@@ -1,0 +1,34 @@
+.leftSideBar{
+}
+.leftSideBar-container{
+    padding: 1rem;
+}
+.leftSideBar-logo-container{
+    display: flex;
+    justify-content: start;
+    align-self: center;
+    margin-bottom: 1rem;
+}
+.leftSideBar-logo{
+    width: 25px;
+    height: 25px;
+}
+.leftSideBar-logo img{
+    width: 100%;
+    height: 100%;
+}
+.leftSideBar-title{
+    display: flex;
+    justify-content: center;
+    align-self: center;
+}
+.leftSideBar-title h1{
+    font-family: var(--font-family);
+    color: var(--text-color2);
+    font-size: 16px;
+    font-weight: 700;
+    margin-left: 0.5rem;
+}
+.leftSideBar-search{
+
+}

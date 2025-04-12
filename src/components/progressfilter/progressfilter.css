@@ -1,0 +1,40 @@
+.progressfilter{
+    border: 0.5px solid var(--border);
+    background-color: #fafafa;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.8rem;
+    border-radius: 0.5rem;
+ 
+    cursor: pointer;
+
+}
+.progressfilter-text-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+}
+.progressfilter-text{
+margin-left: 0.3rem;
+}
+.progressfilter-text p{
+    font-family: var(--font-family);
+    color: var(--text-color2);
+    font-weight: 600;
+    font-size: 14px;
+}
+.progressfilter-count{
+    padding: 0.1rem 0.5rem;
+    background-color: rgb(213, 216, 253);
+    border-radius: 4px;
+}
+.progressfilter-count p{
+    font-family: var(--font-family);
+    color: var(--text-color2);
+    font-weight: 600;
+    font-size: 14px;
+}
+  
