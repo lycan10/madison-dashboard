@@ -1,14 +1,15 @@
 .rightsidebar{
-
+    overflow-y: scroll;
 }
 .rightsidebar-container{
-
+    overflow-y: scroll;
 }
 .rightsidebar-bottom{
     background-color: white;
     padding: 1rem 1rem 0.5rem;
     border-radius: 0.5rem;
     box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    overflow-y: scroll;
 }
 .rightsidebar-navbar{
     display: flex;
@@ -17,7 +18,10 @@
     align-items: center;
 }
 .rightsidebar-navbar h3{
-    
+    font-family: var(--font-family) !important;
+    font-size: 27px !important;
+    color: var(--text-color1) !important;
+    font-weight: 700;
 }
 .rightsidebar-button{
     display: flex;
@@ -130,6 +134,7 @@
     border: 1px solid var(--border);
     border-radius: 0.5rem;
     padding: 1rem;
+    cursor: pointer;
   }
 .custom-grid-top-container{
     display: flex;
@@ -137,6 +142,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.5rem;
+    cursor: pointer;
 }
 
 
@@ -320,3 +326,15 @@ justify-content: center;
   .table{
     margin-top: 2rem;
   }
+  .active>.page-link, .page-link.active {
+    z-index: 3;
+    color: var(--bs-pagination-active-color);
+    background-color: var(--background-color);
+    border-color: var(--background-color);
+    color: white !important;
+}
+.page-link{
+    font-family: var(--font-family) !important;
+    font-size: 10px !important;
+    color: var(--text-color2) !important;
+}

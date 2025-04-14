@@ -9,8 +9,9 @@ import RepairSelector from '../../components/repairs/Repairs';
 import PartSelector from '../../components/repairs/Parts';
 import ProgressFilter from '../../components/progressfilter/ProgressFilter';
 import Pagination from 'react-bootstrap/Pagination';
+import Order from '../order/Order';
 
-const RightSideBar = () => {
+const RightSideBar = ({selected}) => {
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -31,11 +32,15 @@ const RightSideBar = () => {
   const handleClose1 = () => setShowInfo(false);
   const handleShow1 = () => setShowInfo(true);
 
+  
+
 
   const [showEditForm, setShowEditForm] = useState(false);
 
   const handleCloseEditForm = () => setShowEditForm(false);
   const handleShowEditForm = () => setShowEditForm(true);
+
+
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -362,13 +367,16 @@ const RightSideBar = () => {
       // useEffect(() => {
       //   setCurrentPage(1);
       // }, [selectedStatus, isFiltered, isGridView]);
+
+     
     
   return (
     
     <div className='rightsidebar'>
         <div className="rightsidebar-container">
             <Navbar />
-            <div className="rightsidebar-bottom">
+            {selected === 'Dashboard' && (
+                  <div className="rightsidebar-bottom">
                 <div className="rightsidebar-navbar">
                     <h3>Total Trailer</h3>
                     <div className="rightsidebar-button" onClick={handleShow}>
@@ -533,6 +541,18 @@ const RightSideBar = () => {
       </div>
                
             </div>
+                
+              ) }
+              {selected === 'Order' && (
+              <div className="rightsidebar-bottom">
+               
+                <Order />
+   
+            </div>
+              )}
+              
+          
+
         </div>
         <Modal
   show={show}
