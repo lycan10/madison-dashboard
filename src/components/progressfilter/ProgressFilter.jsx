@@ -1,16 +1,13 @@
 import React from 'react';
 import "./progressfilter.css";
 
-const ProgressFilter = ({title, count}) => {
+const ProgressFilter = ({title, count, bgColor, color}) => {
   return (
-    <div className='progressfilter'>
+    <div className='progressfilter' style={{backgroundColor: bgColor}}>
         <div className="progressfilter-text-container">
-        <input
-          type="radio"
-          className="progressfilter-radio"
-        />
+       
         <div className='progressfilter-text'>
-            <p>{title}</p>
+            <p style={{color: color}}>{title}</p>
         </div>
         </div>
        

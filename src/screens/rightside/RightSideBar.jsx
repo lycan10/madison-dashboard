@@ -11,6 +11,167 @@ import ProgressFilter from '../../components/progressfilter/ProgressFilter';
 import Pagination from 'react-bootstrap/Pagination';
 import Order from '../order/Order';
 
+const tableData = [
+  // Pending (6)
+  // {
+  //   id: 1, customerName: 'Angela White', dateIn: '2025-04-01', dateOut: '2025-04-03',
+  //   progress: 'Pending', repairNeeded: ['flooring'], partsNeeded: ['bearings', 'seals'], priority: 'Low',
+  // },
+  // {
+  //   id: 2, customerName: 'Tom Briggs', dateIn: '2025-04-02', dateOut: '2025-04-04',
+  //   progress: 'Pending', repairNeeded: ['roof repair'], partsNeeded: ['panels'], priority: 'High',
+  // },
+  // {
+  //   id: 3, customerName: 'Sasha Reed', dateIn: '2025-04-03', dateOut: '2025-04-05',
+  //   progress: 'Pending', repairNeeded: ['brakes'], partsNeeded: ['brake pads'], priority: 'Medium',
+  // },
+  // {
+  //   id: 4, customerName: 'Jane Smith', dateIn: '2025-04-04', dateOut: '2025-04-06',
+  //   progress: 'Pending', repairNeeded: ['lights'], partsNeeded: ['LED bulbs'], priority: 'High',
+  // },
+  // {
+  //   id: 5, customerName: 'Ben Lewis', dateIn: '2025-04-05', dateOut: '2025-04-07',
+  //   progress: 'Pending', repairNeeded: ['wiring'], partsNeeded: ['cables'], priority: 'High',
+  // },
+  // {
+  //   id: 6, customerName: 'Tina Moon', dateIn: '2025-04-06', dateOut: '2025-04-08',
+  //   progress: 'Pending', repairNeeded: ['fender'], partsNeeded: ['fender'], priority: 'Medium',
+  // },
+
+  // In Progress (6)
+  {
+    id: 7, customerName: 'Emily Clark', dateIn: '2025-04-07', dateOut: '2025-04-09',
+    progress: 'In Progress', repairNeeded: ['door'], partsNeeded: ['hinges'], priority: 'Medium',
+  },
+  {
+    id: 8, customerName: 'Peter Vaughn', dateIn: '2025-04-08', dateOut: '2025-04-10',
+    progress: 'In Progress', repairNeeded: ['suspension'], partsNeeded: ['springs'], priority: 'Low',
+  },
+  {
+    id: 9, customerName: 'Carlos Garcia', dateIn: '2025-04-09', dateOut: '2025-04-11',
+    progress: 'In Progress', repairNeeded: ['frame'], partsNeeded: ['beam'], priority: 'Low',
+  },
+  {
+    id: 10, customerName: 'Nick Johnson', dateIn: '2025-04-10', dateOut: '2025-04-12',
+    progress: 'In Progress', repairNeeded: ['electrical'], partsNeeded: ['fuse'], priority: 'Medium',
+  },
+  {
+    id: 11, customerName: 'Marcus Grant', dateIn: '2025-04-11', dateOut: '2025-04-13',
+    progress: 'In Progress', repairNeeded: ['door'], partsNeeded: ['latch'], priority: 'Medium',
+  },
+  {
+    id: 12, customerName: 'Oliver West', dateIn: '2025-04-12', dateOut: '2025-04-14',
+    progress: 'In Progress', repairNeeded: ['suspension'], partsNeeded: ['springs'], priority: 'Medium',
+  },
+
+  // Completed (6)
+  {
+    id: 13, customerName: 'Mohammed Ali', dateIn: '2025-04-13', dateOut: '2025-04-15',
+    progress: 'Completed', repairNeeded: ['roof'], partsNeeded: ['panels'], priority: 'High',
+  },
+  {
+    id: 14, customerName: 'Linda James', dateIn: '2025-04-14', dateOut: '2025-04-16',
+    progress: 'Completed', repairNeeded: ['hitch'], partsNeeded: ['hitch'], priority: 'Medium',
+  },
+  {
+    id: 15, customerName: 'John Doe', dateIn: '2025-04-15', dateOut: '2025-04-17',
+    progress: 'Completed', repairNeeded: ['axle'], partsNeeded: ['axle'], priority: 'High',
+  },
+  {
+    id: 16, customerName: 'Kelly Black', dateIn: '2025-04-16', dateOut: '2025-04-18',
+    progress: 'Completed', repairNeeded: ['suspension'], partsNeeded: ['shocks'], priority: 'Low',
+  },
+  {
+    id: 17, customerName: 'Rachel Adams', dateIn: '2025-04-17', dateOut: '2025-04-19',
+    progress: 'Completed', repairNeeded: ['brakes'], partsNeeded: ['pads'], priority: 'High',
+  },
+  {
+    id: 18, customerName: 'Max Wells', dateIn: '2025-04-18', dateOut: '2025-04-20',
+    progress: 'Completed', repairNeeded: ['lighting'], partsNeeded: ['light bar'], priority: 'High',
+  },
+
+  // New (6)
+  {
+    id: 19, customerName: 'Kate Lynn', dateIn: '2025-04-19', dateOut: '2025-04-21',
+    progress: 'New', repairNeeded: ['inspection'], partsNeeded: [], priority: 'Low',
+  },
+  {
+    id: 20, customerName: 'Sam Carter', dateIn: '2025-04-20', dateOut: '2025-04-22',
+    progress: 'New', repairNeeded: ['hitch install'], partsNeeded: ['hitch kit'], priority: 'High',
+  },
+  {
+    id: 21, customerName: 'Derek Miles', dateIn: '2025-04-21', dateOut: '2025-04-23',
+    progress: 'New', repairNeeded: ['battery check'], partsNeeded: ['battery'], priority: 'Medium',
+  },
+  {
+    id: 22, customerName: 'Amber Stone', dateIn: '2025-04-22', dateOut: '2025-04-24',
+    progress: 'New', repairNeeded: ['seal test'], partsNeeded: ['gasket'], priority: 'Low',
+  },
+  {
+    id: 23, customerName: 'Zack Rollins', dateIn: '2025-04-23', dateOut: '2025-04-25',
+    progress: 'New', repairNeeded: ['frame check'], partsNeeded: [], priority: 'Low',
+  },
+  {
+    id: 24, customerName: 'Nina Hart', dateIn: '2025-04-24', dateOut: '2025-04-26',
+    progress: 'New', repairNeeded: ['door repair'], partsNeeded: ['door panel'], priority: 'Medium',
+  },
+
+  // Called (6)
+  {
+    id: 25, customerName: 'Joe Banner', dateIn: '2025-04-25', dateOut: '2025-04-27',
+    progress: 'Called', repairNeeded: ['quote review'], partsNeeded: [], priority: 'Medium',
+  },
+  {
+    id: 26, customerName: 'Kyla Fox', dateIn: '2025-04-26', dateOut: '2025-04-28',
+    progress: 'Called', repairNeeded: ['tire replacement'], partsNeeded: ['tires'], priority: 'High',
+  },
+  {
+    id: 27, customerName: 'Matt Davis', dateIn: '2025-04-27', dateOut: '2025-04-29',
+    progress: 'Called', repairNeeded: ['inspection'], partsNeeded: [], priority: 'Low',
+  },
+  {
+    id: 28, customerName: 'Helen Cross', dateIn: '2025-04-28', dateOut: '2025-04-30',
+    progress: 'Called', repairNeeded: ['roof check'], partsNeeded: [], priority: 'Low',
+  },
+  {
+    id: 29, customerName: 'Isaac Ray', dateIn: '2025-04-29', dateOut: '2025-05-01',
+    progress: 'Called', repairNeeded: ['axle replacement'], partsNeeded: ['axle'], priority: 'High',
+  },
+  {
+    id: 30, customerName: 'Donna Glenn', dateIn: '2025-04-30', dateOut: '2025-05-02',
+    progress: 'Called', repairNeeded: ['seal check'], partsNeeded: [], priority: 'Medium',
+  },
+
+  // Repair Done (6)
+  {
+    id: 31, customerName: 'Leo Burns', dateIn: '2025-05-01', dateOut: '2025-05-03',
+    progress: 'Repair Done', repairNeeded: ['brake job'], partsNeeded: ['pads', 'rotors'], priority: 'High',
+  },
+  {
+    id: 32, customerName: 'Nora West', dateIn: '2025-05-02', dateOut: '2025-05-04',
+    progress: 'Repair Done', repairNeeded: ['electrical'], partsNeeded: ['switch'], priority: 'Medium',
+  },
+  {
+    id: 33, customerName: 'Greg Fields', dateIn: '2025-05-03', dateOut: '2025-05-05',
+    progress: 'Repair Done', repairNeeded: ['frame alignment'], partsNeeded: ['beams'], priority: 'Low',
+  },
+  {
+    id: 34, customerName: 'Ella Rice', dateIn: '2025-05-04', dateOut: '2025-05-06',
+    progress: 'Repair Done', repairNeeded: ['fender'], partsNeeded: ['bracket'], priority: 'High',
+  },
+  {
+    id: 35, customerName: 'Dean Storm', dateIn: '2025-05-05', dateOut: '2025-05-07',
+    progress: 'Repair Done', repairNeeded: ['door alignment'], partsNeeded: ['track'], priority: 'Medium',
+  },
+  {
+    id: 36, customerName: 'Julie Barr', dateIn: '2025-05-06', dateOut: '2025-05-08',
+    progress: 'Repair Done', repairNeeded: ['paint job'], partsNeeded: ['primer', 'paint'], priority: 'Low',
+  },
+];
+
+
+
+
 const RightSideBar = ({selected}) => {
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,13 +193,13 @@ const RightSideBar = ({selected}) => {
   const handleClose1 = () => setShowInfo(false);
   const handleShow1 = () => setShowInfo(true);
 
-  
 
 
   const [showEditForm, setShowEditForm] = useState(false);
 
   const handleCloseEditForm = () => setShowEditForm(false);
   const handleShowEditForm = () => setShowEditForm(true);
+
 
 
 
@@ -50,7 +211,9 @@ const RightSideBar = ({selected}) => {
     comments: '',
   });
 
+  const [selectedStatus, setSelectedStatus] = useState("All");
 
+  const [services, setServices] = useState(tableData);
 
   const [selectedItem, setSelectedItem] = useState({});
 
@@ -95,253 +258,21 @@ const RightSideBar = ({selected}) => {
     setShowEditForm(true); // Show the edit modal
   };
   
-  const countByStatus = (status) =>
-    tableData.filter((item) => item.progress.toLowerCase() === status.toLowerCase()).length;
-  
+  const statuses = ["All", "New", "In progress", "Repair done", "Called", "Pending", "Completed"];
   
 
-  const tableData = [
-    {
-      id: 1,
-      customerName: "John Doe",
-      dateIn: "2025-04-10",
-      dateOut: "2025-04-12",
-      progress: "In Progress",
-      repairNeeded: ['axle', 'brakes', 'electrical'],
-      partsNeeded: ['bearings', 'seals', 'drums', 'axle'],
-      priority: "High",
-    },
-    {
-      id: 2,
-      customerName: "Jane Smith",
-      dateIn: "2025-04-09",
-      dateOut: "2025-04-11",
-      progress: "Pending",
-      repairNeeded: ['lights'],
-      partsNeeded: ['bulbs', 'wiring'],
-      priority: "Medium",
-    },
-    {
-      id: 3,
-      customerName: "Carlos Garcia",
-      dateIn: "2025-04-08",
-      dateOut: "2025-04-10",
-      progress: "Completed",
-      repairNeeded: ['frame alignment'],
-      partsNeeded: ['steel beam'],
-      priority: "Low",
-    },
-    {
-      id: 4,
-      customerName: "Angela White",
-      dateIn: "2025-04-07",
-      dateOut: "2025-04-09",
-      progress: "In Progress",
-      repairNeeded: ['tires'],
-      partsNeeded: ['tire set'],
-      priority: "High",
-    },
-    {
-      id: 5,
-      customerName: "Tom Briggs",
-      dateIn: "2025-04-06",
-      dateOut: "2025-04-08",
-      progress: "Pending",
-      repairNeeded: ['wiring'],
-      partsNeeded: ['wiring set'],
-      priority: "Medium",
-    },
-    {
-      id: 6,
-      customerName: "Linda James",
-      dateIn: "2025-04-05",
-      dateOut: "2025-04-07",
-      progress: "Completed",
-      repairNeeded: ['hitch install'],
-      partsNeeded: ['hitch'],
-      priority: "High",
-    },
-    {
-      id: 7,
-      customerName: "Peter Vaughn",
-      dateIn: "2025-04-04",
-      dateOut: "2025-04-06",
-      progress: "In Progress",
-      repairNeeded: ['suspension'],
-      partsNeeded: ['springs'],
-      priority: "Low",
-    },
-    {
-      id: 8,
-      customerName: "Sasha Reed",
-      dateIn: "2025-04-03",
-      dateOut: "2025-04-05",
-      progress: "Pending",
-      repairNeeded: ['door repair'],
-      partsNeeded: ['door hinges'],
-      priority: "Medium",
-    },
-    {
-      id: 9,
-      customerName: "Mohammed Ali",
-      dateIn: "2025-04-02",
-      dateOut: "2025-04-04",
-      progress: "Completed",
-      repairNeeded: ['roof repair'],
-      partsNeeded: ['panels'],
-      priority: "High",
-    },
-    {
-      id: 10,
-      customerName: "Emily Clark",
-      dateIn: "2025-04-01",
-      dateOut: "2025-04-03",
-      progress: "In Progress",
-      repairNeeded: ['flooring'],
-      partsNeeded: ['wood boards'],
-      priority: "Low",
-    },
-    {
-      id: 1,
-      customerName: "John Doe",
-      dateIn: "2025-04-10",
-      dateOut: "2025-04-12",
-      progress: "In Progress",
-      repairNeeded: ['axle', 'brakes', 'electrical'],
-      partsNeeded: ['bearings', 'seals', 'drums', 'axle'],
-      priority: "High",
-    },
-    {
-      id: 2,
-      customerName: "Jane Smith",
-      dateIn: "2025-04-09",
-      dateOut: "2025-04-11",
-      progress: "Pending",
-      repairNeeded: ['lights'],
-      partsNeeded: ['bulbs', 'wiring'],
-      priority: "Medium",
-    },
-    {
-      id: 3,
-      customerName: "Carlos Garcia",
-      dateIn: "2025-04-08",
-      dateOut: "2025-04-10",
-      progress: "Completed",
-      repairNeeded: ['frame alignment'],
-      partsNeeded: ['steel beam'],
-      priority: "Low",
-    },
-    {
-      id: 4,
-      customerName: "Angela White",
-      dateIn: "2025-04-07",
-      dateOut: "2025-04-09",
-      progress: "In Progress",
-      repairNeeded: ['tires'],
-      partsNeeded: ['tire set'],
-      priority: "High",
-    },
-    {
-      id: 5,
-      customerName: "Tom Briggs",
-      dateIn: "2025-04-06",
-      dateOut: "2025-04-08",
-      progress: "Pending",
-      repairNeeded: ['wiring'],
-      partsNeeded: ['wiring set'],
-      priority: "Medium",
-    },
-    {
-      id: 6,
-      customerName: "Linda James",
-      dateIn: "2025-04-05",
-      dateOut: "2025-04-07",
-      progress: "Completed",
-      repairNeeded: ['hitch install'],
-      partsNeeded: ['hitch'],
-      priority: "High",
-    },
-    {
-      id: 7,
-      customerName: "Peter Vaughn",
-      dateIn: "2025-04-04",
-      dateOut: "2025-04-06",
-      progress: "In Progress",
-      repairNeeded: ['suspension'],
-      partsNeeded: ['springs'],
-      priority: "Low",
-    },
-    {
-      id: 1,
-      customerName: "John Doe",
-      dateIn: "2025-04-10",
-      dateOut: "2025-04-12",
-      progress: "In Progress",
-      repairNeeded: ['axle', 'brakes', 'electrical'],
-      partsNeeded: ['bearings', 'seals', 'drums', 'axle'],
-      priority: "High",
-    },
-    {
-      id: 2,
-      customerName: "Jane Smith",
-      dateIn: "2025-04-09",
-      dateOut: "2025-04-11",
-      progress: "Pending",
-      repairNeeded: ['lights'],
-      partsNeeded: ['bulbs', 'wiring'],
-      priority: "Medium",
-    },
-    {
-      id: 3,
-      customerName: "Carlos Garcia",
-      dateIn: "2025-04-08",
-      dateOut: "2025-04-10",
-      progress: "Completed",
-      repairNeeded: ['frame alignment'],
-      partsNeeded: ['steel beam'],
-      priority: "Low",
-    },
-    {
-      id: 4,
-      customerName: "Angela White",
-      dateIn: "2025-04-07",
-      dateOut: "2025-04-09",
-      progress: "In Progress",
-      repairNeeded: ['tires'],
-      partsNeeded: ['tire set'],
-      priority: "High",
-    },
-    {
-      id: 5,
-      customerName: "Tom Briggs",
-      dateIn: "2025-04-06",
-      dateOut: "2025-04-08",
-      progress: "Pending",
-      repairNeeded: ['wiring'],
-      partsNeeded: ['wiring set'],
-      priority: "Medium",
-    },
-    {
-      id: 6,
-      customerName: "Linda James",
-      dateIn: "2025-04-05",
-      dateOut: "2025-04-07",
-      progress: "Completed",
-      repairNeeded: ['hitch install'],
-      partsNeeded: ['hitch'],
-      priority: "High",
-    },
-    {
-      id: 7,
-      customerName: "Peter Vaughn",
-      dateIn: "2025-04-04",
-      dateOut: "2025-04-06",
-      progress: "In Progress",
-      repairNeeded: ['suspension'],
-      partsNeeded: ['springs'],
-      priority: "Low",
-    },
-  ];
+  const countByStatus = (status) => {
+    if (status === "All") {
+      return tableData.length; // For "All", return the total number of items
+    }
+    return tableData.filter(item => item.progress.toLowerCase() === status.toLowerCase()).length;
+  };
+  
+  const filteredTable =
+  selectedStatus === "All"
+    ? tableData
+    : tableData.filter(service => service.progress.toLowerCase() === selectedStatus.toLowerCase());
+
 
       const getPriorityStyles = (priority) => {
         switch (priority) {
@@ -404,16 +335,24 @@ const RightSideBar = ({selected}) => {
                 </div>
               
                 <div className="custom-line no-margin"></div>
-                <div className="rightsidebar-filter-progress">
-                <ProgressFilter title={'New'} count={countByStatus('New')} />
-<ProgressFilter title={'In progress'} count={countByStatus('In Progress')} />
-<ProgressFilter title={'Repair done'} count={countByStatus('Repair Done')} />
-<ProgressFilter title={'Called'} count={countByStatus('Called')} />
-<ProgressFilter title={'Pending'} count={countByStatus('Pending')} />
-<ProgressFilter title={'Completed'} count={countByStatus('Completed')} />
 
-                 
-                  </div>
+                <div className="rightsidebar-filter-progress">
+  {statuses.map((status) => (
+    <div
+      key={status}
+      onClick={() => setSelectedStatus(status)}
+      style={{ cursor: 'pointer' }}
+    >
+      <ProgressFilter
+        title={status}
+        count={countByStatus(status)}  // Get the count for each status
+        bgColor={selectedStatus === status ? '#333' : '#f1f1f1'}
+        color={selectedStatus === status ? '#fff' : '#000'}
+      />
+    </div>
+  ))}
+</div>
+            
                 <div className="rightsidebar-table">
                 {viewMode === "table" ? (
         <div className="rightsidebar-table">
@@ -431,32 +370,40 @@ const RightSideBar = ({selected}) => {
               </tr>
             </thead>
             <tbody>
-  {paginatedData.map((item)=> {
-    const { color, bgColor, icon } = getPriorityStyles(item.priority);
-    return (
-      <tr key={item.id} onClick={() => {
-        setSelectedItem(item);
-        handleShow1();
-      }}>
-        <td>{item.id}</td>
-        <td>{item.customerName}</td>
-        <td>{item.dateIn}</td>
-        <td>{item.dateOut}</td>
-        <td>{item.progress}</td>
-        <td>{Array.isArray(item.repairNeeded) ? item.repairNeeded.join(', ') : item.repairNeeded}</td>
-        <td>{Array.isArray(item.partsNeeded) ? item.partsNeeded.join(', ') : item.partsNeeded}</td>
-        <td>
-          <Priority
-            color={color}
-            bgColor={bgColor}
-            icon={icon}
-            title={item.priority}
-          />
-        </td>
-      </tr>
-    );
-  })}
+  {filteredTable.length === 0 ? (
+    <tr>
+      <td colSpan="8">No data available</td>
+    </tr>
+  ) : (
+    filteredTable.map((item) => {
+      const { color, bgColor, icon } = getPriorityStyles(item.priority);
+      return (
+        <tr key={item.id} onClick={() => {
+          setSelectedItem(item);
+          handleShow1();
+        }}>
+          <td>{item.id}</td>
+          <td>{item.customerName}</td>
+          <td>{item.dateIn}</td>
+          <td>{item.dateOut}</td>
+          <td>{item.progress}</td>
+          <td>{Array.isArray(item.repairNeeded) ? item.repairNeeded.join(', ') : item.repairNeeded}</td>
+          <td>{Array.isArray(item.partsNeeded) ? item.partsNeeded.join(', ') : item.partsNeeded}</td>
+          <td>
+            <Priority
+              color={color}
+              bgColor={bgColor}
+              icon={icon}
+              title={item.priority}
+            />
+          </td>
+        </tr>
+      );
+    })
+  )}
 </tbody>
+
+
 
           </table>
           <div className="custom-grid-pagination table">
@@ -479,62 +426,80 @@ const RightSideBar = ({selected}) => {
         </div>
       ) : (
         <div className="gridview-container">
-           <div className="grid-view">
-          {paginatedData.map((item) => {
-            const { color, bgColor, icon } = getPriorityStyles(item.priority);
-            return (
-              <div key={item.id} className="custom-grid" onClick={() => {
-                setSelectedItem(item);
-                handleShow1();
-              }}>
-                <div className="custom-grid-top-container">
-                  <Priority
-                    color={color}
-                    bgColor={bgColor}
-                    icon={icon}
-                    title={item.priority}
-                  />
-                  <div className="custom-grid-edit">
-                    <HugeiconsIcon icon={MoreHorizontalIcon} size={20} />
+        {filteredTable.length === 0 ? (
+          <div className="no-data-message">
+            <p>No data available.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid-view">
+              {filteredTable.map((item) => {
+                const { color, bgColor, icon } = getPriorityStyles(item.priority);
+                return (
+                  <div
+                    key={item.id}
+                    className="custom-grid"
+                    onClick={() => {
+                      setSelectedItem(item);
+                      handleShow1();
+                    }}
+                  >
+                    <div className="custom-grid-top-container">
+                      <Priority
+                        color={color}
+                        bgColor={bgColor}
+                        icon={icon}
+                        title={item.priority}
+                      />
+                      <div className="custom-grid-edit">
+                        <HugeiconsIcon icon={MoreHorizontalIcon} size={20} />
+                      </div>
+                    </div>
+                    <div className="custom-grid-bottom-container">
+                      <h3>{item.customerName}</h3>
+                      <p>
+                        Repairs:{' '}
+                        {Array.isArray(item.repairNeeded)
+                          ? item.repairNeeded.join(', ')
+                          : item.repairNeeded}
+                      </p>
+                      <p>
+                        Parts:{' '}
+                        {Array.isArray(item.partsNeeded)
+                          ? item.partsNeeded.join(', ')
+                          : item.partsNeeded}
+                      </p>
+                      <div className="custom-line"></div>
+                      <div className="custom-grid-bottom-date">
+                        <p>{item.dateIn}</p>
+                        <p>{item.progress}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="custom-grid-bottom-container">
-                  <h3>{item.customerName}</h3>
-                  <p>
-                    Repairs: {Array.isArray(item.repairNeeded) ? item.repairNeeded.join(', ') : item.repairNeeded}
-                  </p>
-                  <p>
-                    Parts: {Array.isArray(item.partsNeeded) ? item.partsNeeded.join(', ') : item.partsNeeded}
-                  </p>
-                  <div className="custom-line"></div>
-                  <div className="custom-grid-bottom-date">
-                    <p>{item.dateIn}</p>
-                    <p>{item.progress}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-         
-        </div>
-        <div className="custom-grid-pagination">
-        <Pagination>
-            <Pagination.First />
-            <Pagination.Prev />
-            <Pagination.Item>{1}</Pagination.Item>
-            <Pagination.Ellipsis />
-            <Pagination.Item>{10}</Pagination.Item>
-            <Pagination.Item>{11}</Pagination.Item>
-            <Pagination.Item active>{12}</Pagination.Item>
-            <Pagination.Item>{13}</Pagination.Item>
-            <Pagination.Item disabled>{14}</Pagination.Item>
-            <Pagination.Ellipsis />
-            <Pagination.Item>{20}</Pagination.Item>
-            <Pagination.Next />
-            <Pagination.Last />
-          </Pagination>
-        </div>
-        </div>
+                );
+              })}
+            </div>
+            <div className="custom-grid-pagination">
+              <Pagination>
+                <Pagination.First />
+                <Pagination.Prev />
+                <Pagination.Item>{1}</Pagination.Item>
+                <Pagination.Ellipsis />
+                <Pagination.Item>{10}</Pagination.Item>
+                <Pagination.Item>{11}</Pagination.Item>
+                <Pagination.Item active>{12}</Pagination.Item>
+                <Pagination.Item>{13}</Pagination.Item>
+                <Pagination.Item disabled>{14}</Pagination.Item>
+                <Pagination.Ellipsis />
+                <Pagination.Item>{20}</Pagination.Item>
+                <Pagination.Next />
+                <Pagination.Last />
+              </Pagination>
+            </div>
+          </>
+        )}
+      </div>
+      
        
       )}
       
@@ -595,8 +560,8 @@ const RightSideBar = ({selected}) => {
         onChange={handleChange}
       >
         <option>New</option>
-        <option>In Progress</option>
-        <option>Repair Done</option>
+        <option>In progress</option>
+        <option>Repair done</option>
         <option>Called</option>
         <option>Pending</option>
         <option>Completed</option>
@@ -746,8 +711,8 @@ const RightSideBar = ({selected}) => {
         onChange={handleChange}
       >
         <option>New</option>
-        <option>In Progress</option>
-        <option>Repair Done</option>
+        <option>In progress</option>
+        <option>Repair done</option>
         <option>Called</option>
         <option>Pending</option>
         <option>Completed</option>
@@ -758,9 +723,9 @@ const RightSideBar = ({selected}) => {
       <p>Selected Repairs: {repairs.join(' ')}</p>
     </div>
     <div className="form-group">
-      <PartSelector selectedParts={parts} setSelectedParts={setParts} />
-      <p>Selected Parts: {parts.join(' ')}</p>
-    </div>
+  <PartSelector selectedParts={parts} setSelectedParts={setParts} />
+</div>
+
     <div className="form-group">
       <label>Priority</label>
       <select

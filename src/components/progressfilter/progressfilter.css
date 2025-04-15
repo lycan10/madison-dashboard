@@ -28,12 +28,12 @@ margin-left: 0.3rem;
 }
 .progressfilter-count{
     padding: 0.1rem 0.5rem;
-    background-color: rgb(213, 216, 253);
+    background-color: var(--background-color);
     border-radius: 4px;
 }
 .progressfilter-count p{
     font-family: var(--font-family);
-    color: var(--text-color2);
+    color: white;
     font-weight: 600;
     font-size: 14px;
 }
