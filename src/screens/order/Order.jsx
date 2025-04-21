@@ -1,108 +1,226 @@
-import React, { useState } from 'react';
-import Modal from 'react-bootstrap/Modal';
-import './order.css'; 
-import { HugeiconsIcon } from '@hugeicons/react';
-import {
-    Add01Icon,
-  } from "@hugeicons/core-free-icons";
-import ProgressFilter from '../../components/progressfilter/ProgressFilter';
+import React, { useState, useEffect } from "react";
+import Modal from "react-bootstrap/Modal";
+import "./order.css";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import ProgressFilter from "../../components/progressfilter/ProgressFilter";
+import Pagination from "react-bootstrap/Pagination";
+import { useOrders } from "../../context/OrderContext";
 
-const orderDataList = [
-  { id: 1, partName: 'Axle Bolt', quantity: 5, vendor: 'Dexter Parts', status: 'New Order' },
-  { id: 2, partName: 'Brake Pads', quantity: 12, vendor: 'Trailer Pro', status: 'Processing' },
-  { id: 3, partName: 'LED Tail Lights', quantity: 8, vendor: 'Optronics', status: 'Shipped' },
-  { id: 4, partName: 'Suspension Kit', quantity: 3, vendor: 'Redneck Trailer', status: 'Delivered' },
-  { id: 5, partName: 'Hub Assembly', quantity: 6, vendor: 'Buyers Products', status: 'Order Complete' },
-  { id: 6, partName: 'Trailer Jack', quantity: 4, vendor: 'Southwest Wheel', status: 'New Order' },
-  { id: 7, partName: 'Trailer Coupler', quantity: 2, vendor: 'Pacific Rim', status: 'Processing' },
-  { id: 8, partName: 'Safety Chains', quantity: 10, vendor: 'Trailer Source', status: 'Shipped' },
-  { id: 9, partName: 'Reflectors', quantity: 15, vendor: 'ReflectTech', status: 'Delivered' },
-  { id: 10, partName: 'Hitch Ball', quantity: 7, vendor: 'CURT Manufacturing', status: 'Order Complete' },
-];
-
-
+const getStatusStyles = (status) => {
+  switch (status) {
+    case "New Order":
+      return { color: "#FFA500", bgColor: "#FFF5E6" };
+    case "Processing":
+      return { color: "#007BFF", bgColor: "#E6F0FF" };
+    case "Shipped":
+      return { color: "#17A2B8", bgColor: "#E0F7FA" };
+    case "Delivered":
+      return { color: "#28a745", bgColor: "#E8F6EA" };
+    case "Order Complete":
+      return { color: "#20c997", bgColor: "#E6FFFA" };
+    default:
+      return { color: "#6c757d", bgColor: "#f8f9fa" };
+  }
+};
 
 const Order = () => {
-  const [show, setShow] = useState(false);
-  const [show2, setShow2] = useState(false);
+  const {
+    orderPaginationData,
+    orders,
+    loading,
+    error,
+    fetchOrders,
+    addOrder,
+    updateOrder,
+    deleteOrder,
+  } = useOrders();
 
-
-  const [orderData, setOrderData] = useState({
-    partName: '',
-    quantity: 1,
-    vendor: '',
-    status: 'New Order',
-  });
-  const [orders, setOrders] = useState(orderDataList);
-
+  const [currentPage, setCurrentPage] = useState(
+    orderPaginationData.current_page || 1
+  );
+  const itemsPerPage = orderPaginationData.per_page || 10;
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const statuses = [
+    "All",
+    "New Order",
+    "Processing",
+    "Shipped",
+    "Delivered",
+    "Order Complete",
+  ];
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortDirection, setSortDirection] = useState("desc");
 
-  const handleClose2 = () => setShow2(false);
-  const handleShow2 = () => setShow2(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
 
-  const getStatusStyles = (status) => {
-    switch (status) {
-      case "New Order":
-        return { color: "#FFA500", bgColor: "#FFF5E6" };
-      case "Processing":
-        return { color: "#007BFF", bgColor: "#E6F0FF" };
-      case "Shipped":
-        return { color: "#17A2B8", bgColor: "#E0F7FA" };
-      case "Delivered":
-        return { color: "#28a745", bgColor: "#E8F6EA" };
-      case "Order Complete":
-        return { color: "#20c997", bgColor: "#E6FFFA" };
-      default:
-        return { color: "#6c757d", bgColor: "#f8f9fa" };
-    }
+  const [orderFormData, setOrderFormData] = useState({
+    partName: "",
+    quantity: 1,
+    vendor: "",
+    status: "New Order",
+  });
+
+  const [editingOrder, setEditingOrder] = useState(null);
+
+  const handleCloseAddModal = () => {
+    setShowAddModal(false);
+    resetOrderFormData();
+  };
+  const handleShowAddModal = () => setShowAddModal(true);
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditingOrder(null);
+    resetOrderFormData();
+  };
+  const handleShowEditModal = () => setShowEditModal(true);
+
+  const resetOrderFormData = () => {
+    setOrderFormData({
+      partName: "",
+      quantity: 1,
+      vendor: "",
+      status: "New Order",
+    });
   };
 
-  const countByStatus = (status) =>
-    orders.filter((item) => item.status.toLowerCase() === status.toLowerCase()).length;
-  
+  const countByStatus = (status) => {
+    if (status === "All") {
+      return orderPaginationData.total || 0;
+    }
+    return Array.isArray(orders)
+      ? orders.filter(
+          (item) => item.status?.toLowerCase() === status.toLowerCase()
+        ).length
+      : 0;
+  };
+
   const handleFilterClick = (status) => {
     setSelectedStatus(status);
+    setCurrentPage(1);
   };
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setOrderData((prev) => ({ ...prev, [name]: value }));
+    setOrderFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const increaseQuantity = () => {
-    setOrderData((prevData) => ({ ...prevData, quantity: prevData.quantity + 1 }));
+    setOrderFormData((prevData) => ({
+      ...prevData,
+      quantity: prevData.quantity + 1,
+    }));
   };
 
   const decreaseQuantity = () => {
-    if (orderData.quantity > 1) {
-      setOrderData((prevData) => ({ ...prevData, quantity: prevData.quantity - 1 }));
+    if (orderFormData.quantity > 1) {
+      setOrderFormData((prevData) => ({
+        ...prevData,
+        quantity: prevData.quantity - 1,
+      }));
     }
   };
 
-  const handleSubmit = () => {
-    const newOrder = { id: orders.length + 1, ...orderData };
-    setOrders([...orders, newOrder]);
-    setOrderData({ partName: '', quantity: 1, vendor: '', status: 'New Order' });
-    handleClose();
+  const handleAddSubmit = async () => {
+    const success = await addOrder(orderFormData);
+    if (success) {
+      handleCloseAddModal();
+    }
   };
 
-  const filteredOrders =
-  selectedStatus === "All"
-    ? orders
-    : orders.filter(order => order.status === selectedStatus);
+  const handleEditClick = (order) => {
+    setEditingOrder(order);
+    setOrderFormData({
+      partName: order.partName,
+      quantity: order.quantity,
+      vendor: order.vendor,
+      status: order.status,
+    });
+    handleShowEditModal();
+  };
 
-    const statuses = ["All", "New Order", "Processing", "Shipped", "Delivered", "Order Complete"];
+  const handleEditSubmit = async () => {
+    if (!editingOrder) return;
+
+    const success = await updateOrder(editingOrder.id, orderFormData);
+    if (success) {
+      handleCloseEditModal();
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const success = await deleteOrder(id);
+    if (success) {
+      console.log(`Order with ID ${id} deleted successfully.`);
+    }
+  };
+
+  const displayedOrders = orders;
+  const totalPages = orderPaginationData.last_page || 1;
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleSortClick = (column) => {
+    if (sortBy === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    const params = {
+      page: currentPage,
+      perPage: itemsPerPage,
+      ...(selectedStatus !== "All" && { status: selectedStatus }),
+      sortBy: sortBy,
+      sortDirection: sortDirection,
+    };
+    fetchOrders(params);
+  }, [
+    selectedStatus,
+    sortBy,
+    sortDirection,
+    currentPage,
+    itemsPerPage,
+    fetchOrders,
+  ]);
+
+  useEffect(() => {
+    if (
+      orderPaginationData.current_page &&
+      orderPaginationData.current_page !== currentPage
+    ) {
+      setCurrentPage(orderPaginationData.current_page);
+    }
+  }, [orderPaginationData.current_page]);
+
+  const promptDeleteConfirmation = (order) => {
+    setOrderToDelete(order);
+    setShowDeleteConfirmModal(true);
+  };
 
   return (
     <div className="order-page">
       <div className="rightsidebar-navbar">
         <h3>Total Trailer</h3>
-        <div className="rightsidebar-button" onClick={handleShow}>
-          <HugeiconsIcon icon={Add01Icon} size={16} color='#ffffff' strokeWidth={3} />
+
+        <div className="rightsidebar-button" onClick={handleShowAddModal}>
+          <HugeiconsIcon
+            icon={Add01Icon}
+            size={16}
+            color="#ffffff"
+            strokeWidth={3}
+          />
           <p>New Order</p>
         </div>
       </div>
@@ -113,150 +231,244 @@ const Order = () => {
 
       <div className="custom-line no-margin"></div>
 
-
-
-<div className="rightsidebar-filter-progress">
-  {statuses.map((status) => (
-    <div
-      key={status}
-      onClick={() => setSelectedStatus(status)}
-      style={{ cursor: 'pointer' }}
-    >
-      <ProgressFilter
-        title={status}
-        count={status === "All" ? orders.length : orders.filter(order => order.status === status).length}
-        bgColor={selectedStatus === status ? '#333' : '#f1f1f1'}
-        color={selectedStatus === status ? '#fff' : '#000'}
-      />
-    </div>
-  ))}
-</div>
-
-
-
-      <table className="order-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Part Name</th>
-            <th>Quantity</th>
-            <th>Vendor</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-  {filteredOrders.map((order) => {
-    const { color, bgColor } = getStatusStyles(order.status);
-    return (
-      <tr key={order.id}>
-        <td>{order.id}</td>
-        <td>{order.partName}</td>
-        <td>{order.quantity}</td>
-        <td>{order.vendor}</td>
-        <td>
+      <div className="rightsidebar-filter-progress">
+        {statuses.map((status) => (
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              color,
-              backgroundColor: bgColor,
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontWeight: 500,
-              width: "fit-content",
-            }}
+            key={status}
+            onClick={() => handleFilterClick(status)}
+            style={{ cursor: "pointer" }}
           >
-            {order.status}
+            <ProgressFilter
+              title={status}
+              count={countByStatus(status)}
+              bgColor={selectedStatus === status ? "#333" : "#f1f1f1"}
+              color={selectedStatus === status ? "#fff" : "#000"}
+            />
           </div>
-        </td>
-        <td>
-          <div className="action-buttons" style={{ display: "flex", gap: "8px" }}>
-            <button
-              className="edit-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOrderData(order);
-                handleShow2();
-              }}
-            >
-              Edit
-            </button>
-            <button
-              className="delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOrders(prev => prev.filter(o => o.id !== order.id));
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
+        ))}
+      </div>
 
-      </table>
+      {loading ? (
+        <p>Loading orders...</p>
+      ) : error ? (
+        <p>Error: {error.message}</p>
+      ) : (
+        <table className="order-table">
+          <thead>
+            <tr>
+              <th
+                onClick={() => handleSortClick("id")}
+                style={{ cursor: "pointer" }}
+              >
+                # {sortBy === "id" && (sortDirection === "asc" ? "▲" : "▼")}
+              </th>
+              <th
+                onClick={() => handleSortClick("partName")}
+                style={{ cursor: "pointer" }}
+              >
+                Part Name{" "}
+                {sortBy === "partName" && (sortDirection === "asc" ? "▲" : "▼")}
+              </th>
+              <th
+                onClick={() => handleSortClick("quantity")}
+                style={{ cursor: "pointer" }}
+              >
+                Quantity{" "}
+                {sortBy === "quantity" && (sortDirection === "asc" ? "▲" : "▼")}
+              </th>
+              <th
+                onClick={() => handleSortClick("vendor")}
+                style={{ cursor: "pointer" }}
+              >
+                Vendor{" "}
+                {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
+              </th>
+              <th
+                onClick={() => handleSortClick("status")}
+                style={{ cursor: "pointer" }}
+              >
+                Status{" "}
+                {sortBy === "status" && (sortDirection === "asc" ? "▲" : "▼")}
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.isArray(displayedOrders) && displayedOrders.length === 0 ? (
+              <tr>
+                <td colSpan="6">No data available</td>
+              </tr>
+            ) : (
+              Array.isArray(displayedOrders) &&
+              displayedOrders.map((order) => {
+                const { color, bgColor } = getStatusStyles(order.status);
+                return (
+                  <tr key={order.id}>
+                    <td>{order.id}</td>
+                    <td>{order.partName}</td>
+                    <td>{order.quantity}</td>
+                    <td>{order.vendor}</td>
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          color,
+                          backgroundColor: bgColor,
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                          fontWeight: 500,
+                          width: "fit-content",
+                        }}
+                      >
+                        {order.status}
+                      </div>
+                    </td>
+                    <td>
+                      <div
+                        className="action-buttons"
+                        style={{ display: "flex", gap: "8px" }}
+                      >
+                        <button
+                          className="edit-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(order);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="delete-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            promptDeleteConfirmation(order);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      )}
 
-      <Modal show={show} onHide={handleClose} backdrop="static" keyboard={false} centered>
+      <div className="custom-grid-pagination table">
+        <Pagination>
+          <Pagination.First
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+          />
+          <Pagination.Prev
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          />
+          {[...Array(totalPages)].map((_, index) => (
+            <Pagination.Item
+              key={index + 1}
+              active={index + 1 === currentPage}
+              onClick={() => handlePageChange(index + 1)}
+            >
+              {index + 1}
+            </Pagination.Item>
+          ))}
+          <Pagination.Next
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          />
+          <Pagination.Last
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+          />
+        </Pagination>
+      </div>
+
+      <Modal
+        show={showAddModal}
+        onHide={handleCloseAddModal}
+        backdrop="static"
+        keyboard={false}
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title >Add New Order</Modal.Title>
+          <Modal.Title>Add New Order</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form className="custom-form">
             <div className="form-group">
-              <label>Part Name</label>
+              <label htmlFor="partName">Part Name</label>
               <input
                 type="text"
+                id="partName"
                 name="partName"
                 className="input-field"
-                value={orderData.partName}
+                value={orderFormData.partName}
                 onChange={handleChange}
               />
             </div>
 
-             <div className="form-group">
-              <label>Vendor</label>
+            <div className="form-group">
+              <label htmlFor="vendor">Vendor</label>
               <input
                 type="text"
+                id="vendor"
                 name="vendor"
                 className="input-field"
-                value={orderData.vendor}
+                value={orderFormData.vendor}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-  <label>Quantity</label>
-  <div className="quantity-container">
-    <button type="button" className="quantity-btn" onClick={decreaseQuantity}>-</button>
-    <input
-      type="number"
-      name="quantity"
-      className="input-field quantity-input"
-      value={orderData.quantity}
-      onChange={(e) => {
-        const value = parseInt(e.target.value, 10);
-        if (!isNaN(value) && value > 0) {
-          setOrderData((prev) => ({ ...prev, quantity: value }));
-        }
-      }}
-    />
-    <button type="button" className="quantity-btn" onClick={increaseQuantity}>+</button>
-  </div>
-</div>
-
-           
+              <label htmlFor="quantity">Quantity</label>
+              <div className="quantity-container">
+                <button
+                  type="button"
+                  className="quantity-btn"
+                  onClick={decreaseQuantity}
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  className="input-field quantity-input"
+                  value={orderFormData.quantity}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    if (!isNaN(value) && value > 0) {
+                      setOrderFormData((prev) => ({
+                        ...prev,
+                        quantity: value,
+                      }));
+                    } else if (value === 0) {
+                      setOrderFormData((prev) => ({ ...prev, quantity: 1 }));
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="quantity-btn"
+                  onClick={increaseQuantity}
+                >
+                  +
+                </button>
+              </div>
+            </div>
 
             <div className="form-group">
-              <label>Status</label>
+              <label htmlFor="status">Status</label>
               <select
+                id="status"
                 name="status"
                 className="input-field"
-                value={orderData.status}
+                value={orderFormData.status}
                 onChange={handleChange}
               >
                 <option>New Order</option>
@@ -269,67 +481,96 @@ const Order = () => {
           </form>
         </Modal.Body>
         <Modal.Footer>
-          <button className="btn-secondary" onClick={handleClose}>Cancel</button>
-          <button className="btn-primary" onClick={handleSubmit}>Save</button>
+          <button className="btn-secondary" onClick={handleCloseAddModal}>
+            Cancel
+          </button>
+          <button className="btn-primary" onClick={handleAddSubmit}>
+            Save
+          </button>
         </Modal.Footer>
       </Modal>
 
-      <Modal show={show2} onHide={handleClose2} backdrop="static" keyboard={false} centered>
+      <Modal
+        show={showEditModal}
+        onHide={handleCloseEditModal}
+        backdrop="static"
+        keyboard={false}
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title >Edit Order</Modal.Title>
+          <Modal.Title>Edit Order</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form className="custom-form">
             <div className="form-group">
-              <label>Part Name</label>
+              <label htmlFor="editPartName">Part Name</label>
               <input
                 type="text"
+                id="editPartName"
                 name="partName"
                 className="input-field"
-                value={orderData.partName}
+                value={orderFormData.partName}
                 onChange={handleChange}
               />
             </div>
 
-             <div className="form-group">
-              <label>Vendor</label>
+            <div className="form-group">
+              <label htmlFor="editVendor">Vendor</label>
               <input
                 type="text"
+                id="editVendor"
                 name="vendor"
                 className="input-field"
-                value={orderData.vendor}
+                value={orderFormData.vendor}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-  <label>Quantity</label>
-  <div className="quantity-container">
-    <button type="button" className="quantity-btn" onClick={decreaseQuantity}>-</button>
-    <input
-      type="number"
-      name="quantity"
-      className="input-field quantity-input"
-      value={orderData.quantity}
-      onChange={(e) => {
-        const value = parseInt(e.target.value, 10);
-        if (!isNaN(value) && value > 0) {
-          setOrderData((prev) => ({ ...prev, quantity: value }));
-        }
-      }}
-    />
-    <button type="button" className="quantity-btn" onClick={increaseQuantity}>+</button>
-  </div>
-</div>
-
-           
+              <label htmlFor="editQuantity">Quantity</label>
+              <div className="quantity-container">
+                <button
+                  type="button"
+                  className="quantity-btn"
+                  onClick={decreaseQuantity}
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  id="editQuantity"
+                  name="quantity"
+                  className="input-field quantity-input"
+                  value={orderFormData.quantity}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    if (!isNaN(value) && value > 0) {
+                      setOrderFormData((prev) => ({
+                        ...prev,
+                        quantity: value,
+                      }));
+                    } else if (value === 0) {
+                      setOrderFormData((prev) => ({ ...prev, quantity: 1 }));
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="quantity-btn"
+                  onClick={increaseQuantity}
+                >
+                  +
+                </button>
+              </div>
+            </div>
 
             <div className="form-group">
-              <label>Status</label>
+              <label htmlFor="editStatus">Status</label>
               <select
+                id="editStatus"
                 name="status"
                 className="input-field"
-                value={orderData.status}
+                value={orderFormData.status}
                 onChange={handleChange}
               >
                 <option>New Order</option>
@@ -342,8 +583,51 @@ const Order = () => {
           </form>
         </Modal.Body>
         <Modal.Footer>
-          <button className="btn-secondary" onClick={handleClose2}>Cancel</button>
-          <button className="btn-primary" onClick={handleSubmit}>Save</button>
+          <button className="btn-secondary" onClick={handleCloseEditModal}>
+            Cancel
+          </button>
+          <button className="btn-primary" onClick={handleEditSubmit}>
+            Save Changes
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={showDeleteConfirmModal}
+        onHide={() => setShowDeleteConfirmModal(false)}
+        backdrop="static"
+        keyboard={false}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the order{" "}
+          <strong>{orderToDelete?.partName}</strong>?
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            className="btn-secondary"
+            onClick={() => setShowDeleteConfirmModal(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn-danger"
+            onClick={async () => {
+              if (orderToDelete) {
+                const success = await deleteOrder(orderToDelete.id);
+                if (success) {
+                  console.log(`Order ${orderToDelete.id} deleted.`);
+                }
+                setShowDeleteConfirmModal(false);
+                setOrderToDelete(null);
+              }
+            }}
+          >
+            Confirm Delete
+          </button>
         </Modal.Footer>
       </Modal>
     </div>
