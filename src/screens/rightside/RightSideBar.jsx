@@ -90,57 +90,57 @@ const tableData = [
     progress: 'Completed', repairNeeded: ['lighting'], partsNeeded: ['light bar'], priority: 'High',
   },
 
-  // New (6)
+  // // New (6)
   {
     id: 19, customerName: 'Kate Lynn', dateIn: '2025-04-19', dateOut: '2025-04-21',
     progress: 'New', repairNeeded: ['inspection'], partsNeeded: [], priority: 'Low',
   },
-  {
-    id: 20, customerName: 'Sam Carter', dateIn: '2025-04-20', dateOut: '2025-04-22',
-    progress: 'New', repairNeeded: ['hitch install'], partsNeeded: ['hitch kit'], priority: 'High',
-  },
-  {
-    id: 21, customerName: 'Derek Miles', dateIn: '2025-04-21', dateOut: '2025-04-23',
-    progress: 'New', repairNeeded: ['battery check'], partsNeeded: ['battery'], priority: 'Medium',
-  },
-  {
-    id: 22, customerName: 'Amber Stone', dateIn: '2025-04-22', dateOut: '2025-04-24',
-    progress: 'New', repairNeeded: ['seal test'], partsNeeded: ['gasket'], priority: 'Low',
-  },
-  {
-    id: 23, customerName: 'Zack Rollins', dateIn: '2025-04-23', dateOut: '2025-04-25',
-    progress: 'New', repairNeeded: ['frame check'], partsNeeded: [], priority: 'Low',
-  },
-  {
-    id: 24, customerName: 'Nina Hart', dateIn: '2025-04-24', dateOut: '2025-04-26',
-    progress: 'New', repairNeeded: ['door repair'], partsNeeded: ['door panel'], priority: 'Medium',
-  },
+  // {
+  //   id: 20, customerName: 'Sam Carter', dateIn: '2025-04-20', dateOut: '2025-04-22',
+  //   progress: 'New', repairNeeded: ['hitch install'], partsNeeded: ['hitch kit'], priority: 'High',
+  // },
+  // {
+  //   id: 21, customerName: 'Derek Miles', dateIn: '2025-04-21', dateOut: '2025-04-23',
+  //   progress: 'New', repairNeeded: ['battery check'], partsNeeded: ['battery'], priority: 'Medium',
+  // },
+  // {
+  //   id: 22, customerName: 'Amber Stone', dateIn: '2025-04-22', dateOut: '2025-04-24',
+  //   progress: 'New', repairNeeded: ['seal test'], partsNeeded: ['gasket'], priority: 'Low',
+  // },
+  // {
+  //   id: 23, customerName: 'Zack Rollins', dateIn: '2025-04-23', dateOut: '2025-04-25',
+  //   progress: 'New', repairNeeded: ['frame check'], partsNeeded: [], priority: 'Low',
+  // },
+  // {
+  //   id: 24, customerName: 'Nina Hart', dateIn: '2025-04-24', dateOut: '2025-04-26',
+  //   progress: 'New', repairNeeded: ['door repair'], partsNeeded: ['door panel'], priority: 'Medium',
+  // },
 
   // Called (6)
-  {
-    id: 25, customerName: 'Joe Banner', dateIn: '2025-04-25', dateOut: '2025-04-27',
-    progress: 'Called', repairNeeded: ['quote review'], partsNeeded: [], priority: 'Medium',
-  },
-  {
-    id: 26, customerName: 'Kyla Fox', dateIn: '2025-04-26', dateOut: '2025-04-28',
-    progress: 'Called', repairNeeded: ['tire replacement'], partsNeeded: ['tires'], priority: 'High',
-  },
-  {
-    id: 27, customerName: 'Matt Davis', dateIn: '2025-04-27', dateOut: '2025-04-29',
-    progress: 'Called', repairNeeded: ['inspection'], partsNeeded: [], priority: 'Low',
-  },
-  {
-    id: 28, customerName: 'Helen Cross', dateIn: '2025-04-28', dateOut: '2025-04-30',
-    progress: 'Called', repairNeeded: ['roof check'], partsNeeded: [], priority: 'Low',
-  },
-  {
-    id: 29, customerName: 'Isaac Ray', dateIn: '2025-04-29', dateOut: '2025-05-01',
-    progress: 'Called', repairNeeded: ['axle replacement'], partsNeeded: ['axle'], priority: 'High',
-  },
-  {
-    id: 30, customerName: 'Donna Glenn', dateIn: '2025-04-30', dateOut: '2025-05-02',
-    progress: 'Called', repairNeeded: ['seal check'], partsNeeded: [], priority: 'Medium',
-  },
+  // {
+  //   id: 25, customerName: 'Joe Banner', dateIn: '2025-04-25', dateOut: '2025-04-27',
+  //   progress: 'Called', repairNeeded: ['quote review'], partsNeeded: [], priority: 'Medium',
+  // },
+  // {
+  //   id: 26, customerName: 'Kyla Fox', dateIn: '2025-04-26', dateOut: '2025-04-28',
+  //   progress: 'Called', repairNeeded: ['tire replacement'], partsNeeded: ['tires'], priority: 'High',
+  // },
+  // {
+  //   id: 27, customerName: 'Matt Davis', dateIn: '2025-04-27', dateOut: '2025-04-29',
+  //   progress: 'Called', repairNeeded: ['inspection'], partsNeeded: [], priority: 'Low',
+  // },
+  // {
+  //   id: 28, customerName: 'Helen Cross', dateIn: '2025-04-28', dateOut: '2025-04-30',
+  //   progress: 'Called', repairNeeded: ['roof check'], partsNeeded: [], priority: 'Low',
+  // },
+  // {
+  //   id: 29, customerName: 'Isaac Ray', dateIn: '2025-04-29', dateOut: '2025-05-01',
+  //   progress: 'Called', repairNeeded: ['axle replacement'], partsNeeded: ['axle'], priority: 'High',
+  // },
+  // {
+  //   id: 30, customerName: 'Donna Glenn', dateIn: '2025-04-30', dateOut: '2025-05-02',
+  //   progress: 'Called', repairNeeded: ['seal check'], partsNeeded: [], priority: 'Medium',
+  // },
 
   // Repair Done (6)
   {
@@ -355,6 +355,7 @@ const RightSideBar = ({selected}) => {
             
                 <div className="rightsidebar-table">
                 {viewMode === "table" ? (
+                  <div className="order-table-container">
         <div className="rightsidebar-table">
           <table className="custom-table">
             <thead>
@@ -424,7 +425,9 @@ const RightSideBar = ({selected}) => {
                 </Pagination>
                 </div>
         </div>
+        </div>
       ) : (
+        <div className="order-table-container">
         <div className="gridview-container">
         {filteredTable.length === 0 ? (
           <div className="no-data-message">
@@ -432,6 +435,7 @@ const RightSideBar = ({selected}) => {
           </div>
         ) : (
           <>
+          
             <div className="grid-view">
               {filteredTable.map((item) => {
                 const { color, bgColor, icon } = getPriorityStyles(item.priority);
@@ -479,25 +483,26 @@ const RightSideBar = ({selected}) => {
                 );
               })}
             </div>
-            <div className="custom-grid-pagination">
-              <Pagination>
-                <Pagination.First />
-                <Pagination.Prev />
-                <Pagination.Item>{1}</Pagination.Item>
-                <Pagination.Ellipsis />
-                <Pagination.Item>{10}</Pagination.Item>
-                <Pagination.Item>{11}</Pagination.Item>
-                <Pagination.Item active>{12}</Pagination.Item>
-                <Pagination.Item>{13}</Pagination.Item>
-                <Pagination.Item disabled>{14}</Pagination.Item>
-                <Pagination.Ellipsis />
-                <Pagination.Item>{20}</Pagination.Item>
-                <Pagination.Next />
-                <Pagination.Last />
-              </Pagination>
-            </div>
+            <div className="custom-grid-pagination table">
+          <Pagination>
+                  <Pagination.First />
+                  <Pagination.Prev />
+                  <Pagination.Item>{1}</Pagination.Item>
+                  <Pagination.Ellipsis />
+                  <Pagination.Item>{10}</Pagination.Item>
+                  <Pagination.Item>{11}</Pagination.Item>
+                  <Pagination.Item active>{12}</Pagination.Item>
+                  <Pagination.Item>{13}</Pagination.Item>
+                  <Pagination.Item disabled>{14}</Pagination.Item>
+                  <Pagination.Ellipsis />
+                  <Pagination.Item>{20}</Pagination.Item>
+                  <Pagination.Next />
+                  <Pagination.Last />
+                </Pagination>
+                </div>
           </>
         )}
+      </div>
       </div>
       
        
@@ -527,7 +532,7 @@ const RightSideBar = ({selected}) => {
   centered
 >
   <Modal.Header closeButton>
-    <Modal.Title>Add New Task</Modal.Title>
+    <Modal.Title> <h3>Add New Task</h3> </Modal.Title>
   </Modal.Header>
   <Modal.Body>
   <form className="custom-form">

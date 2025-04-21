@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import './order.css'; 
 import { HugeiconsIcon } from '@hugeicons/react';
+import Pagination from 'react-bootstrap/Pagination';
 import {
     Add01Icon,
   } from "@hugeicons/core-free-icons";
@@ -19,6 +20,7 @@ const orderDataList = [
   { id: 9, partName: 'Reflectors', quantity: 15, vendor: 'ReflectTech', status: 'Delivered' },
   { id: 10, partName: 'Hitch Ball', quantity: 7, vendor: 'CURT Manufacturing', status: 'Order Complete' },
 ];
+
 
 
 
@@ -98,6 +100,7 @@ const Order = () => {
     const statuses = ["All", "New Order", "Processing", "Shipped", "Delivered", "Order Complete"];
 
   return (
+   
     <div className="order-page">
       <div className="rightsidebar-navbar">
         <h3>Total Trailer</h3>
@@ -133,7 +136,7 @@ const Order = () => {
 </div>
 
 
-
+<div className="order-table-container">
       <table className="order-table">
         <thead>
           <tr>
@@ -200,10 +203,28 @@ const Order = () => {
 </tbody>
 
       </table>
+      <div className="custom-grid-pagination table">
+          <Pagination>
+                  <Pagination.First />
+                  <Pagination.Prev />
+                  <Pagination.Item>{1}</Pagination.Item>
+                  <Pagination.Ellipsis />
+                  <Pagination.Item>{10}</Pagination.Item>
+                  <Pagination.Item>{11}</Pagination.Item>
+                  <Pagination.Item active>{12}</Pagination.Item>
+                  <Pagination.Item>{13}</Pagination.Item>
+                  <Pagination.Item disabled>{14}</Pagination.Item>
+                  <Pagination.Ellipsis />
+                  <Pagination.Item>{20}</Pagination.Item>
+                  <Pagination.Next />
+                  <Pagination.Last />
+                </Pagination>
+                </div>
+      </div>
 
       <Modal show={show} onHide={handleClose} backdrop="static" keyboard={false} centered>
         <Modal.Header closeButton>
-          <Modal.Title >Add New Order</Modal.Title>
+          <Modal.Title > <h3>Add New Order</h3> </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form className="custom-form">
@@ -276,7 +297,7 @@ const Order = () => {
 
       <Modal show={show2} onHide={handleClose2} backdrop="static" keyboard={false} centered>
         <Modal.Header closeButton>
-          <Modal.Title >Edit Order</Modal.Title>
+          <Modal.Title > <h3>Edit Order</h3> </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form className="custom-form">
@@ -347,6 +368,7 @@ const Order = () => {
         </Modal.Footer>
       </Modal>
     </div>
+
   );
 };
 
