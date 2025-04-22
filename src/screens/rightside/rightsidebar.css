@@ -443,3 +443,21 @@ justify-content: center;
   font-weight: 700;
 }
 }
+
+
+
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media screen and (max-width: 768px) {
+  .custom-table th,
+  .custom-table td {
+    white-space: nowrap;
+  }
+
+  .table-responsive-wrapper {
+    -webkit-overflow-scrolling: touch;
+  }
+}
