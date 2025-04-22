@@ -325,110 +325,109 @@ const RightSideBar = ({ selected }) => {
               ) : error ? (
                 <p>Error: {error.message}</p>
               ) : viewMode === "table" ? (
-                <div className="rightsidebar-table">
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        {/* Add onClick to table headers for sorting */}
-                        <th
-                          onClick={() => handleSortClick("id")}
-                          style={{ cursor: "pointer" }}
-                        >
-                          s/n{" "}
-                          {sortBy === "id" &&
-                            (sortDirection === "asc" ? "▲" : "▼")}
-                        </th>
-                        <th
-                          onClick={() => handleSortClick("customerName")}
-                          style={{ cursor: "pointer" }}
-                        >
-                          Customer Name{" "}
-                          {sortBy === "customerName" &&
-                            (sortDirection === "asc" ? "▲" : "▼")}
-                        </th>
-                        <th
-                          onClick={() => handleSortClick("dateIn")}
-                          style={{ cursor: "pointer" }}
-                        >
-                          Date-In{" "}
-                          {sortBy === "dateIn" &&
-                            (sortDirection === "asc" ? "▲" : "▼")}
-                        </th>
-                        <th
-                          onClick={() => handleSortClick("dateOut")}
-                          style={{ cursor: "pointer" }}
-                        >
-                          Date-Out{" "}
-                          {sortBy === "dateOut" &&
-                            (sortDirection === "asc" ? "▲" : "▼")}
-                        </th>
-                        <th
-                          onClick={() => handleSortClick("progress")}
-                          style={{ cursor: "pointer" }}
-                        >
-                          Progress{" "}
-                          {sortBy === "progress" &&
-                            (sortDirection === "asc" ? "▲" : "▼")}
-                        </th>
-                        <th>Repair Needed</th>{" "}
-                        {/* Assuming no sorting on arrays */}
-                        <th>Parts Needed</th>{" "}
-                        {/* Assuming no sorting on arrays */}
-                        <th
-                          onClick={() => handleSortClick("priority")}
-                          style={{ cursor: "pointer" }}
-                        >
-                          Priority{" "}
-                          {sortBy === "priority" &&
-                            (sortDirection === "asc" ? "▲" : "▼")}
-                        </th>
-                        {/*<th>Actions</th>*/}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Use displayedTasks (which is taskPaginationData.data) */}
-                      {Array.isArray(displayedTasks) &&
-                      displayedTasks.length === 0 ? (
+                <div className="order-table-container">
+                  <div className="rightsidebar-table">
+                    <table className="custom-table">
+                      <thead>
                         <tr>
-                          <td colSpan="9">No data available</td>
+                          {/* Add onClick to table headers for sorting */}
+                          <th
+                            onClick={() => handleSortClick("id")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            s/n{" "}
+                            {sortBy === "id" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          <th
+                            onClick={() => handleSortClick("customerName")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Customer Name{" "}
+                            {sortBy === "customerName" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          <th
+                            onClick={() => handleSortClick("dateIn")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Date-In{" "}
+                            {sortBy === "dateIn" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          <th
+                            onClick={() => handleSortClick("dateOut")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Date-Out{" "}
+                            {sortBy === "dateOut" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          <th
+                            onClick={() => handleSortClick("progress")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Progress{" "}
+                            {sortBy === "progress" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          <th>Repair Needed</th>{" "}
+                          <th>Parts Needed</th>{" "}
+                          <th
+                            onClick={() => handleSortClick("priority")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Priority{" "}
+                            {sortBy === "priority" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          {/*<th>Actions</th>*/}
                         </tr>
-                      ) : (
-                        Array.isArray(displayedTasks) &&
-                        displayedTasks.map((item) => {
-                          const { color, bgColor, icon } = getPriorityStyles(
-                            item.priority
-                          );
-                          return (
-                            <tr key={item.id}>
-                              <td>{item.id}</td>
-                              <td>{item.customerName}</td>
-                              <td>{item.dateIn}</td>
-                              <td>{item.dateOut}</td>
-                              <td>{item.progress}</td>
-                              <td>
-                                {Array.isArray(item.repairNeeded)
-                                  ? item.repairNeeded.join(", ")
-                                  : item.repairNeeded}
-                              </td>
-                              <td>
-                                {Array.isArray(item.partsNeeded)
-                                  ? item.partsNeeded
-                                      .map(
-                                        (part) =>
-                                          `${part.name} (${part.quantity})`
-                                      )
-                                      .join(", ")
-                                  : item.partsNeeded}
-                              </td>
-                              <td>
-                                <Priority
-                                  color={color}
-                                  bgColor={bgColor}
-                                  icon={icon}
-                                  title={item.priority}
-                                />
-                              </td>
-                              {/*<td>
+                      </thead>
+                      <tbody>
+                        {/* Use displayedTasks (which is taskPaginationData.data) */}
+                        {Array.isArray(displayedTasks) &&
+                        displayedTasks.length === 0 ? (
+                          <tr>
+                            <td colSpan="8">No data available</td>
+                          </tr>
+                        ) : (
+                          Array.isArray(displayedTasks) &&
+                          displayedTasks.map((item) => {
+                            const { color, bgColor, icon } = getPriorityStyles(
+                              item.priority
+                            );
+                            return (
+                              <tr key={item.id}>
+                                <td>{item.id}</td>
+                                <td>{item.customerName}</td>
+                                <td>{item.dateIn}</td>
+                                <td>{item.dateOut}</td>
+                                <td>{item.progress}</td>
+                                <td>
+                                  {Array.isArray(item.repairNeeded)
+                                    ? item.repairNeeded.join(", ")
+                                    : item.repairNeeded}
+                                </td>
+                                <td>
+                                  {Array.isArray(item.partsNeeded)
+                                    ? item.partsNeeded
+                                        .map(
+                                          (part) =>
+                                            `${part.name} (${part.quantity})`
+                                        )
+                                        .join(", ")
+                                    : item.partsNeeded}
+                                </td>
+                                <td>
+                                  <Priority
+                                    color={color}
+                                    bgColor={bgColor}
+                                    icon={icon}
+                                    title={item.priority}
+                                  />
+                                </td>
+                                {/*<td>
                                 {" "}
                                 <button
                                   className="btn-info"
@@ -454,45 +453,47 @@ const RightSideBar = ({ selected }) => {
                                   Delete
                                 </button>
                               </td>*/}
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                  {/* Pagination for table view */}
-                  <div className="custom-grid-pagination table">
-                    <Pagination>
-                      <Pagination.First
-                        onClick={() => handlePageChange(1)}
-                        disabled={currentPage === 1}
-                      />
-                      <Pagination.Prev
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                      />
-                      {/* Render pagination items based on totalPages from backend */}
-                      {[...Array(totalPages)].map((_, index) => (
-                        <Pagination.Item
-                          key={index + 1}
-                          active={index + 1 === currentPage}
-                          onClick={() => handlePageChange(index + 1)}
-                        >
-                          {index + 1}
-                        </Pagination.Item>
-                      ))}
-                      <Pagination.Next
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                      />
-                      <Pagination.Last
-                        onClick={() => handlePageChange(totalPages)}
-                        disabled={currentPage === totalPages}
-                      />
-                    </Pagination>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                    {/* Pagination for table view */}
+                    <div className="custom-grid-pagination table">
+                      <Pagination>
+                        <Pagination.First
+                          onClick={() => handlePageChange(1)}
+                          disabled={currentPage === 1}
+                        />
+                        <Pagination.Prev
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                        />
+                        {/* Render pagination items based on totalPages from backend */}
+                        {[...Array(totalPages)].map((_, index) => (
+                          <Pagination.Item
+                            key={index + 1}
+                            active={index + 1 === currentPage}
+                            onClick={() => handlePageChange(index + 1)}
+                          >
+                            {index + 1}
+                          </Pagination.Item>
+                        ))}
+                        <Pagination.Next
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                        />
+                        <Pagination.Last
+                          onClick={() => handlePageChange(totalPages)}
+                          disabled={currentPage === totalPages}
+                        />
+                      </Pagination>
+                    </div>
                   </div>
                 </div>
               ) : (
+                <div className="order-table-container">
                 <div className="gridview-container">
                   {/* Use displayedTasks (which is taskPaginationData.data) */}
                   {Array.isArray(displayedTasks) &&
@@ -593,6 +594,7 @@ const RightSideBar = ({ selected }) => {
                       </div>
                     </>
                   )}
+                </div>
                 </div>
               )}
             </div>

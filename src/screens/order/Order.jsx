@@ -253,109 +253,114 @@ const Order = () => {
       ) : error ? (
         <p>Error: {error.message}</p>
       ) : (
-        <table className="order-table">
-          <thead>
-            <tr>
-              <th
-                onClick={() => handleSortClick("id")}
-                style={{ cursor: "pointer" }}
-              >
-                # {sortBy === "id" && (sortDirection === "asc" ? "▲" : "▼")}
-              </th>
-              <th
-                onClick={() => handleSortClick("partName")}
-                style={{ cursor: "pointer" }}
-              >
-                Part Name{" "}
-                {sortBy === "partName" && (sortDirection === "asc" ? "▲" : "▼")}
-              </th>
-              <th
-                onClick={() => handleSortClick("quantity")}
-                style={{ cursor: "pointer" }}
-              >
-                Quantity{" "}
-                {sortBy === "quantity" && (sortDirection === "asc" ? "▲" : "▼")}
-              </th>
-              <th
-                onClick={() => handleSortClick("vendor")}
-                style={{ cursor: "pointer" }}
-              >
-                Vendor{" "}
-                {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-              </th>
-              <th
-                onClick={() => handleSortClick("status")}
-                style={{ cursor: "pointer" }}
-              >
-                Status{" "}
-                {sortBy === "status" && (sortDirection === "asc" ? "▲" : "▼")}
-              </th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(displayedOrders) && displayedOrders.length === 0 ? (
+        <div className="order-table-container">
+          <table className="order-table">
+            <thead>
               <tr>
-                <td colSpan="6">No data available</td>
+                <th
+                  onClick={() => handleSortClick("id")}
+                  style={{ cursor: "pointer" }}
+                >
+                  # {sortBy === "id" && (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("partName")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Part Name{" "}
+                  {sortBy === "partName" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("quantity")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Quantity{" "}
+                  {sortBy === "quantity" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("vendor")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Vendor{" "}
+                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("status")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Status{" "}
+                  {sortBy === "status" && (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              Array.isArray(displayedOrders) &&
-              displayedOrders.map((order) => {
-                const { color, bgColor } = getStatusStyles(order.status);
-                return (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
-                    <td>{order.partName}</td>
-                    <td>{order.quantity}</td>
-                    <td>{order.vendor}</td>
-                    <td>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          color,
-                          backgroundColor: bgColor,
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontWeight: 500,
-                          width: "fit-content",
-                        }}
-                      >
-                        {order.status}
-                      </div>
-                    </td>
-                    <td>
-                      <div
-                        className="action-buttons"
-                        style={{ display: "flex", gap: "8px" }}
-                      >
-                        <button
-                          className="edit-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditClick(order);
+            </thead>
+            <tbody>
+              {Array.isArray(displayedOrders) &&
+              displayedOrders.length === 0 ? (
+                <tr>
+                  <td colSpan="6">No data available</td>
+                </tr>
+              ) : (
+                Array.isArray(displayedOrders) &&
+                displayedOrders.map((order) => {
+                  const { color, bgColor } = getStatusStyles(order.status);
+                  return (
+                    <tr key={order.id}>
+                      <td>{order.id}</td>
+                      <td>{order.partName}</td>
+                      <td>{order.quantity}</td>
+                      <td>{order.vendor}</td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            color,
+                            backgroundColor: bgColor,
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            fontWeight: 500,
+                            width: "fit-content",
                           }}
                         >
-                          Edit
-                        </button>
-                        <button
-                          className="delete-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            promptDeleteConfirmation(order);
-                          }}
+                          {order.status}
+                        </div>
+                      </td>
+                      <td>
+                        <div
+                          className="action-buttons"
+                          style={{ display: "flex", gap: "8px" }}
                         >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                          <button
+                            className="edit-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditClick(order);
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="delete-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              promptDeleteConfirmation(order);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <div className="custom-grid-pagination table">
@@ -396,7 +401,10 @@ const Order = () => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Add New Order</Modal.Title>
+          <Modal.Title>
+            {" "}
+            <h3>Add New Order</h3>{" "}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form className="custom-form">
@@ -498,7 +506,10 @@ const Order = () => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Edit Order</Modal.Title>
+          <Modal.Title>
+            {" "}
+            <h3>Edit Order</h3>{" "}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form className="custom-form">

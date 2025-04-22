@@ -1,14 +1,16 @@
 .rightsidebar{
-    overflow-y: scroll;
+    overflow-y: hidden;
 }
 .rightsidebar-container{
-    overflow-y: scroll;
+  overflow-y: hidden;
 }
+
 .rightsidebar-bottom{
     background-color: white;
-    padding: 1rem 1rem 0.5rem;
+    padding: 1rem 1rem 0em;
     border-radius: 0.5rem;
     box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    height: calc(100vh - 6.5rem); 
     overflow-y: scroll;
 }
 .rightsidebar-navbar{
@@ -107,11 +109,13 @@
     border: 1px solid var(--border);
     padding: 8px;
     text-align: left;
+    white-space: nowrap;
   }
   .custom-table th {
     font-family: var(--font-family);
     font-size: 14px;
     font-weight: 700;
+    white-space: nowrap;
   }
  
   .custom-table td {
@@ -336,4 +340,106 @@ justify-content: center;
     font-family: var(--font-family) !important;
     font-size: 10px !important;
     color: var(--text-color2) !important;
+}
+
+@media screen and (max-width: 1200px) {
+  .rightsidebar-navbar h3{
+    font-family: var(--font-family) !important;
+    font-size: 23px !important;
+    color: var(--text-color1) !important;
+    font-weight: 700;
+}
+.rightsidebar-button{
+  background-color: red;
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.rightsidebar-filter-progress{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 0.5rem;
+  row-gap: 0.5rem;
+
+  margin-bottom: 1rem;
+}
+}
+
+@media screen and (max-width: 800px) {
+  .rightsidebar-navbar h3{
+    font-family: var(--font-family) !important;
+    font-size: 21px !important;
+    color: var(--text-color1) !important;
+    font-weight: 700;
+}
+.rightsidebar-button{
+  background-color: red;
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.rightsidebar-filter-progress{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 0.5rem;
+  row-gap: 0.5rem;
+
+  margin-bottom: 1rem;
+}
+}
+
+@media screen and (max-width: 500px) {
+  .rightsidebar-navbar h3{
+    font-family: var(--font-family) !important;
+    font-size: 19px !important;
+    color: var(--text-color1) !important;
+    font-weight: 700;
+}
+.rightsidebar-button{
+  background-color: red;
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.rightsidebar-bottom {
+  background-color: white;
+  padding: 1rem 1rem 0em;
+  border-radius: 0.5rem;
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  height: calc(100vh - 6.5rem);
+  overflow-y: scroll;
+  overflow-x: hidden;
+  /* width: 400px; */
+}
+.rightsidebar-filter-progress{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 0.5rem;
+  row-gap: 0.5rem;
+
+  margin-bottom: 1rem;
+}
+.custom-table th {
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 700;
+ width: 600px !important;
+
+}
+.custom-grid{
+  padding: 0.5rem;
+}
+.grid-view{
+  display: grid;
+  grid-template-columns: 1fr 1fr ;
+  gap: 0.5rem;
+}
+.grid-view p{
+  font-size: 12px;
+}
+.modal-title h3{
+  font-family: var(--font-family);
+  font-size: 19px !important;
+  font-weight: 700;
+}
 }
