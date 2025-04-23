@@ -7,11 +7,11 @@ import { useSidebar } from '../../context/SideBarContext';
 
 const LeftSideBar = ({ selected, onSelect, collapsed }) => {
   const { toggleSidebar } = useSidebar();
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 800);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 300);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 800);
+      setIsMobile(window.innerWidth <= 300);
     };
 
     window.addEventListener('resize', handleResize);

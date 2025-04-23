@@ -61,7 +61,6 @@ const PartSelector = ({ selectedParts, setSelectedParts }) => {
         </button>
       </div>
 
-      {/* Display selected parts */}
       {selectedParts.length > 0 && (
         <div className="custom-parts-list">
           <h5>Selected parts</h5>
@@ -72,7 +71,7 @@ const PartSelector = ({ selectedParts, setSelectedParts }) => {
                 <button
                   type="button"
                   onClick={(e) => {
-                    e.stopPropagation(); // prevent modal close if bubbling
+                    e.stopPropagation();
                     handleAddOrUpdatePart(p.name, 1);
                   }}
                 >

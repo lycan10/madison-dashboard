@@ -9,11 +9,11 @@ const Dashboard = () => {
   const [selectedLink, setSelectedLink] = useState('Dashboard');
   const { sidebarShow, toggleSidebar } = useSidebar();
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 760);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 300);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 760);
+      setIsMobile(window.innerWidth <= 300);
     };
 
     window.addEventListener('resize', handleResize);

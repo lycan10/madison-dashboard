@@ -10,6 +10,7 @@ import {
   Coffee02Icon,
   GridViewIcon,
   LeftToRightListBulletIcon,
+  Search01Icon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import Priority from "../../components/priority/Priority";
@@ -41,7 +42,7 @@ const RightSideBar = ({ selected }) => {
     tasks,
     loading,
     error,
-    fetchTasks, 
+    fetchTasks,
     addTask,
     updateTask,
     deleteTask,
@@ -63,15 +64,14 @@ const RightSideBar = ({ selected }) => {
   ];
 
   const [taskCounts, setTaskCounts] = useState({
-      All: 0,
-      New: 0,
-      'In progress': 0,
-      'Repair done': 0,
-      Called: 0,
-      Pending: 0,
-      Completed: 0,
+    All: 0,
+    New: 0,
+    "In progress": 0,
+    "Repair done": 0,
+    Called: 0,
+    Pending: 0,
+    Completed: 0,
   });
-
 
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -84,6 +84,7 @@ const RightSideBar = ({ selected }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleCloseAddModal = () => {
     setShowAddModal(false);
@@ -99,15 +100,15 @@ const RightSideBar = ({ selected }) => {
 
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-    resetFormData(); 
-    setSelectedItem({}); 
+    resetFormData();
+    setSelectedItem({});
   };
   const handleShowEditModal = () => setShowEditModal(true);
 
   const [formData, setFormData] = useState({
     customerName: "",
-    phoneNumber: "", 
-    plateNumber: "", 
+    phoneNumber: "",
+    plateNumber: "",
     dateIn: "",
     dateOut: "",
     progress: "New",
@@ -122,8 +123,8 @@ const RightSideBar = ({ selected }) => {
   const resetFormData = () => {
     setFormData({
       customerName: "",
-      phoneNumber: "", 
-      plateNumber: "", 
+      phoneNumber: "",
+      plateNumber: "",
       dateIn: "",
       dateOut: "",
       progress: "New",
@@ -148,14 +149,14 @@ const RightSideBar = ({ selected }) => {
     const finalData = {
       ...formData,
       phoneNumber: formData.phoneNumber,
-      plateNumber: formData.plateNumber, 
+      plateNumber: formData.plateNumber,
       repairNeeded: repairs,
-      partsNeeded: parts, 
+      partsNeeded: parts,
     };
     const success = await addTask(finalData);
     if (success) {
       handleCloseAddModal();
-      fetchStatusCounts(); 
+      fetchStatusCounts();
     }
   };
 
@@ -165,7 +166,7 @@ const RightSideBar = ({ selected }) => {
       ...formData,
       phoneNumber: formData.phoneNumber,
       plateNumber: formData.plateNumber,
-      repairNeeded: repairs, 
+      repairNeeded: repairs,
       partsNeeded: parts,
     };
     const success = await updateTask(selectedItem.id, finalData);
@@ -178,7 +179,7 @@ const RightSideBar = ({ selected }) => {
   const handleDelete = async (id) => {
     const success = await deleteTask(id);
     if (success) {
-      handleCloseInfoModal(); 
+      handleCloseInfoModal();
       fetchStatusCounts();
     }
   };
@@ -199,34 +200,32 @@ const RightSideBar = ({ selected }) => {
     });
     setRepairs(item.repairNeeded || []);
     setParts(item.partsNeeded || []);
-    handleShowEditModal(); 
+    handleShowEditModal();
   };
 
   const fetchStatusCounts = async () => {
-      try {
-        const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/tasks/counts`;
-          const params = new URLSearchParams();
-          if (startDate) params.append('startDate', startDate);
-          if (endDate) params.append('endDate', endDate);
-          
-          
-          const response = await fetch(`${TASKS_API_URL}?${params.toString()}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          setTaskCounts(data);
-      } catch (error) {
-          console.error("Error fetching status counts:", error);
-      }
-  };
+    try {
+      const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/tasks/counts`;
+      const params = new URLSearchParams();
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
 
+      const response = await fetch(`${TASKS_API_URL}?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setTaskCounts(data);
+    } catch (error) {
+      console.error("Error fetching status counts:", error);
+    }
+  };
 
   const countByStatus = (status) => {
     return taskCounts[status] || 0;
@@ -258,6 +257,7 @@ const RightSideBar = ({ selected }) => {
       sortDirection: sortDirection,
       ...(startDate && { startDate: startDate }),
       ...(endDate && { endDate: endDate }),
+      ...(searchTerm && { search: searchTerm }),
     };
     fetchTasks(params);
   }, [
@@ -268,12 +268,12 @@ const RightSideBar = ({ selected }) => {
     itemsPerPage,
     startDate,
     endDate,
+    searchTerm,
   ]);
 
   useEffect(() => {
-      fetchStatusCounts();
-  }, [startDate, endDate]);
-
+    fetchStatusCounts();
+  }, [startDate, endDate, searchTerm]);
 
   useEffect(() => {
     if (
@@ -300,6 +300,10 @@ const RightSideBar = ({ selected }) => {
     setCurrentPage(1);
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
   return (
     <div className="rightsidebar">
       <div className="rightsidebar-container">
@@ -350,6 +354,18 @@ const RightSideBar = ({ selected }) => {
                   <p>Grid</p>
                 </div>
               </div>
+
+              <div className="search-input-container">
+                <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="search-input"
+                />
+              </div>
+              
               <div className="rightsidebar-filter-date">
                 {/* Date Range Filter Inputs */}
                 <div className="date-range-picker">
@@ -418,7 +434,6 @@ const RightSideBar = ({ selected }) => {
                     <table className="custom-table">
                       <thead>
                         <tr>
-                          {/* Add onClick to table headers for sorting */}
                           <th
                             onClick={() => handleSortClick("id")}
                             style={{ cursor: "pointer" }}
@@ -435,8 +450,7 @@ const RightSideBar = ({ selected }) => {
                             {sortBy === "customerName" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
-                           {/* Added Phone Number Header */}
-                           <th
+                          <th
                             onClick={() => handleSortClick("phoneNumber")}
                             style={{ cursor: "pointer" }}
                           >
@@ -444,8 +458,7 @@ const RightSideBar = ({ selected }) => {
                             {sortBy === "phoneNumber" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
-                           {/* Added Plate Number Header */}
-                           <th
+                          <th
                             onClick={() => handleSortClick("plateNumber")}
                             style={{ cursor: "pointer" }}
                           >
@@ -511,8 +524,8 @@ const RightSideBar = ({ selected }) => {
                               >
                                 <td>{item.id}</td>
                                 <td>{item.customerName}</td>
-                                <td>{item.phoneNumber}</td> 
-                                <td>{item.plateNumber}</td> 
+                                <td>{item.phoneNumber}</td>
+                                <td>{item.plateNumber}</td>
                                 <td>{item.dateIn}</td>
                                 <td>{item.dateOut}</td>
                                 <td>{item.progress}</td>
@@ -733,7 +746,7 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-             {/* Added Phone Number Input */}
+            {/* Added Phone Number Input */}
             <div className="form-group">
               <label htmlFor="phoneNumber">Phone Number</label>
               <input
@@ -745,7 +758,7 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-             {/* Added Plate Number Input */}
+            {/* Added Plate Number Input */}
             <div className="form-group">
               <label htmlFor="plateNumber">Plate Number</label>
               <input
@@ -870,12 +883,12 @@ const RightSideBar = ({ selected }) => {
                 <strong>Customer Name:</strong>
                 <p>{selectedItem.customerName}</p>
               </div>
-               {/* Display Phone Number in Info Modal */}
+              {/* Display Phone Number in Info Modal */}
               <div className="info-group">
                 <strong>Phone Number:</strong>
                 <p>{selectedItem.phoneNumber}</p>
               </div>
-               {/* Display Plate Number in Info Modal */}
+              {/* Display Plate Number in Info Modal */}
               <div className="info-group">
                 <strong>Plate Number:</strong>
                 <p>{selectedItem.plateNumber}</p>
@@ -936,15 +949,21 @@ const RightSideBar = ({ selected }) => {
                   <ul>
                     {selectedItem.history.map((historyEntry) => (
                       <li key={historyEntry.id}>
-                        {historyEntry.changes && typeof historyEntry.changes === 'string' ? (
-                           JSON.parse(historyEntry.changes).map((change, index) => (
-                               <p key={index}>{change}</p>
-                           ))
+                        {historyEntry.changes &&
+                        typeof historyEntry.changes === "string" ? (
+                          JSON.parse(historyEntry.changes).map(
+                            (change, index) => <p key={index}>{change}</p>
+                          )
                         ) : (
-                           <p>{historyEntry.changes}</p>
+                          <p>{historyEntry.changes}</p>
                         )}
                         <small>
-                          by {historyEntry.user ? historyEntry.user.name : 'Unknown User'} on {new Date(historyEntry.created_at).toLocaleString()}
+                          by{" "}
+                          {historyEntry.user
+                            ? historyEntry.user.name
+                            : "Unknown User"}{" "}
+                          on{" "}
+                          {new Date(historyEntry.created_at).toLocaleString()}
                         </small>
                       </li>
                     ))}
@@ -1002,7 +1021,7 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-             {/* Added Phone Number Input for Edit */}
+            {/* Added Phone Number Input for Edit */}
             <div className="form-group">
               <label htmlFor="editPhoneNumber">Phone Number</label>
               <input
@@ -1014,7 +1033,7 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-             {/* Added Plate Number Input for Edit */}
+            {/* Added Plate Number Input for Edit */}
             <div className="form-group">
               <label htmlFor="editPlateNumber">Plate Number</label>
               <input

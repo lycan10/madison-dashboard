@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Modal from "react-bootstrap/Modal";
 import "./order.css";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
 import { useOrders } from "../../context/OrderContext";
@@ -37,10 +37,14 @@ const Order = () => {
     deleteOrder,
   } = useOrders();
 
+  const { token } = useAuth();
+
+
   const [currentPage, setCurrentPage] = useState(
     orderPaginationData.current_page || 1
   );
   const itemsPerPage = orderPaginationData.per_page || 10;
+
   const [selectedStatus, setSelectedStatus] = useState("All");
   const statuses = [
     "All",
@@ -53,12 +57,11 @@ const Order = () => {
 
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
-  const { token } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [orderCounts, setOrderCounts] = useState({
     All: 0,
@@ -74,6 +77,7 @@ const Order = () => {
     quantity: 1,
     vendor: "",
     status: "New Order",
+    comments: "",
   });
 
   const [editingOrder, setEditingOrder] = useState(null);
@@ -97,6 +101,7 @@ const Order = () => {
       quantity: 1,
       vendor: "",
       status: "New Order",
+      comments: "",
     });
   };
 
@@ -127,19 +132,24 @@ const Order = () => {
   };
 
   const handleAddSubmit = async () => {
-    const success = await addOrder(orderFormData);
+    const success = await addOrder({
+        ...orderFormData,
+        comments: orderFormData.comments
+    });
     if (success) {
-      handleCloseAddModal();
+      handleCloseAddModal(); 
+      fetchStatusCounts(); 
     }
   };
 
   const handleEditClick = (order) => {
     setEditingOrder(order);
     setOrderFormData({
-      partName: order.partName,
-      quantity: order.quantity,
-      vendor: order.vendor,
-      status: order.status,
+      partName: order.partName || "",
+      quantity: order.quantity || 1,
+      vendor: order.vendor || "",
+      status: order.status || "New Order",
+      comments: order.comments || "",
     });
     handleShowEditModal();
   };
@@ -147,21 +157,26 @@ const Order = () => {
   const handleEditSubmit = async () => {
     if (!editingOrder) return;
 
-    const success = await updateOrder(editingOrder.id, orderFormData);
+    const success = await updateOrder(editingOrder.id, {
+        ...orderFormData,
+        comments: orderFormData.comments
+    });
     if (success) {
-      handleCloseEditModal();
+      handleCloseEditModal(); 
+      fetchStatusCounts(); 
     }
   };
 
   const handleDelete = async (id) => {
-    const success = await deleteOrder(id);
+    const success = await deleteOrder(id); 
     if (success) {
       console.log(`Order with ID ${id} deleted successfully.`);
+      fetchStatusCounts();
     }
   };
 
-  const displayedOrders = orders;
-  const totalPages = orderPaginationData.last_page || 1;
+  const displayedOrders = orders; 
+  const totalPages = orderPaginationData.last_page || 1; 
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -171,19 +186,47 @@ const Order = () => {
     if (sortBy === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      setSortBy(column);
+      setSortBy(column); 
       setSortDirection("asc");
     }
     setCurrentPage(1);
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); 
+  };
+
+  const fetchStatusCounts = async () => {
+    try {
+      const API_URL = `${process.env.REACT_APP_BASE_URL}/api/orders/counts`;
+
+      const response = await fetch(`${API_URL}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setOrderCounts(data); 
+    } catch (error) {
+      console.error("Error fetching status counts:", error);
+    }
+  };
+
+
   useEffect(() => {
     const params = {
       page: currentPage,
       perPage: itemsPerPage,
-      ...(selectedStatus !== "All" && { status: selectedStatus }),
+      ...(selectedStatus !== "All" && { status: selectedStatus }), 
       sortBy: sortBy,
       sortDirection: sortDirection,
+      ...(searchTerm && { search: searchTerm }), 
     };
     fetchOrders(params);
   }, [
@@ -193,7 +236,13 @@ const Order = () => {
     currentPage,
     itemsPerPage,
     fetchOrders,
+    searchTerm,
   ]);
+
+  useEffect(() => {
+    fetchStatusCounts();
+  }, []);
+
 
   useEffect(() => {
     if (
@@ -204,44 +253,19 @@ const Order = () => {
     }
   }, [orderPaginationData.current_page]);
 
+  const countByStatus = (status) => {
+    return orderCounts[status] || 0;
+  };
+
   const promptDeleteConfirmation = (order) => {
     setOrderToDelete(order);
     setShowDeleteConfirmModal(true);
   };
 
-  const fetchStatusCounts = async () => {
-    try {
-      const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/orders/counts`;
-
-      const response = await fetch(`${TASKS_API_URL}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setOrderCounts(data);
-    } catch (error) {
-      console.error("Error fetching status counts:", error);
-    }
-  };
-
-  useEffect(() => {
-        fetchStatusCounts();
-  }, []);
-
-  const countByStatus = (status) => {
-    return orderCounts[status] || 0;
-  };
-
   return (
     <div className="order-page">
       <div className="rightsidebar-navbar">
-        <h3>Total Trailer</h3>
+        <h3>Total Orders</h3> {/* Updated title */}
 
         <div className="rightsidebar-button" onClick={handleShowAddModal}>
           <HugeiconsIcon
@@ -258,8 +282,21 @@ const Order = () => {
         <h3>Order List</h3>
       </div>
 
+      {/* Search Input */}
+      <div className="search-input-container">
+        <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
+        <input
+          type="text"
+          placeholder="Search orders..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="search-input"
+        />
+      </div>
+
       <div className="custom-line no-margin"></div>
 
+      {/* Status Filters */}
       <div className="rightsidebar-filter-progress">
         {statuses.map((status) => (
           <div
@@ -277,6 +314,7 @@ const Order = () => {
         ))}
       </div>
 
+      {/* Order Table */}
       {loading ? (
         <p>Loading orders...</p>
       ) : error ? (
@@ -316,6 +354,13 @@ const Order = () => {
                   {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
                 </th>
                 <th
+                  onClick={() => handleSortClick("comments")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Comments{" "}
+                  {sortBy === "comments" && (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
                   onClick={() => handleSortClick("status")}
                   style={{ cursor: "pointer" }}
                 >
@@ -329,7 +374,7 @@ const Order = () => {
               {Array.isArray(displayedOrders) &&
               displayedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="6">No data available</td>
+                  <td colSpan="7">No data available</td>
                 </tr>
               ) : (
                 Array.isArray(displayedOrders) &&
@@ -341,6 +386,7 @@ const Order = () => {
                       <td>{order.partName}</td>
                       <td>{order.quantity}</td>
                       <td>{order.vendor}</td>
+                      <td>{order.comments}</td>
                       <td>
                         <div
                           style={{
@@ -500,6 +546,17 @@ const Order = () => {
             </div>
 
             <div className="form-group">
+              <label htmlFor="comments">Comments</label>
+              <textarea
+                id="comments"
+                name="comments"
+                className="input-field textarea"
+                value={orderFormData.comments}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
               <label htmlFor="status">Status</label>
               <select
                 id="status"
@@ -604,6 +661,18 @@ const Order = () => {
               </div>
             </div>
 
+             {/* Added Comments Input for Edit Form */}
+            <div className="form-group">
+              <label htmlFor="editComments">Comments</label>
+              <textarea
+                id="editComments"
+                name="comments"
+                className="input-field textarea"
+                value={orderFormData.comments}
+                onChange={handleChange}
+              />
+            </div>
+
             <div className="form-group">
               <label htmlFor="editStatus">Status</label>
               <select
@@ -632,6 +701,7 @@ const Order = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* Delete Confirmation Modal */}
       <Modal
         show={showDeleteConfirmModal}
         onHide={() => setShowDeleteConfirmModal(false)}
