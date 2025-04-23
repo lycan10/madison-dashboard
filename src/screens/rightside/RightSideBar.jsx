@@ -20,6 +20,7 @@ import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
 import Order from "./../order/Order";
 import { useTasks } from "../../context/TaskContext";
+import { useAuth } from "../../context/AuthContext";
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
@@ -40,7 +41,7 @@ const RightSideBar = ({ selected }) => {
     tasks,
     loading,
     error,
-    fetchTasks,
+    fetchTasks, 
     addTask,
     updateTask,
     deleteTask,
@@ -50,7 +51,6 @@ const RightSideBar = ({ selected }) => {
     taskPaginationData.current_page || 1
   );
   const itemsPerPage = taskPaginationData.per_page || 12;
-
   const [selectedStatus, setSelectedStatus] = useState("All");
   const statuses = [
     "All",
@@ -62,17 +62,28 @@ const RightSideBar = ({ selected }) => {
     "Completed",
   ];
 
+  const [taskCounts, setTaskCounts] = useState({
+      All: 0,
+      New: 0,
+      'In progress': 0,
+      'Repair done': 0,
+      Called: 0,
+      Pending: 0,
+      Completed: 0,
+  });
+
+
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
-
   const [viewMode, setViewMode] = useState("table");
-
   const [repairs, setRepairs] = useState([]);
   const [parts, setParts] = useState([]);
-
+  const { token } = useAuth();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const handleCloseAddModal = () => {
     setShowAddModal(false);
@@ -88,13 +99,15 @@ const RightSideBar = ({ selected }) => {
 
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-    resetFormData();
-    setSelectedItem({});
+    resetFormData(); 
+    setSelectedItem({}); 
   };
   const handleShowEditModal = () => setShowEditModal(true);
 
   const [formData, setFormData] = useState({
     customerName: "",
+    phoneNumber: "", 
+    plateNumber: "", 
     dateIn: "",
     dateOut: "",
     progress: "New",
@@ -109,6 +122,8 @@ const RightSideBar = ({ selected }) => {
   const resetFormData = () => {
     setFormData({
       customerName: "",
+      phoneNumber: "", 
+      plateNumber: "", 
       dateIn: "",
       dateOut: "",
       progress: "New",
@@ -132,12 +147,15 @@ const RightSideBar = ({ selected }) => {
   const handleAddSubmit = async () => {
     const finalData = {
       ...formData,
+      phoneNumber: formData.phoneNumber,
+      plateNumber: formData.plateNumber, 
       repairNeeded: repairs,
-      partsNeeded: parts,
+      partsNeeded: parts, 
     };
     const success = await addTask(finalData);
     if (success) {
       handleCloseAddModal();
+      fetchStatusCounts(); 
     }
   };
 
@@ -145,19 +163,23 @@ const RightSideBar = ({ selected }) => {
     if (!selectedItem.id) return;
     const finalData = {
       ...formData,
-      repairNeeded: repairs,
+      phoneNumber: formData.phoneNumber,
+      plateNumber: formData.plateNumber,
+      repairNeeded: repairs, 
       partsNeeded: parts,
     };
     const success = await updateTask(selectedItem.id, finalData);
     if (success) {
       handleCloseEditModal();
+      fetchStatusCounts();
     }
   };
 
   const handleDelete = async (id) => {
     const success = await deleteTask(id);
     if (success) {
-      handleCloseInfoModal();
+      handleCloseInfoModal(); 
+      fetchStatusCounts();
     }
   };
 
@@ -165,6 +187,8 @@ const RightSideBar = ({ selected }) => {
     setSelectedItem(item);
     setFormData({
       customerName: item.customerName || "",
+      phoneNumber: item.phoneNumber || "",
+      plateNumber: item.plateNumber || "",
       dateIn: item.dateIn || "",
       dateOut: item.dateOut || "",
       progress: item.progress || "New",
@@ -175,18 +199,37 @@ const RightSideBar = ({ selected }) => {
     });
     setRepairs(item.repairNeeded || []);
     setParts(item.partsNeeded || []);
-    handleShowEditModal();
+    handleShowEditModal(); 
   };
 
+  const fetchStatusCounts = async () => {
+      try {
+        const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/tasks/counts`;
+          const params = new URLSearchParams();
+          if (startDate) params.append('startDate', startDate);
+          if (endDate) params.append('endDate', endDate);
+          
+          
+          const response = await fetch(`${TASKS_API_URL}?${params.toString()}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          setTaskCounts(data);
+      } catch (error) {
+          console.error("Error fetching status counts:", error);
+      }
+  };
+
+
   const countByStatus = (status) => {
-    if (status === "All") {
-      return taskPaginationData.total || 0;
-    }
-    return Array.isArray(tasks)
-      ? tasks.filter(
-          (item) => item.progress?.toLowerCase() === status.toLowerCase()
-        ).length
-      : 0;
+    return taskCounts[status] || 0;
   };
 
   const displayedTasks = tasks;
@@ -213,12 +256,25 @@ const RightSideBar = ({ selected }) => {
       ...(selectedStatus !== "All" && { progress: selectedStatus }),
       sortBy: sortBy,
       sortDirection: sortDirection,
+      ...(startDate && { startDate: startDate }),
+      ...(endDate && { endDate: endDate }),
     };
     fetchTasks(params);
-  }, [currentPage, selectedStatus, sortBy, sortDirection, itemsPerPage]);
+  }, [
+    currentPage,
+    selectedStatus,
+    sortBy,
+    sortDirection,
+    itemsPerPage,
+    startDate,
+    endDate,
+  ]);
 
-  // Update currentPage state when taskPaginationData.current_page changes (after a fetch)
-  // This effect is needed to keep the frontend pagination in sync with the backend
+  useEffect(() => {
+      fetchStatusCounts();
+  }, [startDate, endDate]);
+
+
   useEffect(() => {
     if (
       taskPaginationData.current_page &&
@@ -227,6 +283,22 @@ const RightSideBar = ({ selected }) => {
       setCurrentPage(taskPaginationData.current_page);
     }
   }, [taskPaginationData.current_page]);
+
+  const handleDateFilterChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "startDate") {
+      setStartDate(value);
+    } else if (name === "endDate") {
+      setEndDate(value);
+    }
+    setCurrentPage(1);
+  };
+
+  const clearDateFilters = () => {
+    setStartDate("");
+    setEndDate("");
+    setCurrentPage(1);
+  };
 
   return (
     <div className="rightsidebar">
@@ -279,22 +351,38 @@ const RightSideBar = ({ selected }) => {
                 </div>
               </div>
               <div className="rightsidebar-filter-date">
-                {/* Sort by date button (now integrated with sorting logic) */}
-                <div
-                  className="custom-filter-button filter-date"
-                  onClick={() => handleSortClick("created_at")} // Example: Sort by dateIn
-                >
-                  <HugeiconsIcon
-                    icon={Calendar02Icon}
-                    size={14}
-                    color="#545454"
+                {/* Date Range Filter Inputs */}
+                <div className="date-range-picker">
+                  <label htmlFor="startDate">Start Date:</label>
+                  <input
+                    type="date"
+                    id="startDate"
+                    name="startDate"
+                    value={startDate}
+                    onChange={handleDateFilterChange}
+                    className="date-input custom-filter-button filter-date"
                   />
-                  <p>
-                    Sort by Date In{" "}
-                    {sortBy === "dateIn" &&
-                      (sortDirection === "asc" ? "▲" : "▼")}
-                  </p>
                 </div>
+                <div className="date-range-picker mx-2">
+                  <label htmlFor="endDate">End Date:</label>
+                  <input
+                    type="date"
+                    id="endDate"
+                    name="endDate"
+                    value={endDate}
+                    onChange={handleDateFilterChange}
+                    className="date-input custom-filter-button filter-date"
+                  />
+                </div>
+
+                {(startDate || endDate) && (
+                  <button
+                    className="clear-date-button"
+                    onClick={clearDateFilters}
+                  >
+                    Clear Dates
+                  </button>
+                )}
               </div>
             </div>
 
@@ -310,7 +398,7 @@ const RightSideBar = ({ selected }) => {
                 >
                   <ProgressFilter
                     title={status}
-                    count={countByStatus(status)} // Get the count for each status
+                    count={countByStatus(status)} // Use the updated countByStatus
                     bgColor={selectedStatus === status ? "#333" : "#f1f1f1"}
                     color={selectedStatus === status ? "#fff" : "#000"}
                   />
@@ -347,6 +435,24 @@ const RightSideBar = ({ selected }) => {
                             {sortBy === "customerName" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
+                           {/* Added Phone Number Header */}
+                           <th
+                            onClick={() => handleSortClick("phoneNumber")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Phone Number{" "}
+                            {sortBy === "phoneNumber" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                           {/* Added Plate Number Header */}
+                           <th
+                            onClick={() => handleSortClick("plateNumber")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Plate Number{" "}
+                            {sortBy === "plateNumber" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
                           <th
                             onClick={() => handleSortClick("dateIn")}
                             style={{ cursor: "pointer" }}
@@ -371,8 +477,8 @@ const RightSideBar = ({ selected }) => {
                             {sortBy === "progress" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
-                          <th>Repair Needed</th>{" "}
-                          <th>Parts Needed</th>{" "}
+                          <th>Repair Needed</th>
+                          <th>Parts Needed</th>
                           <th
                             onClick={() => handleSortClick("priority")}
                             style={{ cursor: "pointer" }}
@@ -381,15 +487,13 @@ const RightSideBar = ({ selected }) => {
                             {sortBy === "priority" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
-                          {/*<th>Actions</th>*/}
                         </tr>
                       </thead>
                       <tbody>
-                        {/* Use displayedTasks (which is taskPaginationData.data) */}
                         {Array.isArray(displayedTasks) &&
                         displayedTasks.length === 0 ? (
                           <tr>
-                            <td colSpan="8">No data available</td>
+                            <td colSpan="10">No data available</td>
                           </tr>
                         ) : (
                           Array.isArray(displayedTasks) &&
@@ -398,9 +502,17 @@ const RightSideBar = ({ selected }) => {
                               item.priority
                             );
                             return (
-                              <tr key={item.id}>
+                              <tr
+                                key={item.id}
+                                onClick={() => {
+                                  setSelectedItem(item);
+                                  handleShowInfoModal();
+                                }}
+                              >
                                 <td>{item.id}</td>
                                 <td>{item.customerName}</td>
+                                <td>{item.phoneNumber}</td> 
+                                <td>{item.plateNumber}</td> 
                                 <td>{item.dateIn}</td>
                                 <td>{item.dateOut}</td>
                                 <td>{item.progress}</td>
@@ -410,14 +522,29 @@ const RightSideBar = ({ selected }) => {
                                     : item.repairNeeded}
                                 </td>
                                 <td>
-                                  {Array.isArray(item.partsNeeded)
-                                    ? item.partsNeeded
+                                  {Array.isArray(item.partsNeeded) ? (
+                                    item.partsNeeded.length > 3 ? (
+                                      <>
+                                        {item.partsNeeded
+                                          .slice(0, 3)
+                                          .map(
+                                            (part) =>
+                                              `${part.name} (${part.quantity})`
+                                          )
+                                          .join(", ")}
+                                        , ...
+                                      </>
+                                    ) : (
+                                      item.partsNeeded
                                         .map(
                                           (part) =>
                                             `${part.name} (${part.quantity})`
                                         )
                                         .join(", ")
-                                    : item.partsNeeded}
+                                    )
+                                  ) : (
+                                    item.partsNeeded
+                                  )}
                                 </td>
                                 <td>
                                   <Priority
@@ -427,32 +554,6 @@ const RightSideBar = ({ selected }) => {
                                     title={item.priority}
                                   />
                                 </td>
-                                {/*<td>
-                                {" "}
-                                <button
-                                  className="btn-info"
-                                  onClick={() => {
-                                    setSelectedItem(item);
-                                    handleShowInfoModal();
-                                  }}
-                                >
-                                  View
-                                </button>
-
-                                <button
-                                  className="edit-btn"
-                                  onClick={() => handleEditClick(item)}
-
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className="btn-danger"
-                                  onClick={() => handleDelete(item.id)}
-                                >
-                                  Delete
-                                </button>
-                              </td>*/}
                               </tr>
                             );
                           })
@@ -494,117 +595,115 @@ const RightSideBar = ({ selected }) => {
                 </div>
               ) : (
                 <div className="order-table-container">
-                <div className="gridview-container">
-                  {/* Use displayedTasks (which is taskPaginationData.data) */}
-                  {Array.isArray(displayedTasks) &&
-                  displayedTasks.length === 0 ? (
-                    <div className="no-data-message">
-                      <p>No data available.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="grid-view">
-                        {Array.isArray(displayedTasks) &&
-                          displayedTasks.map((item) => {
-                            const { color, bgColor, icon } = getPriorityStyles(
-                              item.priority
-                            );
-                            return (
-                              <div
-                                key={item.id}
-                                className="custom-grid"
-                                onClick={() => {
-                                  setSelectedItem(item);
-                                  handleShowInfoModal();
-                                }}
-                              >
-                                <div className="custom-grid-top-container">
-                                  <Priority
-                                    color={color}
-                                    bgColor={bgColor}
-                                    icon={icon}
-                                    title={item.priority}
-                                  />
-                                  <div className="custom-grid-edit">
-                                    {/* Edit icon in grid view */}
-                                    <HugeiconsIcon
-                                      icon={MoreHorizontalIcon}
-                                      size={20}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEditClick(item);
-                                      }}
+                  <div className="gridview-container">
+                    {/* Use displayedTasks (which is taskPaginationData.data) */}
+                    {Array.isArray(displayedTasks) &&
+                    displayedTasks.length === 0 ? (
+                      <div className="no-data-message">
+                        <p>No data available.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid-view">
+                          {Array.isArray(displayedTasks) &&
+                            displayedTasks.map((item) => {
+                              const { color, bgColor, icon } =
+                                getPriorityStyles(item.priority);
+                              return (
+                                <div
+                                  key={item.id}
+                                  className="custom-grid"
+                                  onClick={() => {
+                                    setSelectedItem(item);
+                                    handleShowInfoModal();
+                                  }}
+                                >
+                                  <div className="custom-grid-top-container">
+                                    <Priority
+                                      color={color}
+                                      bgColor={bgColor}
+                                      icon={icon}
+                                      title={item.priority}
                                     />
+                                    <div className="custom-grid-edit">
+                                      {/* Edit icon in grid view */}
+                                      <HugeiconsIcon
+                                        icon={MoreHorizontalIcon}
+                                        size={20}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEditClick(item);
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="custom-grid-bottom-container">
+                                    <h3>{item.customerName}</h3>
+                                    <p>Phone: {item.phoneNumber}</p>
+                                    <p>Plate: {item.plateNumber}</p>
+                                    <p>
+                                      Repairs:{" "}
+                                      {Array.isArray(item.repairNeeded)
+                                        ? item.repairNeeded.join(", ")
+                                        : item.repairNeeded}
+                                    </p>
+                                    <p>
+                                      Parts:{" "}
+                                      {Array.isArray(item.partsNeeded)
+                                        ? item.partsNeeded.join(", ")
+                                        : item.partsNeeded}
+                                    </p>
+                                    <div className="custom-line"></div>
+                                    <div className="custom-grid-bottom-date">
+                                      <p>{item.dateIn}</p>
+                                      <p>{item.progress}</p>
+                                    </div>
                                   </div>
                                 </div>
-                                <div className="custom-grid-bottom-container">
-                                  <h3>{item.customerName}</h3>
-                                  <p>
-                                    Repairs:{" "}
-                                    {Array.isArray(item.repairNeeded)
-                                      ? item.repairNeeded.join(", ")
-                                      : item.repairNeeded}
-                                  </p>
-                                  <p>
-                                    Parts:{" "}
-                                    {Array.isArray(item.partsNeeded)
-                                      ? item.partsNeeded.join(", ")
-                                      : item.partsNeeded}
-                                  </p>
-                                  <div className="custom-line"></div>
-                                  <div className="custom-grid-bottom-date">
-                                    <p>{item.dateIn}</p>
-                                    <p>{item.progress}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                      {/* Pagination for grid view */}
-                      <div className="custom-grid-pagination">
-                        <Pagination>
-                          <Pagination.First
-                            onClick={() => handlePageChange(1)}
-                            disabled={currentPage === 1}
-                          />
-                          <Pagination.Prev
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                          />
-                          {/* Render pagination items based on totalPages from backend */}
-                          {[...Array(totalPages)].map((_, index) => (
-                            <Pagination.Item
-                              key={index + 1}
-                              active={index + 1 === currentPage}
-                              onClick={() => handlePageChange(index + 1)}
-                            >
-                              {index + 1}
-                            </Pagination.Item>
-                          ))}
-                          <Pagination.Next
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                          />
-                          <Pagination.Last
-                            onClick={() => handlePageChange(totalPages)}
-                            disabled={currentPage === totalPages}
-                          />
-                        </Pagination>
-                      </div>
-                    </>
-                  )}
-                </div>
+                              );
+                            })}
+                        </div>
+                        {/* Pagination for grid view */}
+                        <div className="custom-grid-pagination">
+                          <Pagination>
+                            <Pagination.First
+                              onClick={() => handlePageChange(1)}
+                              disabled={currentPage === 1}
+                            />
+                            <Pagination.Prev
+                              onClick={() => handlePageChange(currentPage - 1)}
+                              disabled={currentPage === 1}
+                            />
+                            {[...Array(totalPages)].map((_, index) => (
+                              <Pagination.Item
+                                key={index + 1}
+                                active={index + 1 === currentPage}
+                                onClick={() => handlePageChange(index + 1)}
+                              >
+                                {index + 1}
+                              </Pagination.Item>
+                            ))}
+                            <Pagination.Next
+                              onClick={() => handlePageChange(currentPage + 1)}
+                              disabled={currentPage === totalPages}
+                            />
+                            <Pagination.Last
+                              onClick={() => handlePageChange(totalPages)}
+                              disabled={currentPage === totalPages}
+                            />
+                          </Pagination>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Render Order content if selected */}
         {selected === "Order" && (
           <div className="rightsidebar-bottom">
-            {/* Assuming the Order component handles its own data fetching and display */}
             <Order />
           </div>
         )}
@@ -631,6 +730,30 @@ const RightSideBar = ({ selected }) => {
                 name="customerName"
                 className="input-field"
                 value={formData.customerName}
+                onChange={handleChange}
+              />
+            </div>
+             {/* Added Phone Number Input */}
+            <div className="form-group">
+              <label htmlFor="phoneNumber">Phone Number</label>
+              <input
+                type="text"
+                id="phoneNumber"
+                name="phoneNumber"
+                className="input-field"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+              />
+            </div>
+             {/* Added Plate Number Input */}
+            <div className="form-group">
+              <label htmlFor="plateNumber">Plate Number</label>
+              <input
+                type="text"
+                id="plateNumber"
+                name="plateNumber"
+                className="input-field"
+                value={formData.plateNumber}
                 onChange={handleChange}
               />
             </div>
@@ -684,7 +807,14 @@ const RightSideBar = ({ selected }) => {
             <div className="form-group">
               {/* PartSelector component */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
-              <p>Selected Parts: {parts.join(", ")}</p>
+              <p>
+                Selected Parts:{" "}
+                {Array.isArray(parts)
+                  ? parts
+                      .map((part) => `${part.name} (${part.quantity})`)
+                      .join(", ")
+                  : parts}
+              </p>
             </div>
             <div className="form-group">
               <label htmlFor="priority">Priority</label>
@@ -734,11 +864,21 @@ const RightSideBar = ({ selected }) => {
           <Modal.Title>Task Details</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {selectedItem && ( // Render only if selectedItem is not null
+          {selectedItem && (
             <>
               <div className="info-group">
                 <strong>Customer Name:</strong>
                 <p>{selectedItem.customerName}</p>
+              </div>
+               {/* Display Phone Number in Info Modal */}
+              <div className="info-group">
+                <strong>Phone Number:</strong>
+                <p>{selectedItem.phoneNumber}</p>
+              </div>
+               {/* Display Plate Number in Info Modal */}
+              <div className="info-group">
+                <strong>Plate Number:</strong>
+                <p>{selectedItem.plateNumber}</p>
               </div>
               <div className="info-group">
                 <strong>Date In:</strong>
@@ -764,7 +904,9 @@ const RightSideBar = ({ selected }) => {
                 <strong>Parts Needed:</strong>
                 <p>
                   {Array.isArray(selectedItem.partsNeeded)
-                    ? selectedItem.partsNeeded.join(", ")
+                    ? selectedItem.partsNeeded
+                        .map((part) => `${part.name} (${part.quantity})`)
+                        .join(", ")
                     : selectedItem.partsNeeded}
                 </p>
               </div>
@@ -776,6 +918,37 @@ const RightSideBar = ({ selected }) => {
                 <div className="info-group">
                   <strong>Comments:</strong>
                   <p>{selectedItem.comments}</p>
+                </div>
+              )}
+
+              {/* Display Created By */}
+              {selectedItem.author && (
+                <div className="info-group">
+                  <strong>Created By:</strong>
+                  <p>{selectedItem.author.name}</p>
+                </div>
+              )}
+
+              {/* Display Task History */}
+              {selectedItem.history && selectedItem.history.length > 0 && (
+                <div className="info-group">
+                  <strong>Task History:</strong>
+                  <ul>
+                    {selectedItem.history.map((historyEntry) => (
+                      <li key={historyEntry.id}>
+                        {historyEntry.changes && typeof historyEntry.changes === 'string' ? (
+                           JSON.parse(historyEntry.changes).map((change, index) => (
+                               <p key={index}>{change}</p>
+                           ))
+                        ) : (
+                           <p>{historyEntry.changes}</p>
+                        )}
+                        <small>
+                          by {historyEntry.user ? historyEntry.user.name : 'Unknown User'} on {new Date(historyEntry.created_at).toLocaleString()}
+                        </small>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </>
@@ -829,6 +1002,30 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
+             {/* Added Phone Number Input for Edit */}
+            <div className="form-group">
+              <label htmlFor="editPhoneNumber">Phone Number</label>
+              <input
+                type="text"
+                id="editPhoneNumber"
+                name="phoneNumber"
+                className="input-field"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+              />
+            </div>
+             {/* Added Plate Number Input for Edit */}
+            <div className="form-group">
+              <label htmlFor="editPlateNumber">Plate Number</label>
+              <input
+                type="text"
+                id="editPlateNumber"
+                name="plateNumber"
+                className="input-field"
+                value={formData.plateNumber}
+                onChange={handleChange}
+              />
+            </div>
             <div className="form-group">
               <label htmlFor="editDateIn">Date In</label>
               <input
@@ -879,7 +1076,16 @@ const RightSideBar = ({ selected }) => {
             <div className="form-group">
               {/* PartSelector component for editing */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
-              <p>Selected Parts: {parts.join(" ")}</p>
+              <p>
+                Selected Parts:{" "}
+                {Array.isArray(parts)
+                  ? parts
+
+                      .map((part) => `${part.name} (${part.quantity})`)
+
+                      .join(", ")
+                  : parts}
+              </p>
             </div>
             <div className="form-group">
               <label htmlFor="editPriority">Priority</label>

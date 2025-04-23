@@ -1,21 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import "./leftsidebar.css";
 import LeftNavLinks from '../../components/leftNavLinks/LeftNavLinks';
 import logo from "../../assets/black-icon.png";
 import { Task02Icon, Home02Icon } from '@hugeicons/core-free-icons';
 import { useSidebar } from '../../context/SideBarContext';
 
-
-
 const LeftSideBar = ({ selected, onSelect, collapsed }) => {
   const { toggleSidebar } = useSidebar();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 800);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 800);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []); 
+
+  const handleLinkClick = (linkTitle) => {
+    onSelect(linkTitle);
+    if (isMobile) {
+      toggleSidebar();
+    }
+  };
 
   return (
     <div className={`leftSideBar ${collapsed ? 'collapsed' : ''}`}>
       <div className="leftSideBar-container">
         <div className="leftSideBar-logo-container">
           <div className="leftSideBar-logo">
-            <img src={logo} alt="Logo" />
+            <img src={logo || "https://placehold.co/25x25/000000/FFFFFF?text=Logo"} alt="Logo" />
           </div>
           {!collapsed && (
             <div className="leftSideBar-title">
@@ -27,21 +45,14 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
         <LeftNavLinks
           icon={Home02Icon}
           title="Dashboard"
-          onClick={() => {
-            onSelect('Dashboard');
-            toggleSidebar();
-          }}
+          onClick={() => handleLinkClick('Dashboard')}
           isSelected={selected === 'Dashboard'}
           collapsed={collapsed}
         />
         <LeftNavLinks
           icon={Task02Icon}
           title="Order"
-          onClick={() => {
-            onSelect('Order');
-            toggleSidebar();
-          }}
-          
+          onClick={() => handleLinkClick('Order')}
           isSelected={selected === 'Order'}
           collapsed={collapsed}
         />

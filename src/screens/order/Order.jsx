@@ -6,6 +6,7 @@ import { Add01Icon } from "@hugeicons/core-free-icons";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
 import { useOrders } from "../../context/OrderContext";
+import { useAuth } from "../../context/AuthContext";
 
 const getStatusStyles = (status) => {
   switch (status) {
@@ -57,6 +58,16 @@ const Order = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
+  const { token } = useAuth();
+
+  const [orderCounts, setOrderCounts] = useState({
+    All: 0,
+    "New Order": 0,
+    Processing: 0,
+    Shipped: 0,
+    Delivered: 0,
+    "Order Complete": 0,
+  });
 
   const [orderFormData, setOrderFormData] = useState({
     partName: "",
@@ -87,17 +98,6 @@ const Order = () => {
       vendor: "",
       status: "New Order",
     });
-  };
-
-  const countByStatus = (status) => {
-    if (status === "All") {
-      return orderPaginationData.total || 0;
-    }
-    return Array.isArray(orders)
-      ? orders.filter(
-          (item) => item.status?.toLowerCase() === status.toLowerCase()
-        ).length
-      : 0;
   };
 
   const handleFilterClick = (status) => {
@@ -207,6 +207,35 @@ const Order = () => {
   const promptDeleteConfirmation = (order) => {
     setOrderToDelete(order);
     setShowDeleteConfirmModal(true);
+  };
+
+  const fetchStatusCounts = async () => {
+    try {
+      const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/orders/counts`;
+
+      const response = await fetch(`${TASKS_API_URL}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setOrderCounts(data);
+    } catch (error) {
+      console.error("Error fetching status counts:", error);
+    }
+  };
+
+  useEffect(() => {
+        fetchStatusCounts();
+  }, []);
+
+  const countByStatus = (status) => {
+    return orderCounts[status] || 0;
   };
 
   return (
