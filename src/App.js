@@ -3,7 +3,6 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TaskProvider } from './context/TaskContext';
 import { OrderProvider } from './context/OrderContext';
-import 'antd/dist/reset.css';
 import Login from './screens/login/Login';
 import Dashboard from "./screens/dashboard/Dashboard";
 import OrderPage from './screens/order/Order';
