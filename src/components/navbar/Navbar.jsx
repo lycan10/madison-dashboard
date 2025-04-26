@@ -36,7 +36,6 @@ const Navbar = () => {
             {/*<HugeiconsIcon icon={ArrowUp01Icon}  color='#545454' size={16} />
             <HugeiconsIcon icon={ArrowDown01Icon}  color='#545454' size={16}   />*/}
             </div>
-
         </div>
         <div className="navbar-right">
             <div className="navbar-image">

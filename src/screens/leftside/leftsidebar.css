@@ -41,6 +41,7 @@
 } */
 .leftSideBar-title {
     margin-left: 0.5rem;
+    margin-right: 0.5rem;
     flex-shrink: 1;
     overflow: hidden;
     transition: all 0.5s linear;

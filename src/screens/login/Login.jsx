@@ -47,7 +47,7 @@ const Login = () => {
             <form className="custom-form" onSubmit={handleSubmit}>
               <div className="form-group">
                 <label style={{ fontWeight: "700", fontSize: "15px" }}>
-                  Email
+                  Username
                 </label>
                 <input
                   type="text"

@@ -654,18 +654,6 @@ const RightSideBar = ({ selected }) => {
                                     <h3>{item.customerName}</h3>
                                     <p>Phone: {item.phoneNumber}</p>
                                     <p>Plate: {item.plateNumber}</p>
-                                    <p>
-                                      Repairs:{" "}
-                                      {Array.isArray(item.repairNeeded)
-                                        ? item.repairNeeded.join(", ")
-                                        : item.repairNeeded}
-                                    </p>
-                                    <p>
-                                      Parts:{" "}
-                                      {Array.isArray(item.partsNeeded)
-                                        ? item.partsNeeded.join(", ")
-                                        : item.partsNeeded}
-                                    </p>
                                     <div className="custom-line"></div>
                                     <div className="custom-grid-bottom-date">
                                       <p>{item.dateIn}</p>
