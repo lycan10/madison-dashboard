@@ -193,7 +193,8 @@
 
 
 .custom-table {
-  width: 100%; /* Ensure table takes full width of its container */
+  width: 100%; 
+/* Ensure table takes full width of its container */
   max-width: 100%; /* Added max-width to help contain the table */
   border-collapse: collapse;
   font-size: 14px;
@@ -314,6 +315,7 @@
   border-radius: 4px;
   width: 100%; /* Ensure input fields take full width */
   box-sizing: border-box; /* Include padding and border in the element's total width */
+  outline: none;
 }
 
 .btn-primary {
@@ -704,8 +706,9 @@
 
   .search-input-container {
      margin-right: 0; /* Remove right margin on small mobile */
-     margin-bottom: 0.5rem; /* Ensure margin bottom is set */
-     max-width: none; /* Remove max width constraint */
+     margin-bottom: 1rem; /* Ensure margin bottom is set */
+     max-width: none;
+     margin-top:0.5rem; /* Remove max width constraint */
   }
 
 
@@ -715,11 +718,13 @@
   }
 
   .date-range-picker {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
+
   }
 
+
   .filter-date {
-    margin-bottom: 0; /* Adjusted as date-range-picker has margin */
+    margin-bottom: 0;
   }
 
   .clear-date-button {
@@ -752,11 +757,9 @@
    .custom-table {
     display: block; /* Make the table a block element */
     overflow-x: auto; /* Enable horizontal scrolling for the table */
-    white-space: nowrap; /* Prevent text wrapping in table cells */
-     width: 100%; /* Make the table take the full width of its container */
+    white-space: nowrap; 
+     width: 100% !important; /* Make the table take the full width of its container */
      max-width: 100%; /* Added max-width */
-     box-sizing: border-box; /* Include padding and border in the element's total width */
-     min-width: 0; /* Allow the table to shrink below its intrinsic content width */
   }
 
   .custom-table th {
@@ -842,4 +845,54 @@
   .modal-title h3 {
     font-size: 14px !important;
   }
+}
+
+.selected-parts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.selected-part-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f3f3f3;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.remove-part-button {
+  background: none;
+  border: none;
+  color: red;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+
+.selected-repairs-list,
+.selected-parts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.selected-repair-item,
+.selected-part-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f3f3f3;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.remove-repair-button,
+.remove-part-button {
+  background: none;
+  border: none;
+  color: red;
+  font-size: 16px;
+  cursor: pointer;
 }

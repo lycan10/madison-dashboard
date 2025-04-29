@@ -62,6 +62,7 @@ const Order = () => {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const [orderCounts, setOrderCounts] = useState({
     All: 0,
@@ -320,7 +321,7 @@ const Order = () => {
       ) : error ? (
         <p>Error: {error.message}</p>
       ) : (
-        <div className="order-table-container">
+        <div className="order-table-container" s>
           <table className="order-table">
             <thead>
               <tr>
@@ -418,6 +419,7 @@ const Order = () => {
                           >
                             Edit
                           </button>
+                          {user.name === "admin" && (
                           <button
                             className="delete-btn"
                             onClick={(e) => {
@@ -426,7 +428,7 @@ const Order = () => {
                             }}
                           >
                             Delete
-                          </button>
+                          </button>)}
                         </div>
                       </td>
                     </tr>

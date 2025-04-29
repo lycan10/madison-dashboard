@@ -56,6 +56,7 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
+        border: 0;
    
 }
 .form-group-button p{
@@ -78,6 +79,25 @@
     object-fit: cover; 
     border-radius: 1rem;
 }
+.input-container{
+    padding: 0px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%; 
+    box-sizing: border-box; 
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+.input-container input {
+    margin-top: 0;
+    border: 0;
+}
+.input-eye{
+    margin: 0 0.5rem;
+}
+
 @media screen and (max-width: 1200px) {
     .login-words{
         width: 75%;

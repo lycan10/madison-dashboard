@@ -3,10 +3,13 @@ import banner from "../../assets/login.jpeg";
 import logo from "../../assets/main.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { HugeiconsIcon } from '@hugeicons/react';
+import {EyeIcon , ViewOffSlashIcon } from '@hugeicons/core-free-icons';
 
 import "./login.css";
 
 const Login = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState({
     username: "",
     password: "",
@@ -30,6 +33,11 @@ const Login = () => {
       setError("Invalid username or password");
     }
   };
+
+  const handleShowPassword = () => {
+    setShowPassword(prev => !prev);
+  };
+
 
   return (
     <div className="login">
@@ -62,13 +70,25 @@ const Login = () => {
                 <label style={{ fontWeight: "700", fontSize: "15px" }}>
                   Password
                 </label>
+                <div className="input-container">
                 <input
-                  type="password"
+                    type={showPassword ? "text" : "password"}
                   name="password"
                   className="input-field"
                   value={loginData.password}
                   onChange={handleInputChange}
                 />
+                  <div className="input-eye" onClick={handleShowPassword} style={{ cursor: "pointer" }}>
+                    {showPassword ? (
+                      <HugeiconsIcon icon={EyeIcon} size={20} color="#545454" />
+                    ) : (
+                      <HugeiconsIcon icon={ViewOffSlashIcon} size={20} />
+                    )}
+                  </div>
+                
+                
+                </div>
+               
               </div>
               {error && <p style={{ color: "red" }}>{error}</p>}
               <button className="form-group-button" type="submit">
