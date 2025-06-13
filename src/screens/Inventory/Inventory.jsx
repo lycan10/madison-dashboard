@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from "react";
-import Modal from "react-bootstrap/Modal";
-import "./order.css";
+import { Modal, Button } from 'react-bootstrap';
+import "../order/order.css";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Search01Icon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  Download04FreeIcons,
+  Search01Icon,
+} from "@hugeicons/core-free-icons";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
 import { useOrders } from "../../context/OrderContext";
 import { useAuth } from "../../context/AuthContext";
+import PartSelector from "../../components/repairs/Parts";
 
 const getStatusStyles = (status) => {
   switch (status) {
     case "New Order":
       return { color: "#FFA500", bgColor: "#FFF5E6" };
-    case "Processing":
+    case "On Shelf":
       return { color: "#007BFF", bgColor: "#E6F0FF" };
-    case "Shipped":
+    case "Sold":
       return { color: "#17A2B8", bgColor: "#E0F7FA" };
-    case "Delivered":
-      return { color: "#28a745", bgColor: "#E8F6EA" };
-    case "Order Complete":
-      return { color: "#20c997", bgColor: "#E6FFFA" };
     default:
       return { color: "#6c757d", bgColor: "#f8f9fa" };
   }
 };
 
-const Order = () => {
+const Inventory = () => {
   const {
     orderPaginationData,
     orders,
@@ -39,7 +40,6 @@ const Order = () => {
 
   const { token } = useAuth();
 
-
   const [currentPage, setCurrentPage] = useState(
     orderPaginationData.current_page || 1
   );
@@ -49,10 +49,8 @@ const Order = () => {
   const statuses = [
     "All",
     "New Order",
-    "Processing",
-    "Shipped",
-    "Delivered",
-    "Order Complete",
+    "On shelf",
+    "Sold",,
   ];
 
   const [sortBy, setSortBy] = useState("created_at");
@@ -62,15 +60,17 @@ const Order = () => {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [parts, setParts] = useState([]);
   const user = JSON.parse(localStorage.getItem("user"));
+  
+
 
   const [orderCounts, setOrderCounts] = useState({
     All: 0,
     "New Order": 0,
-    Processing: 0,
-    Shipped: 0,
-    Delivered: 0,
-    "Order Complete": 0,
+    "On shelf": 0,
+    "Sold": 0,
   });
 
   const [orderFormData, setOrderFormData] = useState({
@@ -134,12 +134,12 @@ const Order = () => {
 
   const handleAddSubmit = async () => {
     const success = await addOrder({
-        ...orderFormData,
-        comments: orderFormData.comments
+      ...orderFormData,
+      comments: orderFormData.comments,
     });
     if (success) {
-      handleCloseAddModal(); 
-      fetchStatusCounts(); 
+      handleCloseAddModal();
+      fetchStatusCounts();
     }
   };
 
@@ -159,25 +159,25 @@ const Order = () => {
     if (!editingOrder) return;
 
     const success = await updateOrder(editingOrder.id, {
-        ...orderFormData,
-        comments: orderFormData.comments
+      ...orderFormData,
+      comments: orderFormData.comments,
     });
     if (success) {
-      handleCloseEditModal(); 
-      fetchStatusCounts(); 
+      handleCloseEditModal();
+      fetchStatusCounts();
     }
   };
 
   const handleDelete = async (id) => {
-    const success = await deleteOrder(id); 
+    const success = await deleteOrder(id);
     if (success) {
       console.log(`Order with ID ${id} deleted successfully.`);
       fetchStatusCounts();
     }
   };
 
-  const displayedOrders = orders; 
-  const totalPages = orderPaginationData.last_page || 1; 
+  const displayedOrders = orders;
+  const totalPages = orderPaginationData.last_page || 1;
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -187,7 +187,7 @@ const Order = () => {
     if (sortBy === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      setSortBy(column); 
+      setSortBy(column);
       setSortDirection("asc");
     }
     setCurrentPage(1);
@@ -195,7 +195,7 @@ const Order = () => {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
   const fetchStatusCounts = async () => {
@@ -206,28 +206,27 @@ const Order = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { 'Authorization': `Bearer ${token}` }),
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setOrderCounts(data); 
+      setOrderCounts(data);
     } catch (error) {
       console.error("Error fetching status counts:", error);
     }
   };
 
-
   useEffect(() => {
     const params = {
       page: currentPage,
       perPage: itemsPerPage,
-      ...(selectedStatus !== "All" && { status: selectedStatus }), 
+      ...(selectedStatus !== "All" && { status: selectedStatus }),
       sortBy: sortBy,
       sortDirection: sortDirection,
-      ...(searchTerm && { search: searchTerm }), 
+      ...(searchTerm && { search: searchTerm }),
     };
     fetchOrders(params);
   }, [
@@ -243,7 +242,6 @@ const Order = () => {
   useEffect(() => {
     fetchStatusCounts();
   }, []);
-
 
   useEffect(() => {
     if (
@@ -263,11 +261,16 @@ const Order = () => {
     setShowDeleteConfirmModal(true);
   };
 
+  const handleDownload = (type) => {
+    console.log(`Downloading as ${type}`);
+    // Handle the actual download here
+    setShowDownloadModal(false);
+  };
+
   return (
     <div className="order-page">
       <div className="rightsidebar-navbar">
         <h3>Total Trailer</h3> {/* Updated title */}
-
         <div className="rightsidebar-button" onClick={handleShowAddModal}>
           <HugeiconsIcon
             icon={Add01Icon}
@@ -275,24 +278,35 @@ const Order = () => {
             color="#ffffff"
             strokeWidth={3}
           />
-          <p>New Order</p>
+          <p>New Inventory</p>
         </div>
       </div>
 
       <div className="order-page-title">
-        <h3>Order List</h3>
+        <h3> Inventory List</h3>
       </div>
 
       {/* Search Input */}
-      <div className="search-input-container">
-        <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
-        <input
-          type="text"
-          placeholder="Search orders..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="search-input"
-        />
+      <div className="download-container">
+        <div className="search-input-container">
+          <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="search-input"
+          />
+        </div>
+        <div className="rightsidebar-button" style={{backgroundColor: '#3c58ae'}} onClick={()=>setShowDownloadModal(true)}>
+          <HugeiconsIcon
+            icon={Download04FreeIcons}
+            size={16}
+            color="#ffffff"
+            strokeWidth={2}
+          />
+          <p>Download</p>
+        </div>
       </div>
 
       <div className="custom-line no-margin"></div>
@@ -340,6 +354,13 @@ const Order = () => {
                     (sortDirection === "asc" ? "▲" : "▼")}
                 </th>
                 <th
+                  onClick={() => handleSortClick("partNumber")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Part Number{" "}
+                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
                   onClick={() => handleSortClick("quantity")}
                   style={{ cursor: "pointer" }}
                 >
@@ -347,19 +368,14 @@ const Order = () => {
                   {sortBy === "quantity" &&
                     (sortDirection === "asc" ? "▲" : "▼")}
                 </th>
-                <th
-                  onClick={() => handleSortClick("vendor")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Vendor{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
+
                 <th
                   onClick={() => handleSortClick("comments")}
                   style={{ cursor: "pointer" }}
                 >
                   Comments{" "}
-                  {sortBy === "comments" && (sortDirection === "asc" ? "▲" : "▼")}
+                  {sortBy === "comments" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
                 </th>
                 <th
                   onClick={() => handleSortClick("status")}
@@ -385,8 +401,9 @@ const Order = () => {
                     <tr key={order.id}>
                       <td>{order.id}</td>
                       <td>{order.partName}</td>
-                      <td>{order.quantity}</td>
                       <td>{order.vendor}</td>
+                      <td>{order.quantity}</td>
+
                       <td>{order.comments}</td>
                       <td>
                         <div
@@ -420,15 +437,16 @@ const Order = () => {
                             Edit
                           </button>
                           {user.name === "admin" && (
-                          <button
-                            className="delete-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              promptDeleteConfirmation(order);
-                            }}
-                          >
-                            Delete
-                          </button>)}
+                            <button
+                              className="delete-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                promptDeleteConfirmation(order);
+                              }}
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -470,6 +488,7 @@ const Order = () => {
         </Pagination>
       </div>
 
+{/* Add inventory */}
       <Modal
         show={showAddModal}
         onHide={handleCloseAddModal}
@@ -480,7 +499,7 @@ const Order = () => {
         <Modal.Header closeButton>
           <Modal.Title>
             {" "}
-            <h3>Add New Order</h3>{" "}
+            <h3>Add New Inventory</h3>{" "}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -496,18 +515,35 @@ const Order = () => {
                 onChange={handleChange}
               />
             </div>
-
             <div className="form-group">
-              <label htmlFor="vendor">Vendor</label>
-              <input
-                type="text"
-                id="vendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
+              {/* PartSelector component for editing */}
+              <PartSelector selectedParts={parts} setSelectedParts={setParts} />
+              <div className="selected-parts-list">
+                {Array.isArray(parts) && parts.length > 0 ? (
+                  parts.map((part, index) => (
+                    <div key={index} className="selected-part-item">
+                      <span>
+                        {part.name} (Qty: {part.quantity})
+                      </span>
+                      <button
+                        type="button"
+                        className="remove-part-button"
+                        onClick={() => {
+                          const updatedParts = [...parts];
+                          updatedParts.splice(index, 1);
+                          setParts(updatedParts);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p>No parts selected</p>
+                )}
+              </div>
             </div>
+
 
             <div className="form-group">
               <label htmlFor="quantity">Quantity</label>
@@ -568,10 +604,8 @@ const Order = () => {
                 onChange={handleChange}
               >
                 <option>New Order</option>
-                <option>Processing</option>
-                <option>Shipped</option>
-                <option>Delivered</option>
-                <option>Order Complete</option>
+                <option>On shelf</option>
+                <option>Sold</option>
               </select>
             </div>
           </form>
@@ -586,6 +620,7 @@ const Order = () => {
         </Modal.Footer>
       </Modal>
 
+{/* Edit inventory */}
       <Modal
         show={showEditModal}
         onHide={handleCloseEditModal}
@@ -596,7 +631,7 @@ const Order = () => {
         <Modal.Header closeButton>
           <Modal.Title>
             {" "}
-            <h3>Edit Order</h3>{" "}
+            <h3>Edit Inventory</h3>{" "}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -611,6 +646,34 @@ const Order = () => {
                 value={orderFormData.partName}
                 onChange={handleChange}
               />
+            </div>
+            <div className="form-group">
+              {/* PartSelector component for editing */}
+              <PartSelector selectedParts={parts} setSelectedParts={setParts} />
+              <div className="selected-parts-list">
+                {Array.isArray(parts) && parts.length > 0 ? (
+                  parts.map((part, index) => (
+                    <div key={index} className="selected-part-item">
+                      <span>
+                        {part.name} (Qty: {part.quantity})
+                      </span>
+                      <button
+                        type="button"
+                        className="remove-part-button"
+                        onClick={() => {
+                          const updatedParts = [...parts];
+                          updatedParts.splice(index, 1);
+                          setParts(updatedParts);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p>No parts selected</p>
+                )}
+              </div>
             </div>
 
             <div className="form-group">
@@ -663,7 +726,7 @@ const Order = () => {
               </div>
             </div>
 
-             {/* Added Comments Input for Edit Form */}
+            {/* Added Comments Input for Edit Form */}
             <div className="form-group">
               <label htmlFor="editComments">Comments</label>
               <textarea
@@ -685,10 +748,8 @@ const Order = () => {
                 onChange={handleChange}
               >
                 <option>New Order</option>
-                <option>Processing</option>
-                <option>Shipped</option>
-                <option>Delivered</option>
-                <option>Order Complete</option>
+                <option>On shelf</option>
+                <option>Sold</option>
               </select>
             </div>
           </form>
@@ -742,8 +803,26 @@ const Order = () => {
           </button>
         </Modal.Footer>
       </Modal>
+
+      {/* Download modal  */}
+
+      <Modal show={showDownloadModal} onHide={()=> setShowDownloadModal(false)} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Download Data</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p>How would you like to download the data?</p>
+        <div className="modal-button-download">
+          <Button className="download-button" variant="outline-primary" onClick={() => handleDownload('pdf')}>PDF</Button>
+          <Button variant="outline-success" onClick={() => handleDownload('csv')}>CSV</Button>
+        </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={()=> setShowDownloadModal(false)}>Cancel</Button>
+      </Modal.Footer>
+    </Modal>
     </div>
   );
 };
 
-export default Order;
+export default Inventory;

@@ -22,6 +22,9 @@ import Pagination from "react-bootstrap/Pagination";
 import Order from "./../order/Order";
 import { useTasks } from "../../context/TaskContext";
 import { useAuth } from "../../context/AuthContext";
+import Inventory from "../Inventory/Inventory";
+import Hitch from "../hitch/Hitch";
+import TimeCard from "../timecard/TimeCard";
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
@@ -58,6 +61,7 @@ const RightSideBar = ({ selected }) => {
     "New",
     "In Progress",
     "Awaiting Parts",
+    "Rejected Jobs",
     "Awaiting Pickup",
     "Picked Up",
   ];
@@ -67,6 +71,7 @@ const RightSideBar = ({ selected }) => {
     New: 0,
     "In Progress": 0,
     "Awaiting Parts": 0,
+    "Rejected Jobs":0,
     "Awaiting Pickup": 0,
     "Picked Up": 0,
   });
@@ -524,40 +529,41 @@ const RightSideBar = ({ selected }) => {
                                 <td>{item.id}</td>
                                 <td>{item.customerName}</td>
                                 <td>{item.phoneNumber}</td>
-                                <td>{item.plateNumber}</td>
+                                <td>
+  {item.plateNumber.length > 10
+    ? `${item.plateNumber.slice(0, 10)}...`
+    : item.plateNumber}
+</td>
                                 <td>{item.dateIn}</td>
                                 <td>{item.dateOut}</td>
                                 <td>{item.progress}</td>
                                 <td>
-                                  {Array.isArray(item.repairNeeded)
-                                    ? item.repairNeeded.join(", ")
-                                    : item.repairNeeded}
-                                </td>
-                                <td>
-                                  {Array.isArray(item.partsNeeded) ? (
-                                    item.partsNeeded.length > 3 ? (
-                                      <>
-                                        {item.partsNeeded
-                                          .slice(0, 3)
-                                          .map(
-                                            (part) =>
-                                              `${part.name} (${part.quantity})`
-                                          )
-                                          .join(", ")}
-                                        , ...
-                                      </>
-                                    ) : (
-                                      item.partsNeeded
-                                        .map(
-                                          (part) =>
-                                            `${part.name} (${part.quantity})`
-                                        )
-                                        .join(", ")
-                                    )
-                                  ) : (
-                                    item.partsNeeded
-                                  )}
-                                </td>
+  {Array.isArray(item.repairNeeded) ? (
+    (() => {
+      const joined = item.repairNeeded.join(", ");
+      return joined.length > 20 ? `${joined.slice(0, 17)}...` : joined;
+    })()
+  ) : (
+    item.repairNeeded
+  )}
+</td>
+<td>
+  {Array.isArray(item.partsNeeded) ? (
+    (() => {
+      const fullText = item.partsNeeded
+        .map((part) => `${part.name} (${part.quantity})`)
+        .join(", ");
+
+      const maxLength = 35; // adjust this to whatever max character length you want
+
+      return fullText.length > maxLength
+        ? `${fullText.slice(0, maxLength)}...`
+        : fullText;
+    })()
+  ) : (
+    item.partsNeeded
+  )}
+</td>
                                 <td>
                                   <Priority
                                     color={color}
@@ -707,6 +713,21 @@ const RightSideBar = ({ selected }) => {
             <Order />
           </div>
         )}
+          {selected === "Inventory" && (
+          <div className="rightsidebar-bottom">
+            <Inventory />
+          </div>
+        )}
+            {selected === "Hitch" && (
+          <div className="rightsidebar-bottom">
+            <Hitch />
+          </div>
+        )}
+            {selected === "TimeCard" && (
+          <div className="rightsidebar-bottom">
+            <TimeCard />
+          </div>
+        )}
       </div>
 
       {/* Add New Task Modal */}
@@ -718,7 +739,9 @@ const RightSideBar = ({ selected }) => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Add New Task</Modal.Title>
+          <Modal.Title>
+            <h3>Add New Task</h3>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form className="custom-form">
@@ -791,6 +814,7 @@ const RightSideBar = ({ selected }) => {
                 <option>New</option>
                 <option>In Progress</option>
                 <option>Awaiting Parts</option>
+                <option>Rejected Jobs</option>
                 <option>Awaiting Pickup</option>
                 <option>Picked Up</option>
               </select>
@@ -860,7 +884,9 @@ const RightSideBar = ({ selected }) => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Task Details</Modal.Title>
+          <Modal.Title>
+            <h3>Task Details</h3>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedItem && (
@@ -994,7 +1020,9 @@ const RightSideBar = ({ selected }) => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Edit Task</Modal.Title>
+          <Modal.Title>
+            <h3>Edit Task</h3>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form className="custom-form">
@@ -1067,6 +1095,7 @@ const RightSideBar = ({ selected }) => {
                 <option>New</option>
                 <option>In Progress</option>
                 <option>Awaiting Parts</option>
+                <option>Rejected Jobs</option>
                 <option>Awaiting Pickup</option>
                 <option>Picked Up</option>
               </select>

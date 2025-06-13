@@ -3,7 +3,7 @@ import "./repairs.css";
 
 const PartSelector = ({ selectedParts, setSelectedParts }) => {
   const [customPart, setCustomPart] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(1.0);
 
   const handleAddOrUpdatePart = (part, qty) => {
     setSelectedParts((prev) => {
@@ -17,7 +17,7 @@ const PartSelector = ({ selectedParts, setSelectedParts }) => {
       }
     });
     setCustomPart("");
-    setQuantity(1);
+    setQuantity("");
   };
 
   const handleRemovePart = (part) => {
@@ -30,7 +30,7 @@ const PartSelector = ({ selectedParts, setSelectedParts }) => {
 
   return (
     <div className="repair-selector part-selector">
-      <label>Parts Needed</label>
+      <label>Part Number</label>
 
       <div className="custom-repair">
         <input
@@ -42,9 +42,9 @@ const PartSelector = ({ selectedParts, setSelectedParts }) => {
         />
         <input
           type="number"
-          min="1"
+          min="0.5"
           value={quantity}
-          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+          onChange={(e) => setQuantity(parseFloat(e.target.value) )}
           className="input-field"
           placeholder="Quantity"
         />

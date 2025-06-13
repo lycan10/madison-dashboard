@@ -1,0 +1,139 @@
+.timesheet-container{
+    display: flex;
+    flex-direction: row;
+}
+.timesheet-button{
+    background-color: red;
+    width: 200px;
+    height: 40px;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-left: 0.5rem;
+    cursor: pointer;
+}
+.timesheet-button p{
+    font-size: 14px;
+    font-family: var(--font-family);
+    color: white;
+    margin-left: 0.5rem;
+}
+
+.break-btn{
+    background-color: white;
+    border: 1.5px solid var(--background-color);
+    color: var(--background-color) ;
+}
+.break-btn p{
+    color: var(--background-color) ;
+}
+
+.timesheet-timer-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin: 2.5rem 0;
+    border: 1px solid #ddd;
+    padding: 1.5rem 2rem;
+    border-radius: 0.5rem;
+    
+}
+.timesheet-timer{
+    border-left: 1px solid #ddd;
+    width: 100%;
+    padding-left: 1rem;
+    
+}
+.timesheet-timer:first-child{
+    border-left: 0;
+    padding-left: 0rem;
+    
+}
+.timesheet-timer p{
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 12px;
+}
+.timesheet-timer h1{
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 23px;
+}
+.select-container{
+    max-width: 200px;
+}
+.select-container select{
+    margin: 0;
+}
+
+@media screen and (max-width: 800px) {
+    .timesheet-button{
+        width: 150px;
+        height: 35px;
+        border-radius: 0.5rem;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        margin-left: 0.5rem;
+        cursor: pointer;
+    }
+    .timesheet-timer-container{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin: 2.5rem 0;
+        border: 1px solid #ddd;
+        padding: 1rem 2rem;
+        border-radius: 0.5rem;
+        
+    }
+    .timesheet-timer p{
+        font-family: var(--font-family);
+        font-weight: 600;
+        font-size: 10px;
+    }
+
+    .timesheet-timer h1{
+        font-family: var(--font-family);
+        font-weight: 600;
+        font-size: 19px;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .timesheet-container{
+        margin-top: 1rem;
+    }
+    .timesheet-button{
+        margin-left: 0rem;
+        margin-right: 0.5rem;
+    }
+    .timesheet-timer-container{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin: 2.5rem 0;
+        border: 1px solid #ddd;
+        padding: 1rem 2rem;
+        border-radius: 0.5rem;
+        
+    }
+    .timesheet-timer{
+        border-left: 1px solid #ddd;
+        width: 100%;
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+        
+    }
+    .timesheet-timer:nth-child(odd) {
+        border-left: 0;
+        padding-left: 0;
+      }
+      .timesheet-timer:nth-last-child(-n+2) {
+        margin-bottom: 0;
+      }
+}

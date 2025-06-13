@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import "./leftsidebar.css";
 import LeftNavLinks from '../../components/leftNavLinks/LeftNavLinks';
 import logo from "../../assets/black-icon.png";
-import { Task02Icon, Home02Icon } from '@hugeicons/core-free-icons';
+import { Task02Icon, Home02Icon, CheckListIcon, Car02FreeIcons, CalendarAdd01FreeIcons } from '@hugeicons/core-free-icons';
 import { useSidebar } from '../../context/SideBarContext';
 
 const LeftSideBar = ({ selected, onSelect, collapsed }) => {
@@ -54,6 +54,27 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           title="Order"
           onClick={() => handleLinkClick('Order')}
           isSelected={selected === 'Order'}
+          collapsed={collapsed}
+        /> 
+          <LeftNavLinks
+          icon={CheckListIcon}
+          title="Inventory"
+          onClick={() => handleLinkClick('Inventory')}
+          isSelected={selected === 'Inventory'}
+          collapsed={collapsed}
+        />
+         <LeftNavLinks
+          icon={Car02FreeIcons}
+          title="Hitch"
+          onClick={() => handleLinkClick('Hitch')}
+          isSelected={selected === 'Hitch'}
+          collapsed={collapsed}
+        />
+         <LeftNavLinks
+          icon={CalendarAdd01FreeIcons}
+          title="Time Card"
+          onClick={() => handleLinkClick('TimeCard')}
+          isSelected={selected === 'TimeCard'}
           collapsed={collapsed}
         />
       </div>

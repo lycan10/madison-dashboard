@@ -50,10 +50,11 @@
   cursor: pointer;
   /* Adjust padding for smaller screens */
   padding: 0.5rem 0.8rem;
+  width: 180px;
 }
 
 .rightsidebar-button p {
-  margin-left: 0.3rem;
+  margin-left: 0.5rem;
   font-family: var(--font-family);
   color: white;
   font-size: 14px;
@@ -677,6 +678,9 @@
 
 /* Mobile styles */
 @media screen and (max-width: 500px) {
+  .rightsidebar-navbar{
+    margin-top: 1rem;
+  }
   .rightsidebar-navbar h3 {
     font-size: 19px !important;
   }

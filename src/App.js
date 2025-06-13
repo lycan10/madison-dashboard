@@ -6,6 +6,8 @@ import { OrderProvider } from './context/OrderContext';
 import Login from './screens/login/Login';
 import Dashboard from "./screens/dashboard/Dashboard";
 import OrderPage from './screens/order/Order';
+import Inventory from './screens/Inventory/Inventory';
+import Hitch from './screens/hitch/Hitch';
 
 const ProtectedRoute = ({ element: Component, ...rest }) => {
   const { user, loading } = useAuth();
@@ -29,6 +31,14 @@ function App() {
               <Route
                 path="/orders"
                 element={<ProtectedRoute element={OrderPage} />}
+              />
+              <Route
+                path="/inventory"
+                element={<ProtectedRoute element={Inventory} />}
+              />
+              <Route
+                path="/hitch"
+                element={<ProtectedRoute element={Hitch} />}
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

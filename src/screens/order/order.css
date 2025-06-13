@@ -133,6 +133,26 @@
 .delete-btn:hover {
   background-color: #a71d2a;
 }
+
+.download-container{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  
+}
+.modal-button-download{
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin: 1rem 0;
+}
+.download-container .search-input-container{
+margin-bottom: 0;
+}
+.download-button{
+  margin-right: 1rem;
+}
 @media screen and (max-width:1500px) {
  
 }
@@ -186,6 +206,15 @@
   .order-table th {
     font-size: 12px;
   }
+  .download-container {
+    display: grid;
+    grid-template-columns: 1fr;
+
+  }
+  .download-container .search-input-container {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
 }
 @media screen and (max-width: 400px) {
  
