@@ -62,9 +62,15 @@ export const OrderProvider = ({ children }) => {
 
         const response = await fetch(url, {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
+
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        }
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -117,6 +123,11 @@ export const OrderProvider = ({ children }) => {
         body: JSON.stringify(order),
       });
 
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to add order");
@@ -155,6 +166,11 @@ export const OrderProvider = ({ children }) => {
         body: JSON.stringify(updatedOrder),
       });
 
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to update order");
@@ -190,6 +206,11 @@ export const OrderProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
 
       if (!response.ok) {
         const errorData = await response.json();

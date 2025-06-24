@@ -11,6 +11,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
+  }, [user]);
+
   const login = async (username, password) => {
     try {
       const response = await fetch(
@@ -31,7 +39,6 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       setUser(data.user);
       setToken(data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
       return true;
     } catch (error) {
@@ -41,10 +48,41 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+
+  const changeUserPassword = async (user_id, password) => {
+    try {
+      const storedToken = localStorage.getItem("token");
+      if (!storedToken) {
+        logout();
+        return false;
+      }
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/users/change-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${storedToken}`,
+          },
+          body: JSON.stringify({ user_id, password }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("failed");
+      }
+      return true;
+    } catch (error) {
+      console.error("Password change error:", error);
+      return false;
+    }
+  };
+
   const logout = async () => {
     await fetch(`${process.env.REACT_APP_BASE_URL}/api/logout`, {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
@@ -52,34 +90,50 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // localStorage.removeItem("user");
   };
 
   const validateUser = async () => {
     try {
+      const storedToken = localStorage.getItem("token");
+      if (!storedToken) {
+        logout();
+        return false;
+      }
+
       const response = await fetch(
         `${process.env.REACT_APP_BASE_URL}/api/user`,
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${storedToken}`,
           },
         }
       );
 
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+
+      if (!response.ok) {
+        throw new Error("User validation failed");
+      }
+
       const data = await response.json();
-      localStorage.setItem("user", JSON.stringify(data));
-      return true
+      setUser(data);
+      return true;
 
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("User validation error:", error);
       logout();
       return false;
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, setUser, changeUserPassword }}>
       {children}
     </AuthContext.Provider>
   );

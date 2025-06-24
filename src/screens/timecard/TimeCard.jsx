@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Modal, Button } from "react-bootstrap";
 import "../order/order.css";
-import "./timecard.css"
+import "./timecard.css";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Add01Icon,
   Download04FreeIcons,
-  Search01Icon,
   CalendarAdd02FreeIcons,
-  Coffee02FreeIcons
+  Coffee02FreeIcons,
 } from "@hugeicons/core-free-icons";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
-import { useOrders } from "../../context/OrderContext";
+import { useTimeCards } from "../../context/TimeCardContext";
 import { useAuth } from "../../context/AuthContext";
 
 const getStatusStyles = (status) => {
@@ -27,7 +25,7 @@ const getStatusStyles = (status) => {
       return { color: "#28a745", bgColor: "#E8F6EA" };
     case "Inactive":
       return { color: "#20c997", bgColor: "#E6FFFA" };
-      case "Sick leave":
+    case "Sick leave":
       return { color: "#6c757d", bgColor: "#f8f9fa" };
     default:
       return { color: "#6c757d", bgColor: "#f8f9fa" };
@@ -36,168 +34,184 @@ const getStatusStyles = (status) => {
 
 const TimeCard = () => {
   const {
-    orderPaginationData,
-    orders,
+    timeCardPaginationData,
+    timeCards,
+    currentActiveTimeCard,
     loading,
     error,
-    fetchOrders,
-    addOrder,
-    updateOrder,
-    deleteOrder,
-  } = useOrders();
+    statusCounts,
+    users,
+    fetchTimeCards,
+    updateTimeCard,
+    deleteTimeCard,
+    fetchStatusCounts,
+    clockIn,
+    clockOut,
+    startBreak,
+    endBreak,
+    addLeaveStatus,
+    exportTimeCards,
+  } = useTimeCards();
 
-  const { token } = useAuth();
+  const { user } = useAuth();
 
   const [currentPage, setCurrentPage] = useState(
-    orderPaginationData.current_page || 1
+    timeCardPaginationData.current_page || 1
   );
-  const itemsPerPage = orderPaginationData.per_page || 10;
+  const itemsPerPage = timeCardPaginationData.per_page || 50;
 
-  const [selectedStatus, setSelectedStatus] = useState("All");
+  // New state for date filter, defaulting to today
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+
+  const [selectedStatus, setSelectedStatus] = useState("All"); // Keep for admin filter
   const statuses = [
     "All",
     "Active",
+    "Inactive",
     "Vacation",
     "Holiday",
-    "Inactive",
     "Sick leave",
   ];
 
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [timeCardToDelete, setTimeCardToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState({});
-  const [clockToggle, setClockToggle] = useState(false);
-  const [breakToggle, setBreakToggle] = useState(false);
+  // New state for clock-out confirmation modal
+  const [showClockOutConfirmModal, setShowClockOutConfirmModal] =
+    useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [workingHoursDisplay, setWorkingHoursDisplay] = useState("--:--");
+  const [breakDurationDisplay, setBreakDurationDisplay] = useState("--:--");
+  const [overtimeDisplay, setOvertimeDisplay] = useState("--:--");
 
-  const [orderCounts, setOrderCounts] = useState({
-    All: 0,
-   "Active": 0,
-    "Holiday": 0,
-    "Vacation": 0,
-    "Inactive": 0,
-    "Sick leave" : 0
-  });
-
-  const [orderFormData, setOrderFormData] = useState({
-    partName: "",
-    quantity: 1,
-    vendor: "",
+  const [timeCardFormData, setTimeCardFormData] = useState({
+    user_id: user?.id || null,
+    clock_in: null,
+    clock_out: null,
     status: "Inactive",
-    comments: "",
   });
 
-  const [editingOrder, setEditingOrder] = useState(null);
+  const [editingTimeCard, setEditingTimeCard] = useState(null);
 
-  const handleCloseInfoModal = () => {
-    setShowInfoModal(false);
-    setSelectedItem({});
-  };
-  const handleShowInfoModal = () => setShowInfoModal(true);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveFormData, setLeaveFormData] = useState({
+    user_id: "",
+    leave_type: "",
+    start_date: "",
+    end_date: "",
+    reason: "",
+  });
 
-  const handleCloseAddModal = () => {
-    setShowAddModal(false);
-    resetOrderFormData();
-  };
-  const handleShowAddModal = () => setShowAddModal(true);
+  const [exportFilters, setExportFilters] = useState({
+    start_date: "",
+    end_date: "",
+    user_id: "",
+    status: "All",
+  });
 
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-    setEditingOrder(null);
-    resetOrderFormData();
+    setEditingTimeCard(null);
+    resetTimeCardFormData();
   };
   const handleShowEditModal = () => setShowEditModal(true);
 
-  const resetOrderFormData = () => {
-    setOrderFormData({
-      partName: "",
-      quantity: 1,
-      vendor: "",
+  const handleShowLeaveModal = () => {
+    setShowLeaveModal(true);
+    setLeaveFormData({
+      user_id: "",
+      leave_type: "",
+      start_date: "",
+      end_date: "",
+      reason: "",
+    });
+  };
+  const handleCloseLeaveModal = () => setShowLeaveModal(false);
+
+  const resetTimeCardFormData = () => {
+    setTimeCardFormData({
+      user_id: user?.id || null,
+      clock_in: null,
+      clock_out: null,
       status: "Inactive",
-      comments: "",
     });
   };
 
-  const handleFilterClick = (status) => {
+  const handleDateFilterChange = (e) => {
+    setSelectedDate(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterClick = (status) => {
     setSelectedStatus(status);
     setCurrentPage(1);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setOrderFormData((prev) => ({ ...prev, [name]: value }));
+    setTimeCardFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const increaseQuantity = () => {
-    setOrderFormData((prevData) => ({
-      ...prevData,
-      quantity: prevData.quantity + 1,
-    }));
+  const handleLeaveChange = (e) => {
+    const { name, value } = e.target;
+    setLeaveFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const decreaseQuantity = () => {
-    if (orderFormData.quantity > 1) {
-      setOrderFormData((prevData) => ({
-        ...prevData,
-        quantity: prevData.quantity - 1,
-      }));
+  const handleExportFilterChange = (e) => {
+    const { name, value } = e.target;
+    setExportFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddLeaveSubmit = async () => {
+    if (!leaveFormData.user_id) {
+      alert("Please select a user.");
+      return;
     }
-  };
-
-  const handleAddSubmit = async () => {
-    const success = await addOrder({
-      ...orderFormData,
-      comments: orderFormData.comments,
-    });
+    const success = await addLeaveStatus(leaveFormData);
     if (success) {
-      handleCloseAddModal();
-      fetchStatusCounts();
+      handleCloseLeaveModal();
     }
   };
 
-  const handleEditClick = (order) => {
-    setEditingOrder(order);
-    setOrderFormData({
-      partName: order.partName || "",
-      quantity: order.quantity || 1,
-      vendor: order.vendor || "",
-      status: order.status || "Inactive",
-      comments: order.comments || "",
+  const handleEditClick = (timeCard) => {
+    setEditingTimeCard(timeCard);
+    setTimeCardFormData({
+      user_id: timeCard.user_id,
+      clock_in: timeCard.clock_in
+        ? new Date(timeCard.clock_in).toISOString().slice(0, 16)
+        : null,
+      clock_out: timeCard.clock_out
+        ? new Date(timeCard.clock_out).toISOString().slice(0, 16)
+        : null,
+      status: timeCard.status || "Inactive",
     });
     handleShowEditModal();
   };
 
   const handleEditSubmit = async () => {
-    if (!editingOrder) return;
+    if (!editingTimeCard) return;
 
-    const success = await updateOrder(editingOrder.id, {
-      ...orderFormData,
-      comments: orderFormData.comments,
-    });
+    const success = await updateTimeCard(editingTimeCard.id, timeCardFormData);
     if (success) {
       handleCloseEditModal();
-      fetchStatusCounts();
     }
   };
 
   const handleDelete = async (id) => {
-    const success = await deleteOrder(id);
+    const success = await deleteTimeCard(id);
     if (success) {
-      console.log(`Order with ID ${id} deleted successfully.`);
-      fetchStatusCounts();
+      console.log(`Time card with ID ${id} deleted successfully.`);
     }
   };
 
-  const displayedOrders = orders;
-  const totalPages = orderPaginationData.last_page || 1;
+  const displayedTimeCards = timeCards;
+  const totalPages = timeCardPaginationData.last_page || 1;
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -213,857 +227,775 @@ const TimeCard = () => {
     setCurrentPage(1);
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleClockToggle = (e) => {
-    setClockToggle(prev => !prev)
-  }
-  const handleBreakToggle = () => {
-    setBreakToggle(prev => !prev);
-  };
-
-  const fetchStatusCounts = async () => {
-    try {
-      const API_URL = `${process.env.REACT_APP_BASE_URL}/api/orders/counts`;
-
-      const response = await fetch(`${API_URL}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setOrderCounts(data);
-    } catch (error) {
-      console.error("Error fetching status counts:", error);
-    }
-  };
-
-  useEffect(() => {
+  const fetchTimeCardsCallback = useCallback(() => {
     const params = {
       page: currentPage,
       perPage: itemsPerPage,
+      date: selectedDate,
       ...(selectedStatus !== "All" && { status: selectedStatus }),
       sortBy: sortBy,
       sortDirection: sortDirection,
       ...(searchTerm && { search: searchTerm }),
     };
-    fetchOrders(params);
+    fetchTimeCards(params);
   }, [
+    currentPage,
+    itemsPerPage,
+    selectedDate,
     selectedStatus,
     sortBy,
     sortDirection,
-    currentPage,
-    itemsPerPage,
-    fetchOrders,
     searchTerm,
+    fetchTimeCards,
   ]);
 
   useEffect(() => {
+    fetchTimeCardsCallback();
+  }, [fetchTimeCardsCallback]);
+
+  useEffect(() => {
     fetchStatusCounts();
-  }, []);
+  }, [fetchStatusCounts]);
 
   useEffect(() => {
     if (
-      orderPaginationData.current_page &&
-      orderPaginationData.current_page !== currentPage
+      timeCardPaginationData.current_page &&
+      timeCardPaginationData.current_page !== currentPage
     ) {
-      setCurrentPage(orderPaginationData.current_page);
+      setCurrentPage(timeCardPaginationData.current_page);
     }
-  }, [orderPaginationData.current_page]);
+  }, [timeCardPaginationData.current_page]);
 
   const countByStatus = (status) => {
-    return orderCounts[status] || 0;
+    return statusCounts[status] || 0;
   };
 
-  const promptDeleteConfirmation = (order) => {
-    setOrderToDelete(order);
-    setShowDeleteConfirmModal(true);
-  };
-
-  const handleDownload = (type) => {
-    console.log(`Downloading as ${type}`);
-    // Handle the actual download here
+  const handleDownload = async (type) => {
+    await exportTimeCards(type, exportFilters);
     setShowDownloadModal(false);
+  };
+
+  const calculateTimeDurations = (timeCard, includeCurrent = false) => {
+    const clockIn = timeCard?.clock_in ? new Date(timeCard.clock_in) : null;
+    const clockOut = timeCard?.clock_out ? new Date(timeCard.clock_out) : null;
+    const breaks = timeCard?.breaks || [];
+
+    let totalWorkingHoursMs = 0;
+    let totalBreakDurationMs = 0;
+    const targetWorkingHoursMs = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+
+    breaks.forEach((b) => {
+      const breakStart = b.break_start ? new Date(b.break_start) : null;
+      let breakEnd = b.break_end ? new Date(b.break_end) : null;
+
+      if (includeCurrent && breakStart && !breakEnd) {
+        breakEnd = new Date();
+      }
+
+      if (breakStart && breakEnd) {
+        totalBreakDurationMs += breakEnd.getTime() - breakStart.getTime();
+      }
+    });
+
+    let effectiveClockOut = clockOut;
+    if (includeCurrent && clockIn && !clockOut) {
+      effectiveClockOut = new Date();
+    }
+
+    if (clockIn && effectiveClockOut) {
+      totalWorkingHoursMs = effectiveClockOut.getTime() - clockIn.getTime();
+    }
+
+    const netWorkingHoursMs = totalWorkingHoursMs - totalBreakDurationMs;
+
+    const msToHoursMinutes = (ms) => {
+      if (ms < 0 || isNaN(ms)) return "0h 0m";
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      return `${hours}h ${minutes}m`;
+    };
+
+    let overtime = "0h 0m";
+    if (netWorkingHoursMs > targetWorkingHoursMs) {
+      overtime = msToHoursMinutes(netWorkingHoursMs - targetWorkingHoursMs);
+    } else if (
+      netWorkingHoursMs < targetWorkingHoursMs &&
+      !includeCurrent && // Only show undertime if clocked out
+      clockIn &&
+      clockOut
+    ) {
+      overtime = `-${msToHoursMinutes(
+        targetWorkingHoursMs - netWorkingHoursMs
+      )}`;
+    }
+
+    return {
+      workingHours:
+        netWorkingHoursMs > 0 ? msToHoursMinutes(netWorkingHoursMs) : "0h 0m",
+      breakDuration:
+        totalBreakDurationMs > 0
+          ? msToHoursMinutes(totalBreakDurationMs)
+          : "0h 0m",
+      overtime: overtime,
+    };
+  };
+
+  useEffect(() => {
+    let interval;
+    if (
+      currentActiveTimeCard &&
+      currentActiveTimeCard.clock_in &&
+      !currentActiveTimeCard.clock_out
+    ) {
+      interval = setInterval(() => {
+        const { workingHours, breakDuration, overtime } =
+          calculateTimeDurations(currentActiveTimeCard, true);
+        setWorkingHoursDisplay(workingHours);
+        setBreakDurationDisplay(breakDuration);
+        setOvertimeDisplay(overtime);
+      }, 1000);
+    } else if (currentActiveTimeCard) {
+      const { workingHours, breakDuration, overtime } = calculateTimeDurations(
+        currentActiveTimeCard,
+        false
+      );
+      setWorkingHoursDisplay(workingHours);
+      setBreakDurationDisplay(breakDuration);
+      setOvertimeDisplay(overtime);
+    } else {
+      setWorkingHoursDisplay("--:--");
+      setBreakDurationDisplay("--:--");
+      setOvertimeDisplay("--:--");
+    }
+
+    return () => clearInterval(interval);
+  }, [currentActiveTimeCard]);
+
+  const hasClockedInToday = !!currentActiveTimeCard?.clock_in;
+  const hasClockedOutToday = !!currentActiveTimeCard?.clock_out;
+  const isClockedIn = hasClockedInToday;
+  const isOnBreak =
+    currentActiveTimeCard?.breaks?.some((b) => !b.break_end) || false;
+  const clockInButtonDisabled = hasClockedInToday;
+  const clockOutButtonDisabled = hasClockedOutToday || isOnBreak;
+  const startBreakButtonDisabled =
+    !isClockedIn || isOnBreak || hasClockedOutToday;
+  const endBreakButtonDisabled = !isOnBreak;
+  const clockButtonText = isClockedIn ? "Clock Out" : "Clock In";
+  const breakButtonText = isOnBreak ? "Stop Break" : "Start Break";
+
+  const clockButtonStyle = {
+    backgroundColor: isClockedIn ? "red" : "green",
+    color: "#ffffff",
+    padding: "8px 15px",
+    borderRadius: "8px",
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    cursor:
+      (clockInButtonDisabled && !isClockedIn) || clockOutButtonDisabled
+        ? "not-allowed"
+        : "pointer",
+    opacity:
+      (clockInButtonDisabled && !isClockedIn) || clockOutButtonDisabled
+        ? 0.6
+        : 1,
+    transition: "background-color 0.3s ease",
+  };
+
+  const breakButtonStyle = {
+    backgroundColor: isOnBreak ? "#dc3545" : "#3c58ae",
+    color: "#ffffff",
+    padding: "8px 15px",
+    borderRadius: "8px",
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    cursor:
+      (startBreakButtonDisabled && !isOnBreak) ||
+      (endBreakButtonDisabled && isOnBreak)
+        ? "not-allowed"
+        : "pointer",
+    opacity:
+      (startBreakButtonDisabled && !isOnBreak) ||
+      (endBreakButtonDisabled && isOnBreak)
+        ? 0.6
+        : 1,
+    transition: "background-color 0.3s ease",
+  };
+
+  // Function to handle clock out button click
+  const handleClockOutClick = () => {
+    if (isClockedIn) {
+      setShowClockOutConfirmModal(true);
+    } else {
+      clockIn();
+    }
+  };
+
+  // Function to confirm clock out
+  const confirmClockOut = async () => {
+    await clockOut();
+    setShowClockOutConfirmModal(false);
   };
 
   return (
     <div className="order-page">
       <div className="rightsidebar-navbar">
-        <h3>Total Trailer</h3> {/* Updated title */}
+        <h3>Time Cards</h3>
         <div className="timesheet-container">
-        <div className="timesheet-button break-btn" onClick={handleBreakToggle}>
-          <HugeiconsIcon
-            icon={Coffee02FreeIcons}
-            size={15}
-            color="#3c58ae"
-            strokeWidth={1.5}
-          />
-          <p>
-  {breakToggle ? "Stop Break" : "Start Break"}
-</p>
-
-        </div>
-        <div className="timesheet-button" onClick={handleClockToggle}>
-          <HugeiconsIcon
-            icon={CalendarAdd02FreeIcons}
-            size={15}
-            color="#ffffff"
-            strokeWidth={1.5}
-          />
-            <p>
-            {clockToggle ? "Clock in" : "Clock out"}
-            </p>
-        </div>
-        </div>
-
-      </div>
-
-      <div className="order-page-title">
-        <h3> TimeSheet </h3>
-      </div>
-
-    
-
-      {/* Search Input */}
-      <div className="download-container">
-      <div className="search-input-container select-container">
-  <select
-    value={searchTerm}
-    onChange={null}
-    className="search-input"
-  >
-    <option value="">Select name...</option>
-    <option value="Active">Andrew</option>
-    <option value="Holiday">Matt</option>
-  </select>
-        </div>
-        <div className="search-input-container select-container">
-  <select
-    value={searchTerm}
-    onChange={(e) => e.target.value}
-    className="search-input"
-  >
-    <option value="">Select status...</option>
-    <option value="Active">All</option>
-    <option value="Active">Active</option>
-    <option value="Holiday">Holiday</option>
-    <option value="Vacation">Vacation</option>
-    <option value="InActive">InActive</option>
-  </select>
-        </div>
-        <div
-          className="rightsidebar-button"
-          style={{ backgroundColor: "#3c58ae" }}
-          onClick={() => setShowDownloadModal(true)}
-        >
-          <HugeiconsIcon
-            icon={Download04FreeIcons}
-            size={16}
-            color="#ffffff"
-            strokeWidth={2}
-          />
-          <p>Download</p>
-        </div>
-      </div>
-
-      <div className="timesheet-timer-container">
-        <div className="timesheet-timer">
-            <p>Clock In</p>
-            <h1>9:00 AM</h1>
-        </div>
-        <div className="timesheet-timer">
-            <p>Breaks </p>
-            <h1>9:00 AM</h1>
-        </div>
-        <div className="timesheet-timer">
-            <p>Working hours</p>
-            <h1>9:00 AM</h1>
-        </div>
-        <div className="timesheet-timer">
-            <p>Clock Out</p>
-            <h1>9:00 AM</h1>
-        </div>
-      </div>
-
-      <div className="custom-line no-margin"></div>
-
-      {/* Status Filters */}
-      <div className="rightsidebar-filter-progress">
-        {statuses.map((status) => (
-          <div
-            key={status}
-            onClick={() => handleFilterClick(status)}
-            style={{ cursor: "pointer" }}
+          <button
+            className="timesheet-button break-btn"
+            onClick={isOnBreak ? endBreak : startBreak}
+            style={breakButtonStyle}
+            disabled={
+              isOnBreak ? endBreakButtonDisabled : startBreakButtonDisabled
+            }
+            aria-disabled={
+              isOnBreak ? endBreakButtonDisabled : startBreakButtonDisabled
+            }
           >
-            <ProgressFilter
-              title={status}
-              count={countByStatus(status)}
-              bgColor={selectedStatus === status ? "#333" : "#f1f1f1"}
-              color={selectedStatus === status ? "#fff" : "#000"}
+            <HugeiconsIcon
+              icon={Coffee02FreeIcons}
+              size={15}
+              color="#ffffff"
+              strokeWidth={1.5}
             />
-          </div>
-        ))}
+            <p className="text-white"> {breakButtonText} </p>
+          </button>
+          <button
+            className="timesheet-button"
+            onClick={handleClockOutClick}
+            style={clockButtonStyle}
+            disabled={
+              isClockedIn ? clockOutButtonDisabled : clockInButtonDisabled
+            }
+            aria-disabled={
+              isClockedIn ? clockOutButtonDisabled : clockInButtonDisabled
+            }
+          >
+            <HugeiconsIcon
+              icon={CalendarAdd02FreeIcons}
+              size={15}
+              color="#ffffff"
+              strokeWidth={1.5}
+            />
+            <p> {clockButtonText} </p>
+          </button>
+        </div>
       </div>
+      {user?.name === "admin" && (
+        <div>
+          <div className="order-page-title">
+            <h3> Date filter </h3>
+          </div>
 
-      {/* Order Table */}
-      {loading ? (
-        <p>Loading orders...</p>
-      ) : error ? (
-        <p>Error: {error.message}</p>
-      ) : (
-        <div className="order-table-container" s>
-          <table className="order-table">
-            <thead>
-              <tr>
-                <th
-                  onClick={() => handleSortClick("id")}
-                  style={{ cursor: "pointer" }}
+          <div className="download-container">
+            <div className="search-input-container select-container">
+              <label htmlFor="date-filter">Date:</label>
+              <input
+                type="date"
+                id="date-filter"
+                value={selectedDate}
+                onChange={handleDateFilterChange}
+                className="search-input"
+              />
+            </div>
+            {user?.name === "admin" && (
+              <div className="d-flex flex-row row-gap gap-2">
+                <div
+                  className="rightsidebar-button"
+                  style={{ backgroundColor: "#3c58ae" }}
+                  onClick={() => setShowDownloadModal(true)}
                 >
-                  # {sortBy === "id" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partName")}
-                  style={{ cursor: "pointer" }}
+                  <HugeiconsIcon
+                    icon={Download04FreeIcons}
+                    size={16}
+                    color="#ffffff"
+                    strokeWidth={2}
+                  />
+                  <p>Download</p>
+                </div>
+                <div
+                  className="rightsidebar-button"
+                  style={{ backgroundColor: "#28a745" }}
+                  onClick={handleShowLeaveModal}
                 >
-                  Name{" "}
-                  {sortBy === "partName" &&
-                    (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Date{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Clock In{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Clock Out{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                Break{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Working Hours{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Overtime{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-            
-              
-                <th
-                  onClick={() => handleSortClick("status")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Status{" "}
-                  {sortBy === "status" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("status")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Actions{" "}
-                  {sortBy === "status" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-       
-              </tr>
-            </thead>
-            <tbody>
-              {Array.isArray(displayedOrders) &&
-              displayedOrders.length === 0 ? (
-                <tr>
-                  <td colSpan="7">No data available</td>
-                </tr>
-              ) : (
-                Array.isArray(displayedOrders) &&
-                displayedOrders.map((order) => {
-                  const { color, bgColor } = getStatusStyles(order.status);
-                  return (
-                    <tr key={order.id}
-                    >
-                      <td>{order.id}</td>
-                      <td>{order.partName}</td>
-                      <td>{order.vendor}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.comments}</td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            color,
-                            backgroundColor: bgColor,
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            fontWeight: 500,
-                            width: "fit-content",
-                          }}
-                        >
-                          {order.status}
-                        </div>
-                      </td>
-                      <td>
-                        <div
-                          className="action-buttons"
-                          style={{ display: "flex", gap: "8px" }}
-                        >
-                          <button
-                            className="edit-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(order);
-                            }}
-                          >
-                            Edit
-                          </button>
-                          {user.name === "admin" && (
-                          <button
-                            className="delete-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              promptDeleteConfirmation(order);
-                            }}
-                          >
-                            Delete
-                          </button>)}
-                        </div>
-                      </td>
-                      
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  <HugeiconsIcon
+                    icon={CalendarAdd02FreeIcons}
+                    size={16}
+                    color="#ffffff"
+                    strokeWidth={2}
+                  />
+                  <p>Add Leave/Holiday</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      <Modal
-        show={showAddModal}
-        onHide={handleCloseAddModal}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {" "}
-            <h3>Add Hitch Request</h3>{" "}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form className="custom-form">
-            <div className="form-group">
-              <label htmlFor="partName">Customer name</label>
-              <input
-                type="text"
-                id="partName"
-                name="partName"
-                className="input-field"
-                value={orderFormData.partName}
-                onChange={handleChange}
-              />
-            </div>
+      <div className="timesheet-timer-container">
+        <div className="timesheet-timer">
+          <p>Clock In</p>
+          <h1>
+            {currentActiveTimeCard?.clock_in
+              ? new Date(currentActiveTimeCard.clock_in).toLocaleTimeString(
+                  [],
+                  { hour: "2-digit", minute: "2-digit" }
+                )
+              : "--:--"}
+          </h1>
+        </div>
+        <div className="timesheet-timer">
+          <p>Breaks </p>
+          <h1>{breakDurationDisplay}</h1>
+        </div>
+        <div className="timesheet-timer">
+          <p>Working hours</p>
+          <h1>{workingHoursDisplay}</h1>
+        </div>
+        <div className="timesheet-timer">
+          <p>Overtime</p>
+          <h1>{overtimeDisplay}</h1>
+        </div>
+        <div className="timesheet-timer">
+          <p>Clock Out</p>
+          <h1>
+            {currentActiveTimeCard?.clock_out
+              ? new Date(currentActiveTimeCard.clock_out).toLocaleTimeString(
+                  [],
+                  { hour: "2-digit", minute: "2-digit" }
+                )
+              : "--:--"}
+          </h1>
+        </div>
+      </div>
+      <div className="custom-line no-margin"></div>
 
-            <div className="form-group">
-              <label htmlFor="vendor">Phone number</label>
-              <input
-                type="text"
-                id="vendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="vendor">Vehicle make</label>
-              <input
-                type="text"
-                id="vendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="vendor">Vehicle model</label>
-              <input
-                type="text"
-                id="vendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="vendor">Vehicle year</label>
-              <input
-                type="text"
-                id="vendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="vendor">Part number</label>
-              <input
-                type="text"
-                id="vendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dateIn">Date In</label>
-              <input
-                type="date"
-                id="dateIn"
-                name="dateIn"
-                className="input-field"
-                value={null}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dateOut">Date Out</label>
-              <input
-                type="date"
-                id="dateOut"
-                name="dateOut"
-                className="input-field"
-                value={null}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="vendor">Price</label>
-              <input
-                type="text"
-                id="vendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="comments">Comments</label>
-              <textarea
-                id="comments"
-                name="comments"
-                className="input-field textarea"
-                value={orderFormData.comments}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="status">Status</label>
-              <select
-                id="status"
-                name="status"
-                className="input-field"
-                value={orderFormData.status}
-                onChange={handleChange}
-              >
-                <option>New Order</option>
-                <option>Quoted</option>
-                <option>Called</option>
-                <option>Awaiting parts</option>
-                <option>Rejected</option>
-                <option>Scheduled</option>
-                <option>Order Complete</option>
-              </select>
-            </div>
-          </form>
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn-secondary" onClick={handleCloseAddModal}>
-            Cancel
-          </button>
-          <button className="btn-primary" onClick={handleAddSubmit}>
-            Save
-          </button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Edit modal */}
-      <Modal
-        show={showEditModal}
-        onHide={handleCloseEditModal}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {" "}
-            <h3>Edit timesheet</h3>{" "}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form className="custom-form">
-            <div className="form-group">
-              <label htmlFor="partName">Name</label>
-              <input
-                type="text"
-                id="partName"
-                name="partName"
-                className="input-field"
-                value={orderFormData.partName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dateIn">Date</label>
-              <input
-                type="date"
-                id="dateIn"
-                name="dateIn"
-                className="input-field"
-                value={null}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dateOut">Clock in</label>
-              <input
-                type="time"
-                id="dateOut"
-                name="dateOut"
-                className="input-field"
-                value={null}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dateOut">Clock out</label>
-              <input
-                type="time"
-                id="dateOut"
-                name="dateOut"
-                className="input-field"
-                value={null}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dateOut">Break</label>
-              <input
-                type="time"
-                id="dateOut"
-                name="dateOut"
-                className="input-field"
-                value={null}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dateOut">Overtime</label>
-              <input
-                type="time"
-                id="dateOut"
-                name="dateOut"
-                className="input-field"
-                value={null}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="status">Status</label>
-              <select
-                id="status"
-                name="status"
-                className="input-field"
-                value={orderFormData.status}
-                onChange={handleChange}
-              >
-                <option>Active</option>
-                <option>Inactive</option>
-                <option>Vacation</option>
-                <option>Holiday parts</option>
-                <option>Sick leave</option>
-              </select>
-            </div>
-          </form>
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn-secondary" onClick={handleCloseAddModal}>
-            Cancel
-          </button>
-          <button className="btn-primary" onClick={handleAddSubmit}>
-            Save
-          </button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Task Info Modal */}
-      <Modal
-        show={showInfoModal}
-        onHide={handleCloseInfoModal}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Task Details</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedItem && (
-            <>
-              <div className="info-group">
-                <strong>Customer Name:</strong>
-                <p>{selectedItem.customerName}</p>
-              </div>
-              {/* Display Phone Number in Info Modal */}
-              <div className="info-group">
-                <strong>Phone Number:</strong>
-                <p>{selectedItem.phoneNumber}</p>
-              </div>
-              {/* Display Plate Number in Info Modal */}
-              <div className="info-group">
-                <strong>Vehicle make:</strong>
-                <p>{selectedItem.plateNumber}</p>
-              </div>
-              <div className="info-group">
-                <strong>Vehicle model:</strong>
-                <p>{selectedItem.plateNumber}</p>
-              </div>
-              <div className="info-group">
-                <strong>Vehicle year:</strong>
-                <p>{selectedItem.plateNumber}</p>
-              </div>
-              
-              <div className="info-group">
-                <strong>Date In:</strong>
-                <p>{selectedItem.dateIn}</p>
-              </div>
-              <div className="info-group">
-                <strong>Date Out:</strong>
-                <p>{selectedItem.dateOut}</p>
-              </div>
-              <div className="info-group">
-                <strong>Job description:</strong>
-                <p>{selectedItem.plateNumber}</p>
-              </div>
-              <div className="info-group">
-                <strong>Price:</strong>
-                <p>{selectedItem.plateNumber}</p>
-              </div>
-              <div className="info-group">
-                <strong>Status:</strong>
-                <p>{selectedItem.progress}</p>
-              </div>
-              <div className="info-group">
-                <strong>Repairs Needed:</strong>
-                <p>
-                  {Array.isArray(selectedItem.repairNeeded)
-                    ? selectedItem.repairNeeded.join(", ")
-                    : selectedItem.repairNeeded}
-                </p>
-              </div>
-              <div className="info-group">
-                <strong>Parts Needed:</strong>
-                <p>
-                  {Array.isArray(selectedItem.partsNeeded)
-                    ? selectedItem.partsNeeded
-                        .map((part) => `${part.name} (${part.quantity})`)
-                        .join(", ")
-                    : selectedItem.partsNeeded}
-                </p>
-              </div>
-              {selectedItem.comments && (
-                <div className="info-group">
-                  <strong>Comments:</strong>
-                  <p>{selectedItem.comments}</p>
-                </div>
-              )}
-
-              {/* Display Created By */}
-              {selectedItem.author && (
-                <div className="info-group">
-                  <strong>Created By:</strong>
-                  <p>{selectedItem.author.name}</p>
-                </div>
-              )}
-
-              {/* Display Task History */}
-              {selectedItem.history && selectedItem.history.length > 0 && (
-                <div className="info-group">
-                  <strong>Task History:</strong>
-                  <ul>
-                    {selectedItem.history.map((historyEntry) => (
-                      <li key={historyEntry.id}>
-                        {historyEntry.changes &&
-                        typeof historyEntry.changes === "string" ? (
-                          JSON.parse(historyEntry.changes).map(
-                            (change, index) => <p key={index}>{change}</p>
-                          )
-                        ) : (
-                          <p>{historyEntry.changes}</p>
-                        )}
-                        <small>
-                          by{" "}
-                          {historyEntry.user
-                            ? historyEntry.user.name
-                            : "Unknown User"}{" "}
-                          on{" "}
-                          {new Date(historyEntry.created_at).toLocaleString()}
-                        </small>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn-secondary" onClick={handleCloseInfoModal}>
-            Cancel
-          </button>
-          {/* Delete button */}
-          {user.name === "admin" && (
-            <button
-              className="btn-danger"
-            //   onClick={(e) => {
-            //     e.stopPropagation();
-            //     promptDeleteConfirmation(order);
-            //   }}
-              onClick={() => handleDelete(selectedItem.id)}
+      {user?.name === "admin" && (
+        <div className="rightsidebar-filter-progress">
+          {statuses.map((status) => (
+            <div
+              key={status}
+              onClick={() => handleStatusFilterClick(status)}
+              style={{ cursor: "pointer" }}
             >
-              Delete
-            </button>
-          )}
-          {/* Edit button */}
-          <button
-            className="btn-primary"
-            onClick={() => {
-              handleCloseInfoModal();
-              handleEditClick(selectedItem);
-            }}
-          >
-            Edit
-          </button>
-        </Modal.Footer>
-      </Modal>
+              <ProgressFilter
+                title={status}
+                count={countByStatus(status)}
+                bgColor={selectedStatus === status ? "#333" : "#f1f1f1"}
+                color={selectedStatus === status ? "#fff" : "#000"}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        show={showDeleteConfirmModal}
-        onHide={() => setShowDeleteConfirmModal(false)}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the order{" "}
-          <strong>{orderToDelete?.partName}</strong>?
-        </Modal.Body>
-        <Modal.Footer>
-          <button
-            className="btn-secondary"
-            onClick={() => setShowDeleteConfirmModal(false)}
-          >
-            Cancel
-          </button>
-          <button
-            className="btn-danger"
-            onClick={async () => {
-              if (orderToDelete) {
-                const success = await deleteOrder(orderToDelete.id);
-                if (success) {
-                  console.log(`Order ${orderToDelete.id} deleted.`);
-                }
-                setShowDeleteConfirmModal(false);
-                setOrderToDelete(null);
-              }
-            }}
-          >
-            Confirm Delete
-          </button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Download modal  */}
-      <Modal
-        show={showDownloadModal}
-        onHide={() => setShowDownloadModal(false)}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Download Data</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>How would you like to download the data?</p>
-          <div className="modal-button-download">
-            <Button
-              className="download-button"
-              variant="outline-primary"
-              onClick={() => handleDownload("pdf")}
-            >
-              PDF
-            </Button>
-            <Button
-              variant="outline-success"
-              onClick={() => handleDownload("csv")}
-            >
-              CSV
-            </Button>
+      {user?.name === "admin" &&
+        (loading ? (
+          <p>Loading time cards...</p>
+        ) : error ? (
+          <p>Error: {error.message}</p>
+        ) : (
+          <div className="order-table-container">
+            <table className="order-table">
+              <thead>
+                <tr>
+                  <th
+                    onClick={() => handleSortClick("id")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    # {sortBy === "id" && (sortDirection === "asc" ? "▲" : "▼")}
+                  </th>
+                  <th
+                    onClick={() => handleSortClick("user_id")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Name{" "}
+                    {sortBy === "user_id" &&
+                      (sortDirection === "asc" ? "▲" : "▼")}
+                  </th>
+                  <th
+                    onClick={() => handleSortClick("created_at")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Date{" "}
+                    {sortBy === "created_at" &&
+                      (sortDirection === "asc" ? "▲" : "▼")}
+                  </th>
+                  <th>Clock In</th>
+                  <th>Breaks</th>
+                  <th>Working Hours</th>
+                  <th>Overtime</th> {/* New table header */}
+                  <th>Clock Out</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedTimeCards.map((timeCard) => (
+                  <tr key={timeCard.id}>
+                    <td>{timeCard.id}</td>
+                    <td>{timeCard.user?.name || "N/A"}</td>
+                    <td>
+                      {new Date(timeCard.created_at).toLocaleDateString()}
+                    </td>
+                    <td>
+                      {timeCard.clock_in
+                        ? new Date(timeCard.clock_in).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "N/A"}
+                    </td>
+                    <td>{timeCard.total_break_duration || "0h 0m"}</td>
+                    <td>{timeCard.working_hours || "0h 0m"}</td>
+                    <td>{timeCard.overtime || "0h 0m"}</td>{" "}
+                    {/* Display overtime */}
+                    <td>
+                      {timeCard.clock_out
+                        ? new Date(timeCard.clock_out).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "N/A"}
+                    </td>
+                    <td>
+                      <span
+                        className="order-status"
+                        style={{
+                          backgroundColor: getStatusStyles(timeCard.status)
+                            .bgColor,
+                          color: getStatusStyles(timeCard.status).color,
+                        }}
+                      >
+                        {timeCard.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="edit-button btn btn-outline-primary btn-sm"
+                        onClick={() => handleEditClick(timeCard)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </Modal.Body>
+        ))}
+
+      {user?.name === "admin" && (
+        <div className="pagination-container">
+          <Pagination>
+            <Pagination.Prev
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            />
+            {[...Array(totalPages)].map((_, index) => (
+              <Pagination.Item
+                key={index + 1}
+                active={index + 1 === currentPage}
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </Pagination.Item>
+            ))}
+            <Pagination.Next
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            />
+          </Pagination>
+        </div>
+      )}
+
+      {user?.name === "admin" && editingTimeCard && (
+        <Modal show={showEditModal} onHide={handleCloseEditModal} centered>
+          <Modal.Header closeButton>
+            <Modal.Title> Edit Time Card</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="form-group">
+              <label>Clock In:</label>
+              <input
+                type="datetime-local"
+                className="form-control"
+                name="clock_in"
+                value={timeCardFormData.clock_in || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label>Clock Out:</label>
+              <input
+                type="datetime-local"
+                className="form-control"
+                name="clock_out"
+                value={timeCardFormData.clock_out || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label>Status:</label>
+              <select
+                className="form-control"
+                name="status"
+                value={timeCardFormData.status}
+                onChange={handleChange}
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseEditModal}>
+              Close
+            </Button>
+            <Button variant="primary" onClick={handleEditSubmit}>
+              Save Changes
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {user?.name === "admin" && (
+        <Modal show={showLeaveModal} onHide={handleCloseLeaveModal} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Add Leave/Holiday</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="form-group">
+              <label>User:</label>
+              <select
+                className="form-control"
+                name="user_id"
+                value={leaveFormData.user_id}
+                onChange={handleLeaveChange}
+                required
+              >
+                <option value="">Select a user</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Leave Type:</label>
+              <select
+                className="form-control"
+                name="leave_type"
+                value={leaveFormData.leave_type}
+                onChange={handleLeaveChange}
+                required
+              >
+                <option value="">Select Leave Type</option>
+                <option value="Vacation">Vacation</option>
+                <option value="Holiday">Holiday</option>
+                <option value="Sick leave">Sick leave</option>
+                <option value="Unpaid Leave">Unpaid Leave</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Start Date:</label>
+              <input
+                type="date"
+                className="form-control"
+                name="start_date"
+                value={leaveFormData.start_date}
+                onChange={handleLeaveChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>End Date:</label>
+              <input
+                type="date"
+                className="form-control"
+                name="end_date"
+                value={leaveFormData.end_date}
+                onChange={handleLeaveChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Reason:</label>
+              <textarea
+                className="form-control"
+                name="reason"
+                rows="3"
+                value={leaveFormData.reason}
+                onChange={handleLeaveChange}
+                maxLength="500"
+              ></textarea>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseLeaveModal}>
+              Close
+            </Button>
+            <Button variant="primary" onClick={handleAddLeaveSubmit}>
+              Submit Leave
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {user?.name === "admin" && (
+        <Modal
+          show={showDeleteConfirmModal}
+          onHide={() => setShowDeleteConfirmModal(false)}
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Delete</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Are you sure you want to delete this time card record for{" "}
+            <strong>{timeCardToDelete?.user?.name}</strong> on{" "}
+            <strong>
+              {timeCardToDelete?.created_at
+                ? new Date(timeCardToDelete.created_at).toLocaleDateString()
+                : "N/A"}
+            </strong>
+            ?
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDeleteConfirmModal(false)}
+            >
+              Cancel
+            </Button>
+            <button
+              className="delete-btn"
+              onClick={() => {
+                handleDelete(timeCardToDelete.id);
+                setShowDeleteConfirmModal(false);
+              }}
+            >
+              Confirm Delete
+            </button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {user?.name === "admin" && (
+        <Modal
+          show={showDownloadModal}
+          onHide={() => setShowDownloadModal(false)}
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Download Data</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="form-group">
+              <label>Start Date:</label>
+              <input
+                type="date"
+                className="form-control"
+                name="start_date"
+                value={exportFilters.start_date}
+                onChange={handleExportFilterChange}
+              />
+            </div>
+            <div className="form-group">
+              <label>End Date:</label>
+              <input
+                type="date"
+                className="form-control"
+                name="end_date"
+                value={exportFilters.end_date}
+                onChange={handleExportFilterChange}
+              />
+            </div>
+            <div className="form-group">
+              <label>User:</label>
+              <select
+                className="form-control"
+                name="user_id"
+                value={exportFilters.user_id}
+                onChange={handleExportFilterChange}
+              >
+                <option value="">All Users</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Status:</label>
+              <select
+                className="form-control"
+                name="status"
+                value={exportFilters.status}
+                onChange={handleExportFilterChange}
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="modal-button-download mt-4">
+              <Button
+                className="download-button"
+                variant="outline-primary"
+                onClick={() => handleDownload("pdf")}
+              >
+                Download PDF
+              </Button>
+              <Button
+                variant="outline-success"
+                onClick={() => handleDownload("csv")}
+              >
+                Download CSV
+              </Button>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDownloadModal(false)}
+            >
+              Cancel
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {/* Clock Out Confirmation Modal */}
+      <Modal
+        show={showClockOutConfirmModal}
+        onHide={() => setShowClockOutConfirmModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Clock Out</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to clock out for today?</Modal.Body>
         <Modal.Footer>
           <Button
             variant="secondary"
-            onClick={() => setShowDownloadModal(false)}
+            onClick={() => setShowClockOutConfirmModal(false)}
           >
             Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmClockOut}>
+            Clock Out
           </Button>
         </Modal.Footer>
       </Modal>

@@ -1,59 +1,57 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Modal, Button } from "react-bootstrap";
 import "../order/order.css";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
-  Download04FreeIcons,
   Search01Icon,
 } from "@hugeicons/core-free-icons";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
-import { useOrders } from "../../context/OrderContext";
+import { useHitches } from "../../context/HitchContext";
 import { useAuth } from "../../context/AuthContext";
 import HitchSelector from "../../components/repairs/HitchSelector";
 import PartSelector from "../../components/repairs/Parts";
 
 const getStatusStyles = (status) => {
-    switch (status) {
-      case "New Order":
-        return { color: "#FFA500", bgColor: "#FFF5E6" };
-      case "Quoted":
-        return { color: "#007BFF", bgColor: "#E6F0FF" };
-      case "Called":
-        return { color: "#6f42c1", bgColor: "#f3e8ff" };
-      case "Awaiting parts":
-        return { color: "#fd7e14", bgColor: "#fff3e0" };
-      case "Rejected":
-        return { color: "#dc3545", bgColor: "#fdecea" };
-      case "Scheduled":
-        return { color: "#17A2B8", bgColor: "#E0F7FA" };
-      case "Order Complete":
-        return { color: "#28a745", bgColor: "#E8F6EA" };
-      case "All":
-      default:
-        return { color: "#6c757d", bgColor: "#f8f9fa" };
-    }
-  };
+  switch (status) {
+    case "New Order":
+      return { color: "#FFA500", bgColor: "#FFF5E6" };
+    case "Quoted":
+      return { color: "#007BFF", bgColor: "#E6F0FF" };
+    case "Called":
+      return { color: "#6f42c1", bgColor: "#f3e8ff" };
+    case "Awaiting parts":
+      return { color: "#fd7e14", bgColor: "#fff3e0" };
+    case "Rejected":
+      return { color: "#dc3545", bgColor: "#fdecea" };
+    case "Scheduled":
+      return { color: "#17A2B8", bgColor: "#E0F7FA" };
+    case "Order Complete":
+      return { color: "#28a745", bgColor: "#E8F6EA" };
+    case "All":
+    default:
+      return { color: "#6c757d", bgColor: "#f8f9fa" };
+  }
+};
 
 const Hitch = () => {
   const {
-    orderPaginationData,
-    orders,
+    hitchPaginationData,
+    hitches,
     loading,
     error,
-    fetchOrders,
-    addOrder,
-    updateOrder,
-    deleteOrder,
-  } = useOrders();
-
-  const { token } = useAuth();
+    fetchHitches,
+    addHitch,
+    updateHitch,
+    deleteHitch,
+    statusCounts,
+  } = useHitches();
 
   const [currentPage, setCurrentPage] = useState(
-    orderPaginationData.current_page || 1
+    hitchPaginationData.current_page || 1
   );
-  const itemsPerPage = orderPaginationData.per_page || 10;
+  const itemsPerPage = hitchPaginationData.per_page || 10;
 
   const [selectedStatus, setSelectedStatus] = useState("All");
   const statuses = [
@@ -73,15 +71,15 @@ const Hitch = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [hitchToDelete, setHitchToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState({});
   const user = JSON.parse(localStorage.getItem("user"));
-    const [repairs, setRepairs] = useState([]);
-     const [parts, setParts] = useState([]);
+  const [repairs, setRepairs] = useState([]);
+  const [parts, setParts] = useState([]);
 
-  const [orderCounts, setOrderCounts] = useState({
+  const [hitchCounts, setHitchCounts] = useState({
     All: 0,
     "New Order": 0,
     Quoted: 0,
@@ -92,15 +90,23 @@ const Hitch = () => {
     "Order Complete": 0,
   });
 
-  const [orderFormData, setOrderFormData] = useState({
-    partName: "",
-    quantity: 1,
-    vendor: "",
-    status: "New Order",
+  const [hitchFormData, setHitchFormData] = useState({
+    customerName: "",
+    phoneNumber: "",
+    vehicleMake: "",
+    vehicleModel: "",
+    vehicleYear: "",
+    jobDescription: [],
+    partsNeeded: [],
+    partNumber: "",
+    dateIn: "",
+    dateOut: "",
+    price: "",
     comments: "",
+    status: "New Order",
   });
 
-  const [editingOrder, setEditingOrder] = useState(null);
+  const [editingHitch, setEditingHitch] = useState(null);
 
   const handleCloseInfoModal = () => {
     setShowInfoModal(false);
@@ -110,25 +116,35 @@ const Hitch = () => {
 
   const handleCloseAddModal = () => {
     setShowAddModal(false);
-    resetOrderFormData();
+    resetHitchFormData();
   };
   const handleShowAddModal = () => setShowAddModal(true);
 
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-    setEditingOrder(null);
-    resetOrderFormData();
+    setEditingHitch(null);
+    resetHitchFormData();
   };
   const handleShowEditModal = () => setShowEditModal(true);
 
-  const resetOrderFormData = () => {
-    setOrderFormData({
-      partName: "",
-      quantity: 1,
-      vendor: "",
-      status: "New Order",
+  const resetHitchFormData = () => {
+    setHitchFormData({
+      customerName: "",
+      phoneNumber: "",
+      vehicleMake: "",
+      vehicleModel: "",
+      vehicleYear: "",
+      jobDescription: [],
+      partsNeeded: [],
+      partNumber: "",
+      dateIn: "",
+      dateOut: "",
+      price: "",
       comments: "",
+      status: "New Order",
     });
+    setRepairs([]);
+    setParts([]);
   };
 
   const handleFilterClick = (status) => {
@@ -138,71 +154,64 @@ const Hitch = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setOrderFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const increaseQuantity = () => {
-    setOrderFormData((prevData) => ({
-      ...prevData,
-      quantity: prevData.quantity + 1,
-    }));
-  };
-
-  const decreaseQuantity = () => {
-    if (orderFormData.quantity > 1) {
-      setOrderFormData((prevData) => ({
-        ...prevData,
-        quantity: prevData.quantity - 1,
-      }));
-    }
+    setHitchFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddSubmit = async () => {
-    const success = await addOrder({
-      ...orderFormData,
-      comments: orderFormData.comments,
+    const success = await addHitch({
+      ...hitchFormData,
+      jobDescription: repairs,
+      partsNeeded: parts,
     });
     if (success) {
       handleCloseAddModal();
-      fetchStatusCounts();
     }
   };
 
-  const handleEditClick = (order) => {
-    setEditingOrder(order);
-    setOrderFormData({
-      partName: order.partName || "",
-      quantity: order.quantity || 1,
-      vendor: order.vendor || "",
-      status: order.status || "New Order",
-      comments: order.comments || "",
+  const handleEditClick = (hitch) => {
+    setEditingHitch(hitch);
+    setHitchFormData({
+      customerName: hitch.customerName || "",
+      phoneNumber: hitch.phoneNumber || "",
+      vehicleMake: hitch.vehicleMake || "",
+      vehicleModel: hitch.vehicleModel || "",
+      vehicleYear: hitch.vehicleYear || "",
+      jobDescription: hitch.jobDescription || [],
+      partsNeeded: hitch.partsNeeded || [],
+      partNumber: hitch.partNumber || "",
+      dateIn: hitch.dateIn || "",
+      dateOut: hitch.dateOut || "",
+      price: hitch.price || "",
+      comments: hitch.comments || "",
+      status: hitch.status || "New Order",
     });
+    setRepairs(hitch.jobDescription || []);
+    setParts(hitch.partsNeeded || []);
     handleShowEditModal();
   };
 
   const handleEditSubmit = async () => {
-    if (!editingOrder) return;
+    if (!editingHitch) return;
 
-    const success = await updateOrder(editingOrder.id, {
-      ...orderFormData,
-      comments: orderFormData.comments,
+    const success = await updateHitch(editingHitch.id, {
+      ...hitchFormData,
+      jobDescription: repairs,
+      partsNeeded: parts,
     });
     if (success) {
       handleCloseEditModal();
-      fetchStatusCounts();
     }
   };
 
   const handleDelete = async (id) => {
-    const success = await deleteOrder(id);
+    const success = await deleteHitch(id);
     if (success) {
-      console.log(`Order with ID ${id} deleted successfully.`);
-      fetchStatusCounts();
+      console.log(`Hitch request with ID ${id} deleted successfully.`);
     }
   };
 
-  const displayedOrders = orders;
-  const totalPages = orderPaginationData.last_page || 1;
+  const displayedHitches = hitches;
+  const totalPages = hitchPaginationData.last_page || 1;
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -223,26 +232,26 @@ const Hitch = () => {
     setCurrentPage(1);
   };
 
-  const fetchStatusCounts = async () => {
-    try {
-      const API_URL = `${process.env.REACT_APP_BASE_URL}/api/orders/counts`;
+  // const fetchStatusCounts = async () => {
+  //   try {
+  //     const API_URL = `${process.env.REACT_APP_BASE_URL}/api/orders/counts`;
 
-      const response = await fetch(`${API_URL}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setOrderCounts(data);
-    } catch (error) {
-      console.error("Error fetching status counts:", error);
-    }
-  };
+  //     const response = await fetch(`${API_URL}`, {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         ...(token && { Authorization: `Bearer ${token}` }),
+  //       },
+  //     });
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+  //     const data = await response.json();
+  //     setOrderCounts(data);
+  //   } catch (error) {
+  //     console.error("Error fetching status counts:", error);
+  //   }
+  // };
 
   useEffect(() => {
     const params = {
@@ -253,49 +262,43 @@ const Hitch = () => {
       sortDirection: sortDirection,
       ...(searchTerm && { search: searchTerm }),
     };
-    fetchOrders(params);
+    fetchHitches(params);
   }, [
     selectedStatus,
     sortBy,
     sortDirection,
     currentPage,
     itemsPerPage,
-    fetchOrders,
     searchTerm,
   ]);
 
   useEffect(() => {
-    fetchStatusCounts();
+    // fetchStatusCounts();
   }, []);
 
   useEffect(() => {
     if (
-      orderPaginationData.current_page &&
-      orderPaginationData.current_page !== currentPage
+      hitchPaginationData.current_page &&
+      hitchPaginationData.current_page !== currentPage
     ) {
-      setCurrentPage(orderPaginationData.current_page);
+      setCurrentPage(hitchPaginationData.current_page);
     }
-  }, [orderPaginationData.current_page]);
+    setHitchCounts(statusCounts);
+  }, [hitchPaginationData.current_page, statusCounts]);
 
   const countByStatus = (status) => {
-    return orderCounts[status] || 0;
-  };
-
-  const promptDeleteConfirmation = (order) => {
-    setOrderToDelete(order);
-    setShowDeleteConfirmModal(true);
+    return hitchCounts[status] || 0;
   };
 
   const handleDownload = (type) => {
     console.log(`Downloading as ${type}`);
-    // Handle the actual download here
     setShowDownloadModal(false);
   };
 
   return (
     <div className="order-page">
       <div className="rightsidebar-navbar">
-        <h3>Total Trailer</h3> {/* Updated title */}
+        <h3>Total Trailer</h3>
         <div className="rightsidebar-button" onClick={handleShowAddModal}>
           <HugeiconsIcon
             icon={Add01Icon}
@@ -311,13 +314,12 @@ const Hitch = () => {
         <h3> Hitch List</h3>
       </div>
 
-      {/* Search Input */}
       <div className="download-container">
         <div className="search-input-container">
           <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
           <input
             type="text"
-            placeholder="Search orders..."
+            placeholder="Search hitch requests..."
             value={searchTerm}
             onChange={handleSearchChange}
             className="search-input"
@@ -340,7 +342,6 @@ const Hitch = () => {
 
       <div className="custom-line no-margin"></div>
 
-      {/* Status Filters */}
       <div className="rightsidebar-filter-progress">
         {statuses.map((status) => (
           <div
@@ -358,9 +359,8 @@ const Hitch = () => {
         ))}
       </div>
 
-      {/* Order Table */}
       {loading ? (
-        <p>Loading orders...</p>
+        <p>Loading hitch requests...</p>
       ) : error ? (
         <p>Error: {error.message}</p>
       ) : (
@@ -375,57 +375,62 @@ const Hitch = () => {
                   # {sortBy === "id" && (sortDirection === "asc" ? "▲" : "▼")}
                 </th>
                 <th
-                  onClick={() => handleSortClick("partName")}
+                  onClick={() => handleSortClick("customerName")}
                   style={{ cursor: "pointer" }}
                 >
                   Customer Name{" "}
-                  {sortBy === "partName" &&
+                  {sortBy === "customerName" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("phoneNumber")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Phone Number{" "}
+                  {sortBy === "phoneNumber" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("vehicleMake")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Vehicle Make{" "}
+                  {sortBy === "vehicleMake" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("vehicleModel")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Vehicle Model{" "}
+                  {sortBy === "vehicleModel" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("vehicleYear")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Vehicle year{" "}
+                  {sortBy === "vehicleYear" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
+                </th>
+                <th
+                  onClick={() => handleSortClick("jobDescription")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Job description{" "}
+                  {sortBy === "jobDescription" &&
                     (sortDirection === "asc" ? "▲" : "▼")}
                 </th>
                 <th
                   onClick={() => handleSortClick("partNumber")}
                   style={{ cursor: "pointer" }}
                 >
-                  Phone Number{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Vehicle Make{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Vehicle Model{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Vehicle year{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Job description{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partNumber")}
-                  style={{ cursor: "pointer" }}
-                >
                   Part Number{" "}
-                  {sortBy === "vendor" && (sortDirection === "asc" ? "▲" : "▼")}
+                  {sortBy === "partNumber" &&
+                    (sortDirection === "asc" ? "▲" : "▼")}
                 </th>
-            
-              
+
                 <th
                   onClick={() => handleSortClick("status")}
                   style={{ cursor: "pointer" }}
@@ -433,35 +438,40 @@ const Hitch = () => {
                   Status{" "}
                   {sortBy === "status" && (sortDirection === "asc" ? "▲" : "▼")}
                 </th>
-       
               </tr>
             </thead>
             <tbody>
-              {Array.isArray(displayedOrders) &&
-              displayedOrders.length === 0 ? (
+              {Array.isArray(displayedHitches) &&
+              displayedHitches.length === 0 ? (
                 <tr>
-                  <td colSpan="7">No data available</td>
+                  <td colSpan="9">No data available</td>
                 </tr>
               ) : (
-                Array.isArray(displayedOrders) &&
-                displayedOrders.map((order) => {
-                  const { color, bgColor } = getStatusStyles(order.status);
+                Array.isArray(displayedHitches) &&
+                displayedHitches.map((hitch) => {
+                  const { color, bgColor } = getStatusStyles(hitch.status);
                   return (
-                    <tr key={order.id}
-                    style={{cursor: "pointer"}}
-                    onClick={() => {
-                      setSelectedItem(order);
-                      handleShowInfoModal();
-                      
-                    }}>
-                      <td>{order.id}</td>
-                      <td>{order.partName}</td>
-                      <td>{order.vendor}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.comments}</td>
+                    <tr
+                      key={hitch.id}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                        setSelectedItem(hitch);
+                        handleShowInfoModal();
+                      }}
+                    >
+                      <td>{hitch.id}</td>
+                      <td>{hitch.customerName}</td>
+                      <td>{hitch.phoneNumber}</td>
+                      <td>{hitch.vehicleMake}</td>
+                      <td>{hitch.vehicleModel}</td>
+                      <td>{hitch.vehicleYear}</td>
+                      <td>
+                        {Array.isArray(hitch.jobDescription)
+                          ? hitch.jobDescription.join(", ")
+                          : hitch.jobDescription}
+                      </td>{" "}
+                      {/* Changed from order.quantity and added array handling */}
+                      <td>{hitch.partNumber}</td>
                       <td>
                         <div
                           style={{
@@ -476,36 +486,9 @@ const Hitch = () => {
                             width: "fit-content",
                           }}
                         >
-                          {order.status}
+                          {hitch.status}
                         </div>
                       </td>
-                      {/* <td>
-                        <div
-                          className="action-buttons"
-                          style={{ display: "flex", gap: "8px" }}
-                        >
-                          <button
-                            className="edit-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(order);
-                            }}
-                          >
-                            Edit
-                          </button>
-                          {user.name === "admin" && (
-                            <button
-                              className="delete-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                promptDeleteConfirmation(order);
-                              }}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </td> */}
                     </tr>
                   );
                 })
@@ -561,63 +544,62 @@ const Hitch = () => {
         <Modal.Body>
           <form className="custom-form">
             <div className="form-group">
-              <label htmlFor="partName">Customer name</label>
+              <label htmlFor="customerName">Customer name</label>
               <input
                 type="text"
-                id="partName"
-                name="partName"
+                id="customerName"
+                name="customerName"
                 className="input-field"
-                value={orderFormData.partName}
+                value={hitchFormData.customerName}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="vendor">Phone number</label>
+              <label htmlFor="phoneNumber">Phone number</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="phoneNumber"
+                name="phoneNumber"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.phoneNumber}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Vehicle make</label>
+              <label htmlFor="vehicleMake">Vehicle make</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="vehicleMake"
+                name="vehicleMake"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.vehicleMake}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Vehicle model</label>
+              <label htmlFor="vehicleModel">Vehicle model</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="vehicleModel"
+                name="vehicleModel"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.vehicleModel}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Vehicle year</label>
+              <label htmlFor="vehicleYear">Vehicle year</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="vehicleYear"
+                name="vehicleYear"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.vehicleYear}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              {/* RepairSelector component for editing */}
               <HitchSelector
                 selectedHitch={repairs}
                 setSelectedHitch={setRepairs}
@@ -648,7 +630,6 @@ const Hitch = () => {
               </div>
             </div>
             <div className="form-group">
-              {/* PartSelector component for editing */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
               <div className="selected-parts-list">
                 {Array.isArray(parts) && parts.length > 0 ? (
@@ -676,13 +657,13 @@ const Hitch = () => {
               </div>
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Part number</label>
+              <label htmlFor="partNumber">Part number</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="partNumber"
+                name="partNumber"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.partNumber}
                 onChange={handleChange}
               />
             </div>
@@ -693,7 +674,7 @@ const Hitch = () => {
                 id="dateIn"
                 name="dateIn"
                 className="input-field"
-                value={null}
+                value={hitchFormData.dateIn}
                 onChange={handleChange}
               />
             </div>
@@ -704,18 +685,18 @@ const Hitch = () => {
                 id="dateOut"
                 name="dateOut"
                 className="input-field"
-                value={null}
+                value={hitchFormData.dateOut}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Price</label>
+              <label htmlFor="price">Price</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="price"
+                name="price"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.price}
                 onChange={handleChange}
               />
             </div>
@@ -726,7 +707,7 @@ const Hitch = () => {
                 id="comments"
                 name="comments"
                 className="input-field textarea"
-                value={orderFormData.comments}
+                value={hitchFormData.comments}
                 onChange={handleChange}
               />
             </div>
@@ -737,7 +718,7 @@ const Hitch = () => {
                 id="status"
                 name="status"
                 className="input-field"
-                value={orderFormData.status}
+                value={hitchFormData.status}
                 onChange={handleChange}
               >
                 <option>New Order</option>
@@ -761,7 +742,6 @@ const Hitch = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Edit modal */}
       <Modal
         show={showEditModal}
         onHide={handleCloseEditModal}
@@ -778,63 +758,62 @@ const Hitch = () => {
         <Modal.Body>
           <form className="custom-form">
             <div className="form-group">
-              <label htmlFor="partName">Customer name</label>
+              <label htmlFor="customerName">Customer name</label>
               <input
                 type="text"
-                id="partName"
-                name="partName"
+                id="customerName"
+                name="customerName"
                 className="input-field"
-                value={orderFormData.partName}
+                value={hitchFormData.customerName}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="vendor">Phone number</label>
+              <label htmlFor="phoneNumber">Phone number</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="phoneNumber"
+                name="phoneNumber"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.phoneNumber}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Vehicle make</label>
+              <label htmlFor="vehicleMake">Vehicle make</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="vehicleMake"
+                name="vehicleMake"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.vehicleMake}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Vehicle model</label>
+              <label htmlFor="vehicleModel">Vehicle model</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="vehicleModel"
+                name="vehicleModel"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.vehicleModel}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Vehicle year</label>
+              <label htmlFor="vehicleYear">Vehicle year</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="vehicleYear"
+                name="vehicleYear"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.vehicleYear}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              {/* RepairSelector component for editing */}
               <HitchSelector
                 selectedHitch={repairs}
                 setSelectedHitch={setRepairs}
@@ -865,7 +844,6 @@ const Hitch = () => {
               </div>
             </div>
             <div className="form-group">
-              {/* PartSelector component for editing */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
               <div className="selected-parts-list">
                 {Array.isArray(parts) && parts.length > 0 ? (
@@ -893,13 +871,13 @@ const Hitch = () => {
               </div>
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Part number</label>
+              <label htmlFor="partNumber">Part number</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="partNumber"
+                name="partNumber"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.partNumber}
                 onChange={handleChange}
               />
             </div>
@@ -910,7 +888,7 @@ const Hitch = () => {
                 id="dateIn"
                 name="dateIn"
                 className="input-field"
-                value={null}
+                value={hitchFormData.dateIn}
                 onChange={handleChange}
               />
             </div>
@@ -921,18 +899,18 @@ const Hitch = () => {
                 id="dateOut"
                 name="dateOut"
                 className="input-field"
-                value={null}
+                value={hitchFormData.dateOut}
                 onChange={handleChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="vendor">Price</label>
+              <label htmlFor="price">Price</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
+                id="price"
+                name="price"
                 className="input-field"
-                value={orderFormData.vendor}
+                value={hitchFormData.price}
                 onChange={handleChange}
               />
             </div>
@@ -943,7 +921,7 @@ const Hitch = () => {
                 id="comments"
                 name="comments"
                 className="input-field textarea"
-                value={orderFormData.comments}
+                value={hitchFormData.comments}
                 onChange={handleChange}
               />
             </div>
@@ -954,7 +932,7 @@ const Hitch = () => {
                 id="status"
                 name="status"
                 className="input-field"
-                value={orderFormData.status}
+                value={hitchFormData.status}
                 onChange={handleChange}
               >
                 <option>New Order</option>
@@ -972,13 +950,12 @@ const Hitch = () => {
           <button className="btn-secondary" onClick={handleCloseEditModal}>
             Cancel
           </button>
-          <button className="btn-primary" onClick={handleAddSubmit}>
+          <button className="btn-primary" onClick={handleEditSubmit}>
             Save
           </button>
         </Modal.Footer>
       </Modal>
 
-      {/* Task Info Modal */}
       <Modal
         show={showInfoModal}
         onHide={handleCloseInfoModal}
@@ -987,7 +964,7 @@ const Hitch = () => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Task Details</Modal.Title>
+          <Modal.Title>Hitch Request Details</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedItem && (
@@ -996,25 +973,23 @@ const Hitch = () => {
                 <strong>Customer Name:</strong>
                 <p>{selectedItem.customerName}</p>
               </div>
-              {/* Display Phone Number in Info Modal */}
               <div className="info-group">
                 <strong>Phone Number:</strong>
                 <p>{selectedItem.phoneNumber}</p>
               </div>
-              {/* Display Plate Number in Info Modal */}
               <div className="info-group">
                 <strong>Vehicle make:</strong>
-                <p>{selectedItem.plateNumber}</p>
+                <p>{selectedItem.vehicleMake}</p>
               </div>
               <div className="info-group">
                 <strong>Vehicle model:</strong>
-                <p>{selectedItem.plateNumber}</p>
+                <p>{selectedItem.vehicleModel}</p>
               </div>
               <div className="info-group">
                 <strong>Vehicle year:</strong>
-                <p>{selectedItem.plateNumber}</p>
+                <p>{selectedItem.vehicleYear}</p>
               </div>
-              
+
               <div className="info-group">
                 <strong>Date In:</strong>
                 <p>{selectedItem.dateIn}</p>
@@ -1025,18 +1000,19 @@ const Hitch = () => {
               </div>
               <div className="info-group">
                 <strong>Price:</strong>
-                <p>{selectedItem.plateNumber}</p>
+                <p>{selectedItem.price}</p>
               </div>
               <div className="info-group">
                 <strong>Status:</strong>
-                <p>{selectedItem.progress}</p>
+                <p>{selectedItem.status}</p>
               </div>
               <div className="info-group">
                 <strong>Job description:</strong>
                 <p>
-                  {Array.isArray(selectedItem.repairNeeded)
-                    ? selectedItem.repairNeeded.join(", ")
-                    : selectedItem.repairNeeded}
+                  {Array.isArray(selectedItem.jobDescription)
+                    ? selectedItem.jobDescription.join(", ")
+                    : selectedItem.jobDescription}{" "}
+                  // Changed from repairNeeded
                 </p>
               </div>
               <div className="info-group">
@@ -1044,7 +1020,7 @@ const Hitch = () => {
                 <p>
                   {Array.isArray(selectedItem.partsNeeded)
                     ? selectedItem.partsNeeded
-                        .map((part) => `${part.name} (${part.quantity})`)
+                        .map((part) => `${part.name} (Qty: ${part.quantity})`)
                         .join(", ")
                     : selectedItem.partsNeeded}
                 </p>
@@ -1056,7 +1032,6 @@ const Hitch = () => {
                 </div>
               )}
 
-              {/* Display Created By */}
               {selectedItem.author && (
                 <div className="info-group">
                   <strong>Created By:</strong>
@@ -1064,10 +1039,9 @@ const Hitch = () => {
                 </div>
               )}
 
-              {/* Display Task History */}
               {selectedItem.history && selectedItem.history.length > 0 && (
                 <div className="info-group">
-                  <strong>Task History:</strong>
+                  <strong>Hitch Request History:</strong>
                   <ul>
                     {selectedItem.history.map((historyEntry) => (
                       <li key={historyEntry.id}>
@@ -1099,20 +1073,14 @@ const Hitch = () => {
           <button className="btn-secondary" onClick={handleCloseInfoModal}>
             Cancel
           </button>
-          {/* Delete button */}
           {user.name === "admin" && (
             <button
               className="btn-danger"
-            //   onClick={(e) => {
-            //     e.stopPropagation();
-            //     promptDeleteConfirmation(order);
-            //   }}
               onClick={() => handleDelete(selectedItem.id)}
             >
               Delete
             </button>
           )}
-          {/* Edit button */}
           <button
             className="btn-primary"
             onClick={() => {
@@ -1125,7 +1093,6 @@ const Hitch = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         show={showDeleteConfirmModal}
         onHide={() => setShowDeleteConfirmModal(false)}
@@ -1137,8 +1104,8 @@ const Hitch = () => {
           <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to delete the order{" "}
-          <strong>{orderToDelete?.partName}</strong>?
+          Are you sure you want to delete the hitch request{" "}
+          <strong>{hitchToDelete?.customerName}</strong>?
         </Modal.Body>
         <Modal.Footer>
           <button
@@ -1150,13 +1117,13 @@ const Hitch = () => {
           <button
             className="btn-danger"
             onClick={async () => {
-              if (orderToDelete) {
-                const success = await deleteOrder(orderToDelete.id);
+              if (hitchToDelete) {
+                const success = await deleteHitch(hitchToDelete.id);
                 if (success) {
-                  console.log(`Order ${orderToDelete.id} deleted.`);
+                  console.log(`Hitch request ${hitchToDelete.id} deleted.`);
                 }
                 setShowDeleteConfirmModal(false);
-                setOrderToDelete(null);
+                setHitchToDelete(null);
               }
             }}
           >
@@ -1165,7 +1132,6 @@ const Hitch = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Download modal  */}
       <Modal
         show={showDownloadModal}
         onHide={() => setShowDownloadModal(false)}

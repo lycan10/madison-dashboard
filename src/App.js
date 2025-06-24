@@ -1,13 +1,17 @@
-import React from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { TaskProvider } from './context/TaskContext';
-import { OrderProvider } from './context/OrderContext';
-import Login from './screens/login/Login';
+import React from "react";
+import { Route, Routes, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { TaskProvider } from "./context/TaskContext";
+import { OrderProvider } from "./context/OrderContext";
+import Login from "./screens/login/Login";
 import Dashboard from "./screens/dashboard/Dashboard";
-import OrderPage from './screens/order/Order';
-import Inventory from './screens/Inventory/Inventory';
-import Hitch from './screens/hitch/Hitch';
+import OrderPage from "./screens/order/Order";
+import Inventory from "./screens/Inventory/Inventory";
+import Hitch from "./screens/hitch/Hitch";
+import ChangeUsersPassword from "./screens/ChangeUsersPassword/changeUsersPassword";
+import { InventoryProvider } from "./context/InventoryContext";
+import { HitchProvider } from "./context/HitchContext";
+import { TimeCardProvider } from "./context/TimeCardContext";
 
 const ProtectedRoute = ({ element: Component, ...rest }) => {
   const { user, loading } = useAuth();
@@ -21,28 +25,38 @@ function App() {
   return (
     <AuthProvider>
       <TaskProvider>
-        <OrderProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/"
-                element={<ProtectedRoute element={Dashboard} />}
-              />
-              <Route
-                path="/orders"
-                element={<ProtectedRoute element={OrderPage} />}
-              />
-              <Route
-                path="/inventory"
-                element={<ProtectedRoute element={Inventory} />}
-              />
-              <Route
-                path="/hitch"
-                element={<ProtectedRoute element={Hitch} />}
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-        </OrderProvider>
+        <InventoryProvider>
+          <HitchProvider>
+            <OrderProvider>
+              <TimeCardProvider>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route
+                  path="/"
+                  element={<ProtectedRoute element={Dashboard} />}
+                />
+                <Route
+                  path="/orders"
+                  element={<ProtectedRoute element={OrderPage} />}
+                />
+                <Route
+                  path="/inventory"
+                  element={<ProtectedRoute element={Inventory} />}
+                />
+                <Route
+                  path="/hitch"
+                  element={<ProtectedRoute element={Hitch} />}
+                />
+                <Route
+                  path="/change-password"
+                  element={<ProtectedRoute element={ChangeUsersPassword} />}
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+              </TimeCardProvider>
+            </OrderProvider>
+          </HitchProvider>
+        </InventoryProvider>
       </TaskProvider>
     </AuthProvider>
   );

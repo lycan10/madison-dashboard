@@ -1,10 +1,10 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useContext, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 
-const TaskContext = createContext(null);
+const InventoryContext = createContext(null);
 
-export const TaskProvider = ({ children }) => {
-  const [taskPaginationData, setTaskPaginationData] = useState({
+export const InventoryProvider = ({ children }) => {
+  const [inventoryPaginationData, setInventoryPaginationData] = useState({
     current_page: 1,
     data: [],
     first_page_url: null,
@@ -14,20 +14,20 @@ export const TaskProvider = ({ children }) => {
     links: [],
     next_page_url: null,
     path: null,
-    per_page: 10, // Adjusted to 10 for consistency as per TaskController
+    per_page: 10,
     prev_page_url: null,
     to: null,
     total: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [taskCounts, setTaskCounts] = useState({}); // Added for task counts
+  const [statusCounts, setStatusCounts] = useState({});
   const { token } = useAuth();
-  const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/tasks`;
+  const INVENTORY_API_URL = `${process.env.REACT_APP_BASE_URL}/api/inventories`;
 
-  const fetchTasks = async (params = {}) => {
+  const fetchInventories = async (params = {}) => {
     if (!token) {
-      setTaskPaginationData({
+      setInventoryPaginationData({
         current_page: 1,
         data: [],
         first_page_url: null,
@@ -37,7 +37,7 @@ export const TaskProvider = ({ children }) => {
         links: [],
         next_page_url: null,
         path: null,
-        per_page: 10, // Adjusted to 10
+        per_page: 10,
         prev_page_url: null,
         to: null,
         total: 0,
@@ -50,7 +50,7 @@ export const TaskProvider = ({ children }) => {
 
     const query = new URLSearchParams(params).toString();
     try {
-      const response = await fetch(`${TASKS_API_URL}?${query}`, {
+      const response = await fetch(`${INVENTORY_API_URL}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -63,24 +63,24 @@ export const TaskProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch tasks");
+        throw new Error(errorData.message || "Failed to fetch inventory");
       }
 
       const data = await response.json();
-      setTaskPaginationData(data);
+      setInventoryPaginationData(data);
     } catch (err) {
       setError(err);
-      console.error("Error fetching tasks:", err);
+      console.error("Error fetching inventory:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchTaskCounts = async () => {
+  const fetchInventoryStatusCounts = async () => {
     if (!token) return;
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL}/api/task/counts`,
+        `${process.env.REACT_APP_BASE_URL}/api/inventory/counts`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -93,30 +93,29 @@ export const TaskProvider = ({ children }) => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
       }
-
       if (!response.ok) {
-        throw new Error("Failed to fetch task counts");
+        throw new Error("Failed to fetch inventory status counts");
       }
       const data = await response.json();
-      setTaskCounts(data);
+      setStatusCounts(data);
     } catch (err) {
-      console.error("Error fetching task counts:", err);
+      console.error("Error fetching inventory status counts:", err);
     }
   };
 
-  const addTask = async (taskData) => {
+  const addInventory = async (inventoryData) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(TASKS_API_URL, {
+      const response = await fetch(INVENTORY_API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(taskData),
+        body: JSON.stringify(inventoryData),
       });
 
       if (response.status === 401) {
@@ -126,41 +125,41 @@ export const TaskProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add task");
+        throw new Error(errorData.message || "Failed to add inventory item");
       }
 
-      const newTask = await response.json();
-      fetchTasks({
-        page: taskPaginationData.current_page,
-        perPage: taskPaginationData.per_page,
-        ...(taskPaginationData.progress && {
-          progress: taskPaginationData.progress,
+      const newInventory = await response.json();
+      fetchInventories({
+        page: inventoryPaginationData.current_page,
+        perPage: inventoryPaginationData.per_page,
+        ...(inventoryPaginationData.status && {
+          status: inventoryPaginationData.status,
         }),
-      }); // Re-fetch to update pagination data
-      fetchTaskCounts(); // Re-fetch counts
-      return newTask;
+      });
+      fetchInventoryStatusCounts();
+      return newInventory;
     } catch (err) {
       setError(err);
-      console.error("Error adding task:", err);
+      console.error("Error adding inventory item:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateTask = async (id, taskData) => {
+  const updateInventory = async (id, inventoryData) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${TASKS_API_URL}/${id}`, {
+      const response = await fetch(`${INVENTORY_API_URL}/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(taskData),
+        body: JSON.stringify(inventoryData),
       });
 
       if (response.status === 401) {
@@ -170,35 +169,35 @@ export const TaskProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update task");
+        throw new Error(errorData.message || "Failed to update inventory item");
       }
 
-      const updatedTask = await response.json();
-      fetchTasks({
-        page: taskPaginationData.current_page,
-        perPage: taskPaginationData.per_page,
-        ...(taskPaginationData.progress && {
-          progress: taskPaginationData.progress,
+      const updatedInventory = await response.json();
+      fetchInventories({
+        page: inventoryPaginationData.current_page,
+        perPage: inventoryPaginationData.per_page,
+        ...(inventoryPaginationData.status && {
+          status: inventoryPaginationData.status,
         }),
-      }); // Re-fetch to update pagination data
-      fetchTaskCounts(); // Re-fetch counts
-      return updatedTask;
+      });
+      fetchInventoryStatusCounts();
+      return updatedInventory;
     } catch (err) {
       setError(err);
-      console.error("Error updating task:", err);
+      console.error("Error updating inventory item:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteTask = async (id) => {
+  const deleteInventory = async (id) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${TASKS_API_URL}/${id}`, {
+      const response = await fetch(`${INVENTORY_API_URL}/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -213,35 +212,33 @@ export const TaskProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete task");
+        throw new Error(errorData.message || "Failed to delete inventory item");
       }
 
-      // Adjust page if current page becomes empty after deletion
-      let newPage = taskPaginationData.current_page;
-      if (taskPaginationData.data.length === 1 && newPage > 1) {
+      let newPage = inventoryPaginationData.current_page;
+      if (inventoryPaginationData.data.length === 1 && newPage > 1) {
         newPage -= 1;
       }
 
-      fetchTasks({
+      fetchInventories({
         page: newPage,
-        perPage: taskPaginationData.per_page,
-        ...(taskPaginationData.progress && {
-          progress: taskPaginationData.progress,
+        perPage: inventoryPaginationData.per_page,
+        ...(inventoryPaginationData.status && {
+          status: inventoryPaginationData.status,
         }),
       });
-      fetchTaskCounts(); // Re-fetch counts
+      fetchInventoryStatusCounts();
       return true;
     } catch (err) {
       setError(err);
-      console.error("Error deleting task:", err);
+      console.error("Error deleting inventory item:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // New function for exporting task data
-  const exportTasks = async (format, params = {}) => {
+  const exportInventories = async (format, params = {}) => {
     if (!token) {
       setError(new Error("Authentication token not available."));
       return;
@@ -251,7 +248,7 @@ export const TaskProvider = ({ children }) => {
     setError(null);
 
     const queryParams = new URLSearchParams(params).toString();
-    const exportUrl = `${process.env.REACT_APP_BASE_URL}/api/task/export-${format}?${queryParams}`;
+    const exportUrl = `${process.env.REACT_APP_BASE_URL}/api/inventory/export-${format}?${queryParams}`;
 
     try {
       const response = await fetch(exportUrl, {
@@ -267,13 +264,11 @@ export const TaskProvider = ({ children }) => {
       }
 
       if (!response.ok) {
-        let errorMessage = `Failed to export tasks as ${format}. Status: ${response.status}`;
+        let errorMessage = `Failed to export inventory as ${format}. Status: ${response.status}`;
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
-        } catch (jsonError) {
-          // If response is not JSON, use the default error message
-        }
+        } catch (jsonError) {}
         throw new Error(errorMessage);
       }
 
@@ -281,49 +276,48 @@ export const TaskProvider = ({ children }) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `tasks_report.${format}`;
+      a.download = `inventory_report.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
       setError(err);
-      console.error(`Error exporting tasks as ${format}:`, err);
+      console.error(`Error exporting inventory as ${format}:`, err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTasks();
-    fetchTaskCounts();
-  }, [token]);
+    fetchInventoryStatusCounts();
+  }, []);
 
   return (
-    <TaskContext.Provider
+    <InventoryContext.Provider
       value={{
-        taskPaginationData,
-        tasks: taskPaginationData.data,
+        inventoryPaginationData,
+        inventories: inventoryPaginationData.data,
         loading,
         error,
-        taskCounts, // Provide taskCounts
-        fetchTasks,
-        addTask,
-        updateTask,
-        deleteTask,
-        fetchTaskCounts,
-        exportTasks,
+        statusCounts,
+        fetchInventories,
+        addInventory,
+        updateInventory,
+        deleteInventory,
+        fetchInventoryStatusCounts,
+        exportInventories,
       }}
     >
       {children}
-    </TaskContext.Provider>
+    </InventoryContext.Provider>
   );
 };
 
-export const useTasks = () => {
-  const context = useContext(TaskContext);
+export const useInventories = () => {
+  const context = useContext(InventoryContext);
   if (!context) {
-    throw new Error("useTasks must be used within a TaskProvider");
+    throw new Error("useInventories must be used within an InventoryProvider");
   }
   return context;
 };

@@ -12,8 +12,10 @@ import {
   LeftToRightListBulletIcon,
   Search01Icon,
   MoreHorizontalIcon,
+  Download04FreeIcons,
 } from "@hugeicons/core-free-icons";
 import Priority from "../../components/priority/Priority";
+import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import RepairSelector from "../../components/repairs/Repairs";
 import PartSelector from "../../components/repairs/Parts";
@@ -25,6 +27,7 @@ import { useAuth } from "../../context/AuthContext";
 import Inventory from "../Inventory/Inventory";
 import Hitch from "../hitch/Hitch";
 import TimeCard from "../timecard/TimeCard";
+import ChangeUsersPassword  from "../ChangeUsersPassword/changeUsersPassword";
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
@@ -49,6 +52,7 @@ const RightSideBar = ({ selected }) => {
     addTask,
     updateTask,
     deleteTask,
+    exportTasks,
   } = useTasks();
 
   const [currentPage, setCurrentPage] = useState(
@@ -71,7 +75,7 @@ const RightSideBar = ({ selected }) => {
     New: 0,
     "In Progress": 0,
     "Awaiting Parts": 0,
-    "Rejected Jobs":0,
+    "Rejected Jobs": 0,
     "Awaiting Pickup": 0,
     "Picked Up": 0,
   });
@@ -89,6 +93,7 @@ const RightSideBar = ({ selected }) => {
   const [endDate, setEndDate] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const user = JSON.parse(localStorage.getItem("user"));
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   const handleCloseAddModal = () => {
     setShowAddModal(false);
@@ -112,6 +117,7 @@ const RightSideBar = ({ selected }) => {
   const [formData, setFormData] = useState({
     customerName: "",
     phoneNumber: "",
+    email: "",
     plateNumber: "",
     dateIn: "",
     dateOut: "",
@@ -128,6 +134,7 @@ const RightSideBar = ({ selected }) => {
     setFormData({
       customerName: "",
       phoneNumber: "",
+      email: "",
       plateNumber: "",
       dateIn: "",
       dateOut: "",
@@ -153,6 +160,7 @@ const RightSideBar = ({ selected }) => {
     const finalData = {
       ...formData,
       phoneNumber: formData.phoneNumber,
+      email: formData.email,
       plateNumber: formData.plateNumber,
       repairNeeded: repairs,
       partsNeeded: parts,
@@ -169,6 +177,7 @@ const RightSideBar = ({ selected }) => {
     const finalData = {
       ...formData,
       phoneNumber: formData.phoneNumber,
+      email: formData.email,
       plateNumber: formData.plateNumber,
       repairNeeded: repairs,
       partsNeeded: parts,
@@ -193,6 +202,7 @@ const RightSideBar = ({ selected }) => {
     setFormData({
       customerName: item.customerName || "",
       phoneNumber: item.phoneNumber || "",
+      email: item.email || "",
       plateNumber: item.plateNumber || "",
       dateIn: item.dateIn || "",
       dateOut: item.dateOut || "",
@@ -209,7 +219,7 @@ const RightSideBar = ({ selected }) => {
 
   const fetchStatusCounts = async () => {
     try {
-      const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/tasks/counts`;
+      const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/task/counts`;
       const params = new URLSearchParams();
       if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
@@ -308,6 +318,19 @@ const RightSideBar = ({ selected }) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
+
+  const handleDownload = async (type) => {
+    console.log(`Downloading tasks as ${type}`);
+    const params = {
+      sortBy: sortBy,
+      sortDirection: sortDirection,
+      ...(searchTerm && { search: searchTerm }),
+      // Do NOT include page or perPage for exports, as we want all data
+    };
+    await exportTasks(type, params);
+    setShowDownloadModal(false);
+  };
+
   return (
     <div className="rightsidebar">
       <div className="rightsidebar-container">
@@ -318,14 +341,34 @@ const RightSideBar = ({ selected }) => {
             <div className="rightsidebar-navbar">
               <h3>Total Trailer</h3>
               {/* Button to open the Add New Task modal */}
-              <div className="rightsidebar-button" onClick={handleShowAddModal}>
-                <HugeiconsIcon
-                  icon={Add01Icon}
-                  size={16}
-                  color="#ffffff"
-                  strokeWidth={3}
-                />
-                <p>New Repair</p>
+              <div className="button-group d-flex flex-row">
+                {" "}
+                {/* Added a div for button grouping */}
+                <div
+                  className="rightsidebar-button"
+                  onClick={handleShowAddModal}
+                >
+                  <HugeiconsIcon
+                    icon={Add01Icon}
+                    size={16}
+                    color="#ffffff"
+                    strokeWidth={3}
+                  />
+                  <p>New Repair</p>
+                </div>
+                <div
+                  className="rightsidebar-button"
+                  style={{ backgroundColor: "#3c58ae", marginLeft: "10px" }}
+                  onClick={() => setShowDownloadModal(true)}
+                >
+                  <HugeiconsIcon
+                    icon={Download04FreeIcons}
+                    size={16}
+                    color="#ffffff"
+                    strokeWidth={2}
+                  />
+                  <p>Download</p>
+                </div>
               </div>
             </div>
             <div className="rightsidebar-filter">
@@ -463,6 +506,14 @@ const RightSideBar = ({ selected }) => {
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
                           <th
+                            onClick={() => handleSortClick("email")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Email{" "}
+                            {sortBy === "email" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          <th
                             onClick={() => handleSortClick("plateNumber")}
                             style={{ cursor: "pointer" }}
                           >
@@ -530,40 +581,50 @@ const RightSideBar = ({ selected }) => {
                                 <td>{item.customerName}</td>
                                 <td>{item.phoneNumber}</td>
                                 <td>
-  {item.plateNumber.length > 10
-    ? `${item.plateNumber.slice(0, 10)}...`
-    : item.plateNumber}
-</td>
+                                  {item?.email ? 
+                                  (item?.email.length > 10
+                                    ? `${item.email.slice(0, 10)}...`
+                                    : item?.email)
+                                  :
+                                  ""}
+                                </td>
+                                <td>
+                                  {item.plateNumber.length > 8
+                                    ? `${item.plateNumber.slice(0, 8)}...`
+                                    : item.plateNumber}
+                                </td>
                                 <td>{item.dateIn}</td>
                                 <td>{item.dateOut}</td>
                                 <td>{item.progress}</td>
                                 <td>
-  {Array.isArray(item.repairNeeded) ? (
-    (() => {
-      const joined = item.repairNeeded.join(", ");
-      return joined.length > 20 ? `${joined.slice(0, 17)}...` : joined;
-    })()
-  ) : (
-    item.repairNeeded
-  )}
-</td>
-<td>
-  {Array.isArray(item.partsNeeded) ? (
-    (() => {
-      const fullText = item.partsNeeded
-        .map((part) => `${part.name} (${part.quantity})`)
-        .join(", ");
+                                  {Array.isArray(item.repairNeeded)
+                                    ? (() => {
+                                        const joined =
+                                          item.repairNeeded.join(", ");
+                                        return joined.length > 20
+                                          ? `${joined.slice(0, 12)}...`
+                                          : joined;
+                                      })()
+                                    : item.repairNeeded}
+                                </td>
+                                <td>
+                                  {Array.isArray(item.partsNeeded)
+                                    ? (() => {
+                                        const fullText = item.partsNeeded
+                                          .map(
+                                            (part) =>
+                                              `${part.name} (${part.quantity})`
+                                          )
+                                          .join(", ");
 
-      const maxLength = 35; // adjust this to whatever max character length you want
+                                        const maxLength = 35; // adjust this to whatever max character length you want
 
-      return fullText.length > maxLength
-        ? `${fullText.slice(0, maxLength)}...`
-        : fullText;
-    })()
-  ) : (
-    item.partsNeeded
-  )}
-</td>
+                                        return fullText.length > maxLength
+                                          ? `${fullText.slice(0, maxLength)}...`
+                                          : fullText;
+                                      })()
+                                    : item.partsNeeded}
+                                </td>
                                 <td>
                                   <Priority
                                     color={color}
@@ -658,6 +719,7 @@ const RightSideBar = ({ selected }) => {
                                   <div className="custom-grid-bottom-container">
                                     <h3>{item.customerName}</h3>
                                     <p>Phone: {item.phoneNumber}</p>
+                                    <p>Phone: {item.email}</p>
                                     <p>Plate: {item.plateNumber}</p>
                                     <div className="custom-line"></div>
                                     <div className="custom-grid-bottom-date">
@@ -713,19 +775,24 @@ const RightSideBar = ({ selected }) => {
             <Order />
           </div>
         )}
-          {selected === "Inventory" && (
+        {selected === "Inventory" && (
           <div className="rightsidebar-bottom">
             <Inventory />
           </div>
         )}
-            {selected === "Hitch" && (
+        {selected === "Hitch" && (
           <div className="rightsidebar-bottom">
             <Hitch />
           </div>
         )}
-            {selected === "TimeCard" && (
+        {selected === "TimeCard" && (
           <div className="rightsidebar-bottom">
             <TimeCard />
+          </div>
+        )}
+        {selected === "ChangePassword" && (
+          <div className="rightsidebar-bottom">
+            <ChangeUsersPassword />
           </div>
         )}
       </div>
@@ -765,6 +832,18 @@ const RightSideBar = ({ selected }) => {
                 name="phoneNumber"
                 className="input-field"
                 value={formData.phoneNumber}
+                onChange={handleChange}
+              />
+            </div>
+            {/* Added email Input */}
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="text"
+                id="email"
+                name="email"
+                className="input-field"
+                value={formData.email}
                 onChange={handleChange}
               />
             </div>
@@ -899,6 +978,10 @@ const RightSideBar = ({ selected }) => {
               <div className="info-group">
                 <strong>Phone Number:</strong>
                 <p>{selectedItem.phoneNumber}</p>
+              </div>
+              <div className="info-group">
+                <strong>Email:</strong>
+                <p>{selectedItem.email}</p>
               </div>
               {/* Display Plate Number in Info Modal */}
               <div className="info-group">
@@ -1049,6 +1132,19 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
+
+            {/* Added Phone Number Input for Edit */}
+            <div className="form-group">
+              <label htmlFor="editEmail">Email</label>
+              <input
+                type="text"
+                id="editEmail"
+                name="email"
+                className="input-field"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
             {/* Added Plate Number Input for Edit */}
             <div className="form-group">
               <label htmlFor="editPlateNumber">Plate Number</label>
@@ -1192,6 +1288,23 @@ const RightSideBar = ({ selected }) => {
           <button className="btn-primary" onClick={handleEditSubmit}>
             Save Changes
           </button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Download Modal */}
+      <Modal show={showDownloadModal} onHide={() => setShowDownloadModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Download Task Data</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>How would you like to download the task data?</p>
+          <div className="modal-button-download">
+            <Button className="download-button" variant="outline-primary" onClick={() => handleDownload('pdf')}>PDF</Button>
+            <Button variant="outline-success" onClick={() => handleDownload('csv')}>CSV</Button>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDownloadModal(false)}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     </div>
