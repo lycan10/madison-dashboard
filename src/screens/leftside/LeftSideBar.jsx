@@ -9,6 +9,9 @@ import {
   Car02FreeIcons,
   CalendarAdd01FreeIcons,
   LogoutIcon,
+  Tag01FreeIcons,
+  TractorFreeIcons,
+  WaterEnergyFreeIcons,
 } from "@hugeicons/core-free-icons";
 import { useSidebar } from "../../context/SideBarContext";
 import { useAuth } from "../../context/AuthContext";
@@ -54,14 +57,27 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           </div>
           {!collapsed && (
             <div className="leftSideBar-title">
-              <h1>Total Trailer</h1>
+              <h1>Madison Generator</h1>
             </div>
           )}
-        </div>
-
+        </div> 
         <LeftNavLinks
-          icon={Home02Icon}
-          title="Dashboard"
+          icon={TractorFreeIcons}
+          title="Cables"
+          onClick={() => handleLinkClick("Cables")}
+          isSelected={selected === "Cables"}
+          collapsed={collapsed}
+        />
+        <LeftNavLinks
+          icon={WaterEnergyFreeIcons}
+          title="Hydraulic Hose"
+          onClick={() => handleLinkClick("Hose")}
+          isSelected={selected === "Hose"}
+          collapsed={collapsed}
+        />
+        <LeftNavLinks
+          icon={Tag01FreeIcons}
+          title="Starters/Alternators"
           onClick={() => handleLinkClick("Dashboard")}
           isSelected={selected === "Dashboard"}
           collapsed={collapsed}
@@ -73,20 +89,8 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           isSelected={selected === "Order"}
           collapsed={collapsed}
         />
-        <LeftNavLinks
-          icon={CheckListIcon}
-          title="Inventory"
-          onClick={() => handleLinkClick("Inventory")}
-          isSelected={selected === "Inventory"}
-          collapsed={collapsed}
-        />
-        <LeftNavLinks
-          icon={Car02FreeIcons}
-          title="Hitch"
-          onClick={() => handleLinkClick("Hitch")}
-          isSelected={selected === "Hitch"}
-          collapsed={collapsed}
-        />
+        
+       
         <LeftNavLinks
           icon={CalendarAdd01FreeIcons}
           title="Time Card"

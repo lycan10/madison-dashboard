@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import './repairs.css';
 
 const predefinedRepairs = [
-  "Hitch", "Electrical", "Installation"
+  "1/4 Inch Hose", "3/8 Inch Hose", "1/2 Inch Hose", "5/8 Inch Hose", "3/4 Inch Hose", "1 Inch Hose",
 ];
 
-const HitchSelector = ({ selectedHitch, setSelectedHitch }) => {
-  const [customHitch, setCustomHitch] = useState('');
+const HoseSelector = ({ selectedHose = [], setSelectedHose }) => {
+  const [customHose, setCustomHose] = useState('');
 
-  const toggleHitch = (item) => {
-    setSelectedHitch(prev =>
+  const toggleHose = (item) => {
+    setSelectedHose((prev = []) =>
       prev.includes(item)
         ? prev.filter(r => r !== item)
         : [...prev, item]
@@ -17,9 +17,10 @@ const HitchSelector = ({ selectedHitch, setSelectedHitch }) => {
   };
 
   const addCustomToggle = () => {
-    if (customHitch.trim() !== '' && !selectedHitch.includes(customHitch.trim())) {
-        setSelectedHitch(prev => [...prev, customHitch.trim()]);
-        setCustomHitch('');
+    const trimmed = customHose.trim();
+    if (trimmed !== '' && !selectedHose.includes(trimmed)) {
+      setSelectedHose(prev => [...(prev || []), trimmed]);
+      setCustomHose('');
     }
   };
 
@@ -30,8 +31,8 @@ const HitchSelector = ({ selectedHitch, setSelectedHitch }) => {
         {predefinedRepairs.map((item) => (
           <div
             key={item}
-            className={`repair-box ${selectedHitch.includes(item) ? 'selected' : ''}`}
-            onClick={() => toggleHitch(item)}
+            className={`repair-box ${(selectedHose || []).includes(item) ? 'selected' : ''}`}
+            onClick={() => toggleHose(item)}
           >
             {item}
           </div>
@@ -40,8 +41,8 @@ const HitchSelector = ({ selectedHitch, setSelectedHitch }) => {
       <div className="custom-repair">
         <input
           type="text"
-          value={customHitch}
-          onChange={(e) => setCustomHitch(e.target.value)}
+          value={customHose}
+          onChange={(e) => setCustomHose(e.target.value)}
           className="input-field"
           placeholder="Custom repair"
         />
@@ -53,4 +54,4 @@ const HitchSelector = ({ selectedHitch, setSelectedHitch }) => {
   );
 };
 
-export default HitchSelector;
+export default HoseSelector;

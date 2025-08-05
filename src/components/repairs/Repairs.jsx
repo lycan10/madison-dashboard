@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './repairs.css';
 
 const predefinedRepairs = [
-  "Axle", "Brakes", "Suspension", "Wiring", "Lube job", "Lights", "Door-cable", "Tires", "Jack"
+  "Brushes", "Brush holders", "Drive/Gear", "Solenoid", "Complete rebuild", "Polish armature",
 ];
 
 const RepairSelector = ({ selectedRepairs, setSelectedRepairs }) => {

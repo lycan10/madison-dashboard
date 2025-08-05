@@ -393,6 +393,7 @@ const TimeCard = () => {
     display: "flex",
     alignItems: "center",
     gap: "5px",
+    border: 'none',
     cursor:
       (clockInButtonDisabled && !isClockedIn) || clockOutButtonDisabled
         ? "not-allowed"
@@ -412,6 +413,7 @@ const TimeCard = () => {
     display: "flex",
     alignItems: "center",
     gap: "5px",
+    border: 'none',
     cursor:
       (startBreakButtonDisabled && !isOnBreak) ||
       (endBreakButtonDisabled && isOnBreak)

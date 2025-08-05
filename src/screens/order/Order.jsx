@@ -266,7 +266,7 @@ const Order = () => {
   return (
     <div className="order-page">
       <div className="rightsidebar-navbar">
-        <h3>Total Trailer</h3> {/* Updated title */}
+        <h3>Madison Generator</h3> {/* Updated title */}
 
         <div className="rightsidebar-button" onClick={handleShowAddModal}>
           <HugeiconsIcon

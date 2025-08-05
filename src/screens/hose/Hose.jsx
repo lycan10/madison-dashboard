@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./rightsidebar.css";
+import "../rightside/rightsidebar.css";
 import Navbar from "../../components/navbar/Navbar";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -21,13 +21,10 @@ import RepairSelector from "../../components/repairs/Repairs";
 import PartSelector from "../../components/repairs/Parts";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
-import Order from "./../order/Order";
 import { useTasks } from "../../context/TaskContext";
 import { useAuth } from "../../context/AuthContext";
-import Hitch from "../cables/Cables";
-import TimeCard from "../timecard/TimeCard";
 import ChangeUsersPassword  from "../ChangeUsersPassword/changeUsersPassword";
-import Hose from "../hose/Hose";
+import HoseSelector from "../../components/repairs/HoseSelector";
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
@@ -42,7 +39,7 @@ const getPriorityStyles = (priority) => {
   }
 };
 
-const RightSideBar = ({ selected }) => {
+const Hose = ({ selected }) => {
   const {
     taskPaginationData,
     tasks,
@@ -119,6 +116,8 @@ const RightSideBar = ({ selected }) => {
   const [formData, setFormData] = useState({
     customerName: "",
     phoneNumber: "",
+    cableType: "",
+    address: "",
     email: "",
     plateNumber: "",
     dateIn: "",
@@ -127,7 +126,6 @@ const RightSideBar = ({ selected }) => {
     priority: "Low",
     comments: "",
     partsNeeded: [],
-    repairNeeded: [],
   });
 
   const [selectedItem, setSelectedItem] = useState({});
@@ -136,6 +134,8 @@ const RightSideBar = ({ selected }) => {
     setFormData({
       customerName: "",
       phoneNumber: "",
+      cableType: "",
+      address: "",
       email: "",
       plateNumber: "",
       dateIn: "",
@@ -144,9 +144,7 @@ const RightSideBar = ({ selected }) => {
       priority: "Low",
       comments: "",
       partsNeeded: [],
-      repairNeeded: [],
     });
-    setRepairs([]);
     setParts([]);
   };
 
@@ -164,7 +162,6 @@ const RightSideBar = ({ selected }) => {
       phoneNumber: formData.phoneNumber,
       email: formData.email,
       plateNumber: formData.plateNumber,
-      repairNeeded: repairs,
       partsNeeded: parts,
     };
     const success = await addTask(finalData);
@@ -181,7 +178,6 @@ const RightSideBar = ({ selected }) => {
       phoneNumber: formData.phoneNumber,
       email: formData.email,
       plateNumber: formData.plateNumber,
-      repairNeeded: repairs,
       partsNeeded: parts,
     };
     const success = await updateTask(selectedItem.id, finalData);
@@ -212,7 +208,6 @@ const RightSideBar = ({ selected }) => {
       comments: item.comments || "",
       priority: item.priority || "Low",
       partsNeeded: item.partsNeeded || [],
-      repairNeeded: item.repairNeeded || [],
     });
     setRepairs(item.repairNeeded || []);
     setParts(item.partsNeeded || []);
@@ -334,11 +329,8 @@ const RightSideBar = ({ selected }) => {
   };
 
   return (
-    <div className="rightsidebar">
       <div className="rightsidebar-container">
-        <Navbar />
         {/* Render Dashboard content if selected */}
-        {selected === "Dashboard" && (
           <div className="rightsidebar-bottom">
             <div className="rightsidebar-navbar">
               <h3>Madison Generator</h3>
@@ -356,7 +348,7 @@ const RightSideBar = ({ selected }) => {
                     color="#ffffff"
                     strokeWidth={3}
                   />
-                  <p>New Repair</p>
+                  <p>New Order</p>
                 </div>
                 <div
                   className="rightsidebar-button"
@@ -408,7 +400,7 @@ const RightSideBar = ({ selected }) => {
                 <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
                 <input
                   type="text"
-                  placeholder="Search tasks..."
+                  placeholder="Search order..."
                   value={searchTerm}
                   onChange={handleSearchChange}
                   className="search-input"
@@ -503,6 +495,14 @@ const RightSideBar = ({ selected }) => {
                             onClick={() => handleSortClick("phoneNumber")}
                             style={{ cursor: "pointer" }}
                           >
+                            Hydraulic Hose Type{" "}
+                            {sortBy === "hydraulicHoseType" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          <th
+                            onClick={() => handleSortClick("plateNumber")}
+                            style={{ cursor: "pointer" }}
+                          >
                             Phone Number{" "}
                             {sortBy === "phoneNumber" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
@@ -515,14 +515,7 @@ const RightSideBar = ({ selected }) => {
                             {sortBy === "email" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
-                          <th
-                            onClick={() => handleSortClick("plateNumber")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Plate Number{" "}
-                            {sortBy === "plateNumber" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
+                         
                           <th
                             onClick={() => handleSortClick("dateIn")}
                             style={{ cursor: "pointer" }}
@@ -547,7 +540,6 @@ const RightSideBar = ({ selected }) => {
                             {sortBy === "progress" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
-                          <th>Repair Needed</th>
                           <th>Parts Needed</th>
                           <th
                             onClick={() => handleSortClick("priority")}
@@ -581,6 +573,7 @@ const RightSideBar = ({ selected }) => {
                               >
                                 <td>{item.id}</td>
                                 <td>{item.customerName}</td>
+                                <td>{item.customerName}</td>
                                 <td>{item.phoneNumber}</td>
                                 <td>
                                   {item?.email ? 
@@ -590,25 +583,10 @@ const RightSideBar = ({ selected }) => {
                                   :
                                   ""}
                                 </td>
-                                <td>
-                                  {item.plateNumber.length > 8
-                                    ? `${item.plateNumber.slice(0, 8)}...`
-                                    : item.plateNumber}
-                                </td>
                                 <td>{item.dateIn}</td>
                                 <td>{item.dateOut}</td>
                                 <td>{item.progress}</td>
-                                <td>
-                                  {Array.isArray(item.repairNeeded)
-                                    ? (() => {
-                                        const joined =
-                                          item.repairNeeded.join(", ");
-                                        return joined.length > 20
-                                          ? `${joined.slice(0, 12)}...`
-                                          : joined;
-                                      })()
-                                    : item.repairNeeded}
-                                </td>
+                               
                                 <td>
                                   {Array.isArray(item.partsNeeded)
                                     ? (() => {
@@ -770,34 +748,6 @@ const RightSideBar = ({ selected }) => {
               )}
             </div>
           </div>
-        )}
-
-        {selected === "Order" && (
-          <div className="rightsidebar-bottom">
-            <Order />
-          </div>
-        )}
-        {selected === "Hose" && (
-          <div className="rightsidebar-bottom">
-            <Hose />
-          </div>
-        )}
-        {selected === "Cables" && (
-          <div className="rightsidebar-bottom">
-            <Hitch />
-          </div>
-        )}
-        {selected === "TimeCard" && (
-          <div className="rightsidebar-bottom">
-            <TimeCard />
-          </div>
-        )}
-        {selected === "ChangePassword" && (
-          <div className="rightsidebar-bottom">
-            <ChangeUsersPassword />
-          </div>
-        )}
-      </div>
 
       {/* Add New Task Modal */}
       <Modal
@@ -809,7 +759,7 @@ const RightSideBar = ({ selected }) => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <h3>New Order</h3>
+            <h3>New Hydraulic Hose Order</h3>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -825,6 +775,17 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
+            <div className="form-group">
+              <label htmlFor="customerName">Hydraulic Hose Type</label>
+              <input
+                type="text"
+                id="hydraulicHoseType"
+                name="hydraulicHoseType"
+                className="input-field"
+                value={formData.cableType}
+                onChange={handleChange}
+              />
+            </div>
             {/* Added Phone Number Input */}
             <div className="form-group">
               <label htmlFor="phoneNumber">Phone Number</label>
@@ -834,6 +795,18 @@ const RightSideBar = ({ selected }) => {
                 name="phoneNumber"
                 className="input-field"
                 value={formData.phoneNumber}
+                onChange={handleChange}
+              />
+            </div>
+             {/* Added Address Input */}
+             <div className="form-group">
+              <label htmlFor="email">Address</label>
+              <input
+                type="text"
+                id="address"
+                name="address"
+                className="input-field"
+                value={formData.email}
                 onChange={handleChange}
               />
             </div>
@@ -892,12 +865,13 @@ const RightSideBar = ({ selected }) => {
             </div>
             <div className="form-group">
               {/* RepairSelector component */}
-              <RepairSelector
-                selectedRepairs={repairs}
-                setSelectedRepairs={setRepairs}
+              <HoseSelector
+                selectedHose={repairs}
+                setSelectedHose={setRepairs}
               />
               <p>Selected Repairs: {repairs.join(", ")}</p>
             </div>
+           
             <div className="form-group">
               {/* PartSelector component */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
@@ -956,7 +930,7 @@ const RightSideBar = ({ selected }) => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <h3>Task Details</h3>
+            <h3>Hydraulic Hose Details</h3>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -966,10 +940,18 @@ const RightSideBar = ({ selected }) => {
                 <strong>Customer Name:</strong>
                 <p>{selectedItem.customerName}</p>
               </div>
+              <div className="info-group">
+                <strong>Hydraulic Hose Type:</strong>
+                <p>{selectedItem.cableType}</p>
+              </div>
               {/* Display Phone Number in Info Modal */}
               <div className="info-group">
                 <strong>Phone Number:</strong>
                 <p>{selectedItem.phoneNumber}</p>
+              </div>
+              <div className="info-group">
+                <strong>Address:</strong>
+                <p>{selectedItem.address}</p>
               </div>
               <div className="info-group">
                 <strong>Email:</strong>
@@ -1092,7 +1074,7 @@ const RightSideBar = ({ selected }) => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <h3>Edit Task</h3>
+            <h3>Edit Order</h3>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -1108,6 +1090,19 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
+                {/* Added Cable type */}
+                <div className="form-group">
+              <label htmlFor="editEmail">Hydraulic Hose Type</label>
+              <input
+                type="text"
+                id="hydraulicHoseType"
+                name="adress"
+                className="input-field"
+                value={formData.cableType}
+                onChange={handleChange}
+              />
+            </div>
+
             {/* Added Phone Number Input for Edit */}
             <div className="form-group">
               <label htmlFor="editPhoneNumber">Phone Number</label>
@@ -1117,6 +1112,18 @@ const RightSideBar = ({ selected }) => {
                 name="phoneNumber"
                 className="input-field"
                 value={formData.phoneNumber}
+                onChange={handleChange}
+              />
+            </div>
+                 {/* Added Address */}
+                 <div className="form-group">
+              <label htmlFor="editEmail">Adress</label>
+              <input
+                type="text"
+                id="editAdress"
+                name="adress"
+                className="input-field"
+                value={formData.address}
                 onChange={handleChange}
               />
             </div>
@@ -1175,9 +1182,9 @@ const RightSideBar = ({ selected }) => {
             </div>
             <div className="form-group">
               {/* RepairSelector component for editing */}
-              <RepairSelector
-                selectedRepairs={repairs}
-                setSelectedRepairs={setRepairs}
+              <HoseSelector
+                selectedHose={repairs}
+                setSelectedHose={setRepairs}
               />
               <p className="pb-2">Selected Repairs:</p>
               <div className="selected-repairs-list">
@@ -1288,4 +1295,4 @@ const RightSideBar = ({ selected }) => {
   );
 };
 
-export default RightSideBar;
+export default Hose;
