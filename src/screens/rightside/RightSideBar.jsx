@@ -22,11 +22,11 @@ import PartSelector from "../../components/repairs/Parts";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
 import Order from "./../order/Order";
-import { useTasks } from "../../context/TaskContext";
+import { useAlternators } from "../../context/AlternatorContext";
 import { useAuth } from "../../context/AuthContext";
-import Hitch from "../cables/Cables";
+import Cables from "../cables/Cables";
 import TimeCard from "../timecard/TimeCard";
-import ChangeUsersPassword  from "../ChangeUsersPassword/changeUsersPassword";
+import ChangeUsersPassword from "../ChangeUsersPassword/changeUsersPassword";
 import Hose from "../hose/Hose";
 
 const getPriorityStyles = (priority) => {
@@ -44,21 +44,23 @@ const getPriorityStyles = (priority) => {
 
 const RightSideBar = ({ selected }) => {
   const {
-    taskPaginationData,
-    tasks,
+    alternatorPaginationData,
+    alternators,
     loading,
     error,
-    fetchTasks,
-    addTask,
-    updateTask,
-    deleteTask,
-    exportTasks,
-  } = useTasks();
+    fetchAlternators,
+    addAlternator,
+    updateAlternator,
+    deleteAlternator,
+    exportAlternators,
+    fetchAlternatorCounts,
+    alternatorCounts,
+  } = useAlternators();
 
   const [currentPage, setCurrentPage] = useState(
-    taskPaginationData.current_page || 1
+    alternatorPaginationData.current_page || 1
   );
-  const itemsPerPage = taskPaginationData.per_page || 12;
+  const itemsPerPage = alternatorPaginationData.per_page || 12;
   const [selectedStatus, setSelectedStatus] = useState("All");
   const statuses = [
     "All",
@@ -66,21 +68,11 @@ const RightSideBar = ({ selected }) => {
     "In Progress",
     "Returns",
     "Awaiting Parts",
+    "Rejected Jobs",
     "Awaiting Pickup",
     "Picked Up",
-    "Shipped"
+    "Shipped",
   ];
-
-  const [taskCounts, setTaskCounts] = useState({
-    All: 0,
-    New: 0,
-    "In Progress": 0,
-    "Returns": 0, 
-    "Awaiting Parts": 0,
-    "Rejected Jobs": 0,
-    "Awaiting Pickup": 0,
-    "Picked Up": 0,
-  });
 
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -167,10 +159,10 @@ const RightSideBar = ({ selected }) => {
       repairNeeded: repairs,
       partsNeeded: parts,
     };
-    const success = await addTask(finalData);
+    const success = await addAlternator(finalData);
     if (success) {
       handleCloseAddModal();
-      fetchStatusCounts();
+      fetchAlternatorCounts();
     }
   };
 
@@ -184,18 +176,18 @@ const RightSideBar = ({ selected }) => {
       repairNeeded: repairs,
       partsNeeded: parts,
     };
-    const success = await updateTask(selectedItem.id, finalData);
+    const success = await updateAlternator(selectedItem.id, finalData);
     if (success) {
       handleCloseEditModal();
-      fetchStatusCounts();
+      fetchAlternatorCounts();
     }
   };
 
   const handleDelete = async (id) => {
-    const success = await deleteTask(id);
+    const success = await deleteAlternator(id);
     if (success) {
       handleCloseInfoModal();
-      fetchStatusCounts();
+      fetchAlternatorCounts();
     }
   };
 
@@ -219,36 +211,12 @@ const RightSideBar = ({ selected }) => {
     handleShowEditModal();
   };
 
-  const fetchStatusCounts = async () => {
-    try {
-      const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/task/counts`;
-      const params = new URLSearchParams();
-      if (startDate) params.append("startDate", startDate);
-      if (endDate) params.append("endDate", endDate);
-
-      const response = await fetch(`${TASKS_API_URL}?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setTaskCounts(data);
-    } catch (error) {
-      console.error("Error fetching status counts:", error);
-    }
-  };
-
   const countByStatus = (status) => {
-    return taskCounts[status] || 0;
+    return alternatorCounts[status] || 0;
   };
 
-  const displayedTasks = tasks;
-  const totalPages = taskPaginationData.last_page || 1;
+  const displayedAlternators = alternators;
+  const totalPages = alternatorPaginationData.last_page || 1;
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -275,7 +243,7 @@ const RightSideBar = ({ selected }) => {
       ...(endDate && { endDate: endDate }),
       ...(searchTerm && { search: searchTerm }),
     };
-    fetchTasks(params);
+    fetchAlternators(params);
   }, [
     currentPage,
     selectedStatus,
@@ -288,17 +256,17 @@ const RightSideBar = ({ selected }) => {
   ]);
 
   useEffect(() => {
-    fetchStatusCounts();
+    fetchAlternatorCounts();
   }, [startDate, endDate, searchTerm]);
 
   useEffect(() => {
     if (
-      taskPaginationData.current_page &&
-      taskPaginationData.current_page !== currentPage
+      alternatorPaginationData.current_page &&
+      alternatorPaginationData.current_page !== currentPage
     ) {
-      setCurrentPage(taskPaginationData.current_page);
+      setCurrentPage(alternatorPaginationData.current_page);
     }
-  }, [taskPaginationData.current_page]);
+  }, [alternatorPaginationData.current_page]);
 
   const handleDateFilterChange = (e) => {
     const { name, value } = e.target;
@@ -322,14 +290,14 @@ const RightSideBar = ({ selected }) => {
   };
 
   const handleDownload = async (type) => {
-    console.log(`Downloading tasks as ${type}`);
+    console.log(`Downloading alternators as ${type}`);
     const params = {
       sortBy: sortBy,
       sortDirection: sortDirection,
       ...(searchTerm && { search: searchTerm }),
       // Do NOT include page or perPage for exports, as we want all data
     };
-    await exportTasks(type, params);
+    await exportAlternators(type, params);
     setShowDownloadModal(false);
   };
 
@@ -341,8 +309,8 @@ const RightSideBar = ({ selected }) => {
         {selected === "Dashboard" && (
           <div className="rightsidebar-bottom">
             <div className="rightsidebar-navbar">
-              <h3>Madison Generator</h3>
-              {/* Button to open the Add New Task modal */}
+              <h3>Madison Generator – Alternators</h3>
+              {/* Button to open the Add New Alternator modal */}
               <div className="button-group d-flex flex-row">
                 {" "}
                 {/* Added a div for button grouping */}
@@ -356,7 +324,7 @@ const RightSideBar = ({ selected }) => {
                     color="#ffffff"
                     strokeWidth={3}
                   />
-                  <p>New Repair</p>
+                  <p>New Alternator</p>
                 </div>
                 <div
                   className="rightsidebar-button"
@@ -408,7 +376,7 @@ const RightSideBar = ({ selected }) => {
                 <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
                 <input
                   type="text"
-                  placeholder="Search tasks..."
+                  placeholder="Search alternators..."
                   value={searchTerm}
                   onChange={handleSearchChange}
                   className="search-input"
@@ -463,7 +431,7 @@ const RightSideBar = ({ selected }) => {
                 >
                   <ProgressFilter
                     title={status}
-                    count={countByStatus(status)} // Use the updated countByStatus
+                    count={countByStatus(status)}
                     bgColor={selectedStatus === status ? "#333" : "#f1f1f1"}
                     color={selectedStatus === status ? "#fff" : "#000"}
                   />
@@ -471,10 +439,10 @@ const RightSideBar = ({ selected }) => {
               ))}
             </div>
 
-            {/* Display loading, error, or task data */}
+            {/* Display loading, error, or alternator data */}
             <div className="rightsidebar-table">
               {loading ? (
-                <p>Loading tasks...</p>
+                <p>Loading alternators...</p>
               ) : error ? (
                 <p>Error: {error.message}</p>
               ) : viewMode === "table" ? (
@@ -560,14 +528,14 @@ const RightSideBar = ({ selected }) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {Array.isArray(displayedTasks) &&
-                        displayedTasks.length === 0 ? (
+                        {Array.isArray(displayedAlternators) &&
+                        displayedAlternators.length === 0 ? (
                           <tr>
                             <td colSpan="10">No data available</td>
                           </tr>
                         ) : (
-                          Array.isArray(displayedTasks) &&
-                          displayedTasks.map((item) => {
+                          Array.isArray(displayedAlternators) &&
+                          displayedAlternators.map((item) => {
                             const { color, bgColor, icon } = getPriorityStyles(
                               item.priority
                             );
@@ -583,17 +551,18 @@ const RightSideBar = ({ selected }) => {
                                 <td>{item.customerName}</td>
                                 <td>{item.phoneNumber}</td>
                                 <td>
-                                  {item?.email ? 
-                                  (item?.email.length > 10
-                                    ? `${item.email.slice(0, 10)}...`
-                                    : item?.email)
-                                  :
-                                  ""}
+                                  {item?.email
+                                    ? item?.email.length > 10
+                                      ? `${item.email.slice(0, 10)}...`
+                                      : item?.email
+                                    : ""}
                                 </td>
                                 <td>
-                                  {item.plateNumber.length > 8
-                                    ? `${item.plateNumber.slice(0, 8)}...`
-                                    : item.plateNumber}
+                                  {item.plateNumber
+                                    ? item.plateNumber.length > 8
+                                      ? `${item.plateNumber.slice(0, 8)}...`
+                                      : item.plateNumber
+                                    : ""}
                                 </td>
                                 <td>{item.dateIn}</td>
                                 <td>{item.dateOut}</td>
@@ -677,17 +646,17 @@ const RightSideBar = ({ selected }) => {
               ) : (
                 <div className="order-table-container">
                   <div className="gridview-container">
-                    {/* Use displayedTasks (which is taskPaginationData.data) */}
-                    {Array.isArray(displayedTasks) &&
-                    displayedTasks.length === 0 ? (
+                    {/* Use displayedAlternators (which is alternatorPaginationData.data) */}
+                    {Array.isArray(displayedAlternators) &&
+                    displayedAlternators.length === 0 ? (
                       <div className="no-data-message">
                         <p>No data available.</p>
                       </div>
                     ) : (
                       <>
                         <div className="grid-view">
-                          {Array.isArray(displayedTasks) &&
-                            displayedTasks.map((item) => {
+                          {Array.isArray(displayedAlternators) &&
+                            displayedAlternators.map((item) => {
                               const { color, bgColor, icon } =
                                 getPriorityStyles(item.priority);
                               return (
@@ -721,7 +690,7 @@ const RightSideBar = ({ selected }) => {
                                   <div className="custom-grid-bottom-container">
                                     <h3>{item.customerName}</h3>
                                     <p>Phone: {item.phoneNumber}</p>
-                                    <p>Phone: {item.email}</p>
+                                    <p>Email: {item.email}</p>
                                     <p>Plate: {item.plateNumber}</p>
                                     <div className="custom-line"></div>
                                     <div className="custom-grid-bottom-date">
@@ -779,12 +748,12 @@ const RightSideBar = ({ selected }) => {
         )}
         {selected === "Hose" && (
           <div className="rightsidebar-bottom">
-            <Hose />
+            <Hose selected={selected} />
           </div>
         )}
         {selected === "Cables" && (
           <div className="rightsidebar-bottom">
-            <Hitch />
+            <Cables selected={selected} />
           </div>
         )}
         {selected === "TimeCard" && (
@@ -799,7 +768,7 @@ const RightSideBar = ({ selected }) => {
         )}
       </div>
 
-      {/* Add New Task Modal */}
+      {/* Add New Alternator Modal */}
       <Modal
         show={showAddModal}
         onHide={handleCloseAddModal}
@@ -809,7 +778,7 @@ const RightSideBar = ({ selected }) => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <h3>New Order</h3>
+            <h3>New Alternator</h3>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -849,7 +818,17 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-           
+            <div className="form-group">
+              <label htmlFor="plateNumber">Plate Number</label>
+              <input
+                type="text"
+                id="plateNumber"
+                name="plateNumber"
+                className="input-field"
+                value={formData.plateNumber}
+                onChange={handleChange}
+              />
+            </div>
             <div className="form-group">
               <label htmlFor="dateIn">Date In</label>
               <input
@@ -881,13 +860,11 @@ const RightSideBar = ({ selected }) => {
                 value={formData.progress}
                 onChange={handleChange}
               >
-                <option>New</option>
-                <option>In Progress</option>
-                <option>Returns</option>
-                <option>Awaiting Parts</option>
-                <option>Rejected Jobs</option>
-                <option>Awaiting Pickup</option>
-                <option>Picked Up</option>
+                {statuses.slice(1).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -896,19 +873,10 @@ const RightSideBar = ({ selected }) => {
                 selectedRepairs={repairs}
                 setSelectedRepairs={setRepairs}
               />
-              <p>Selected Repairs: {repairs.join(", ")}</p>
             </div>
             <div className="form-group">
               {/* PartSelector component */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
-              <p>
-                Selected Parts:{" "}
-                {Array.isArray(parts)
-                  ? parts
-                      .map((part) => `${part.name} (${part.quantity})`)
-                      .join(", ")
-                  : parts}
-              </p>
             </div>
             <div className="form-group">
               <label htmlFor="priority">Priority</label>
@@ -946,7 +914,7 @@ const RightSideBar = ({ selected }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Task Info Modal */}
+      {/* Alternator Info Modal */}
       <Modal
         show={showInfoModal}
         onHide={handleCloseInfoModal}
@@ -956,7 +924,7 @@ const RightSideBar = ({ selected }) => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <h3>Task Details</h3>
+            <h3>Alternator Details</h3>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -975,7 +943,10 @@ const RightSideBar = ({ selected }) => {
                 <strong>Email:</strong>
                 <p>{selectedItem.email}</p>
               </div>
-            
+              <div className="info-group">
+                <strong>Plate Number:</strong>
+                <p>{selectedItem.plateNumber}</p>
+              </div>
               <div className="info-group">
                 <strong>Date In:</strong>
                 <p>{selectedItem.dateIn}</p>
@@ -1025,10 +996,10 @@ const RightSideBar = ({ selected }) => {
                 </div>
               )}
 
-              {/* Display Task History */}
+              {/* Display Alternator History */}
               {selectedItem.history && selectedItem.history.length > 0 && (
                 <div className="info-group">
-                  <strong>Task History:</strong>
+                  <strong>Alternator History:</strong>
                   <ul>
                     {selectedItem.history.map((historyEntry) => (
                       <li key={historyEntry.id}>
@@ -1082,7 +1053,7 @@ const RightSideBar = ({ selected }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Edit Task Modal */}
+      {/* Edit Alternator Modal */}
       <Modal
         show={showEditModal}
         onHide={handleCloseEditModal}
@@ -1092,7 +1063,7 @@ const RightSideBar = ({ selected }) => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <h3>Edit Task</h3>
+            <h3>Edit Alternator</h3>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -1134,6 +1105,17 @@ const RightSideBar = ({ selected }) => {
               />
             </div>
             <div className="form-group">
+              <label htmlFor="editPlateNumber">Plate Number</label>
+              <input
+                type="text"
+                id="editPlateNumber"
+                name="plateNumber"
+                className="input-field"
+                value={formData.plateNumber}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
               <label htmlFor="editDateIn">Date In</label>
               <input
                 type="date"
@@ -1164,13 +1146,11 @@ const RightSideBar = ({ selected }) => {
                 value={formData.progress}
                 onChange={handleChange}
               >
-                <option>New</option>
-                <option>In Progress</option>
-                <option>Return</option>
-                <option>Awaiting Parts</option>
-                <option>Rejected Jobs</option>
-                <option>Awaiting Pickup</option>
-                <option>Picked Up</option>
+                {statuses.slice(1).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -1269,19 +1249,39 @@ const RightSideBar = ({ selected }) => {
       </Modal>
 
       {/* Download Modal */}
-      <Modal show={showDownloadModal} onHide={() => setShowDownloadModal(false)} centered>
+      <Modal
+        show={showDownloadModal}
+        onHide={() => setShowDownloadModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Download Task Data</Modal.Title>
+          <Modal.Title>Download Alternator Data</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>How would you like to download the task data?</p>
+          <p>How would you like to download the alternator data?</p>
           <div className="modal-button-download">
-            <Button className="download-button" variant="outline-primary" onClick={() => handleDownload('pdf')}>PDF</Button>
-            <Button variant="outline-success" onClick={() => handleDownload('csv')}>CSV</Button>
+            <Button
+              className="download-button"
+              variant="outline-primary"
+              onClick={() => handleDownload("pdf")}
+            >
+              PDF
+            </Button>
+            <Button
+              variant="outline-success"
+              onClick={() => handleDownload("csv")}
+            >
+              CSV
+            </Button>
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDownloadModal(false)}>Cancel</Button>
+          <Button
+            variant="secondary"
+            onClick={() => setShowDownloadModal(false)}
+          >
+            Cancel
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>

@@ -1,17 +1,17 @@
 import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { TaskProvider } from "./context/TaskContext";
 import { OrderProvider } from "./context/OrderContext";
 import Login from "./screens/login/Login";
 import Dashboard from "./screens/dashboard/Dashboard";
 import OrderPage from "./screens/order/Order";
 import ChangeUsersPassword from "./screens/ChangeUsersPassword/changeUsersPassword";
-import { InventoryProvider } from "./context/InventoryContext";
-import { HitchProvider } from "./context/HitchContext";
 import { TimeCardProvider } from "./context/TimeCardContext";
 import Cables from "./screens/cables/Cables";
 import Hose from "./screens/hose/Hose";
+import {CableProvider} from "./context/CableContext";
+import {HoseProvider} from "./context/HoseContext";
+import {AlternatorProvider} from "./context/AlternatorContext";
 
 const ProtectedRoute = ({ element: Component, ...rest }) => {
   const { user, loading } = useAuth();
@@ -24,11 +24,11 @@ const ProtectedRoute = ({ element: Component, ...rest }) => {
 function App() {
   return (
     <AuthProvider>
-      <TaskProvider>
-        <InventoryProvider>
-          <HitchProvider>
-            <OrderProvider>
-              <TimeCardProvider>
+      <OrderProvider>
+        <TimeCardProvider>
+          <CableProvider>
+            <HoseProvider>
+              <AlternatorProvider>
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route
@@ -53,11 +53,11 @@ function App() {
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-              </TimeCardProvider>
-            </OrderProvider>
-          </HitchProvider>
-        </InventoryProvider>
-      </TaskProvider>
+            </AlternatorProvider>
+          </HoseProvider>
+        </CableProvider>
+      </TimeCardProvider>
+    </OrderProvider>
     </AuthProvider>
   );
 }

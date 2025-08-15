@@ -1,10 +1,10 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 
-const InventoryContext = createContext(null);
+const AlternatorContext = createContext(null);
 
-export const InventoryProvider = ({ children }) => {
-  const [inventoryPaginationData, setInventoryPaginationData] = useState({
+export const AlternatorProvider = ({ children }) => {
+  const [alternatorPaginationData, setAlternatorPaginationData] = useState({
     current_page: 1,
     data: [],
     first_page_url: null,
@@ -21,13 +21,13 @@ export const InventoryProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [statusCounts, setStatusCounts] = useState({});
+  const [alternatorCounts, setAlternatorCounts] = useState({});
   const { token } = useAuth();
-  const INVENTORY_API_URL = `${process.env.REACT_APP_BASE_URL}/api/inventories`;
+  const ALTERNATORS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/alternators`;
 
-  const fetchInventories = async (params = {}) => {
+  const fetchAlternators = async (params = {}) => {
     if (!token) {
-      setInventoryPaginationData({
+      setAlternatorPaginationData({
         current_page: 1,
         data: [],
         first_page_url: null,
@@ -50,7 +50,7 @@ export const InventoryProvider = ({ children }) => {
 
     const query = new URLSearchParams(params).toString();
     try {
-      const response = await fetch(`${INVENTORY_API_URL}?${query}`, {
+      const response = await fetch(`${ALTERNATORS_API_URL}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -63,24 +63,24 @@ export const InventoryProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch inventory");
+        throw new Error(errorData.message || "Failed to fetch alternators");
       }
 
       const data = await response.json();
-      setInventoryPaginationData(data);
+      setAlternatorPaginationData(data);
     } catch (err) {
       setError(err);
-      console.error("Error fetching inventory:", err);
+      console.error("Error fetching alternators:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchInventoryStatusCounts = async () => {
+  const fetchAlternatorCounts = async () => {
     if (!token) return;
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL}/api/inventory/counts`,
+        `${process.env.REACT_APP_BASE_URL}/api/alternator/counts`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -93,29 +93,30 @@ export const InventoryProvider = ({ children }) => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
       }
+
       if (!response.ok) {
-        throw new Error("Failed to fetch inventory status counts");
+        throw new Error("Failed to fetch alternator counts");
       }
       const data = await response.json();
-      setStatusCounts(data);
+      setAlternatorCounts(data);
     } catch (err) {
-      console.error("Error fetching inventory status counts:", err);
+      console.error("Error fetching alternator counts:", err);
     }
   };
 
-  const addInventory = async (inventoryData) => {
+  const addAlternator = async (alternatorData) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(INVENTORY_API_URL, {
+      const response = await fetch(ALTERNATORS_API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(inventoryData),
+        body: JSON.stringify(alternatorData),
       });
 
       if (response.status === 401) {
@@ -125,41 +126,41 @@ export const InventoryProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add inventory item");
+        throw new Error(errorData.message || "Failed to add alternator");
       }
 
-      const newInventory = await response.json();
-      fetchInventories({
-        page: inventoryPaginationData.current_page,
-        perPage: inventoryPaginationData.per_page,
-        ...(inventoryPaginationData.status && {
-          status: inventoryPaginationData.status,
+      const newAlternator = await response.json();
+      fetchAlternators({
+        page: alternatorPaginationData.current_page,
+        perPage: alternatorPaginationData.per_page,
+        ...(alternatorPaginationData.progress && {
+          progress: alternatorPaginationData.progress,
         }),
       });
-      fetchInventoryStatusCounts();
-      return newInventory;
+      fetchAlternatorCounts();
+      return newAlternator;
     } catch (err) {
       setError(err);
-      console.error("Error adding inventory item:", err);
+      console.error("Error adding alternator:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateInventory = async (id, inventoryData) => {
+  const updateAlternator = async (id, alternatorData) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${INVENTORY_API_URL}/${id}`, {
+      const response = await fetch(`${ALTERNATORS_API_URL}/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(inventoryData),
+        body: JSON.stringify(alternatorData),
       });
 
       if (response.status === 401) {
@@ -169,35 +170,35 @@ export const InventoryProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update inventory item");
+        throw new Error(errorData.message || "Failed to update alternator");
       }
 
-      const updatedInventory = await response.json();
-      fetchInventories({
-        page: inventoryPaginationData.current_page,
-        perPage: inventoryPaginationData.per_page,
-        ...(inventoryPaginationData.status && {
-          status: inventoryPaginationData.status,
+      const updatedAlternator = await response.json();
+      fetchAlternators({
+        page: alternatorPaginationData.current_page,
+        perPage: alternatorPaginationData.per_page,
+        ...(alternatorPaginationData.progress && {
+          progress: alternatorPaginationData.progress,
         }),
       });
-      fetchInventoryStatusCounts();
-      return updatedInventory;
+      fetchAlternatorCounts();
+      return updatedAlternator;
     } catch (err) {
       setError(err);
-      console.error("Error updating inventory item:", err);
+      console.error("Error updating alternator:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteInventory = async (id) => {
+  const deleteAlternator = async (id) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${INVENTORY_API_URL}/${id}`, {
+      const response = await fetch(`${ALTERNATORS_API_URL}/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -212,33 +213,33 @@ export const InventoryProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete inventory item");
+        throw new Error(errorData.message || "Failed to delete alternator");
       }
 
-      let newPage = inventoryPaginationData.current_page;
-      if (inventoryPaginationData.data.length === 1 && newPage > 1) {
+      let newPage = alternatorPaginationData.current_page;
+      if (alternatorPaginationData.data.length === 1 && newPage > 1) {
         newPage -= 1;
       }
 
-      fetchInventories({
+      fetchAlternators({
         page: newPage,
-        perPage: inventoryPaginationData.per_page,
-        ...(inventoryPaginationData.status && {
-          status: inventoryPaginationData.status,
+        perPage: alternatorPaginationData.per_page,
+        ...(alternatorPaginationData.progress && {
+          progress: alternatorPaginationData.progress,
         }),
       });
-      fetchInventoryStatusCounts();
+      fetchAlternatorCounts();
       return true;
     } catch (err) {
       setError(err);
-      console.error("Error deleting inventory item:", err);
+      console.error("Error deleting alternator:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const exportInventories = async (format, params = {}) => {
+  const exportAlternators = async (format, params = {}) => {
     if (!token) {
       setError(new Error("Authentication token not available."));
       return;
@@ -248,7 +249,7 @@ export const InventoryProvider = ({ children }) => {
     setError(null);
 
     const queryParams = new URLSearchParams(params).toString();
-    const exportUrl = `${process.env.REACT_APP_BASE_URL}/api/inventory/export-${format}?${queryParams}`;
+    const exportUrl = `${process.env.REACT_APP_BASE_URL}/api/alternator/export-${format}?${queryParams}`;
 
     try {
       const response = await fetch(exportUrl, {
@@ -264,11 +265,12 @@ export const InventoryProvider = ({ children }) => {
       }
 
       if (!response.ok) {
-        let errorMessage = `Failed to export inventory as ${format}. Status: ${response.status}`;
+        let errorMessage = `Failed to export alternators as ${format}. Status: ${response.status}`;
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
-        } catch (jsonError) {}
+        } catch (jsonError) {
+        }
         throw new Error(errorMessage);
       }
 
@@ -276,48 +278,49 @@ export const InventoryProvider = ({ children }) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `inventory_report.${format}`;
+      a.download = `alternators_report.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
       setError(err);
-      console.error(`Error exporting inventory as ${format}:`, err);
+      console.error(`Error exporting alternators as ${format}:`, err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInventoryStatusCounts();
-  }, []);
+    fetchAlternators();
+    fetchAlternatorCounts();
+  }, [token]);
 
   return (
-    <InventoryContext.Provider
+    <AlternatorContext.Provider
       value={{
-        inventoryPaginationData,
-        inventories: inventoryPaginationData.data,
+        alternatorPaginationData,
+        alternators: alternatorPaginationData.data,
         loading,
         error,
-        statusCounts,
-        fetchInventories,
-        addInventory,
-        updateInventory,
-        deleteInventory,
-        fetchInventoryStatusCounts,
-        exportInventories,
+        alternatorCounts,
+        fetchAlternators,
+        addAlternator,
+        updateAlternator,
+        deleteAlternator,
+        fetchAlternatorCounts,
+        exportAlternators,
       }}
     >
       {children}
-    </InventoryContext.Provider>
+    </AlternatorContext.Provider>
   );
 };
 
-export const useInventories = () => {
-  const context = useContext(InventoryContext);
+export const useAlternators = () => {
+  const context = useContext(AlternatorContext);
   if (!context) {
-    throw new Error("useInventories must be used within an InventoryProvider");
+    throw new Error("useAlternators must be used within an AlternatorProvider");
   }
   return context;
 };

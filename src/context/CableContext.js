@@ -1,10 +1,10 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 
-const TaskContext = createContext(null);
+const CableContext = createContext(null);
 
-export const TaskProvider = ({ children }) => {
-  const [taskPaginationData, setTaskPaginationData] = useState({
+export const CableProvider = ({ children }) => {
+  const [cablePaginationData, setCablePaginationData] = useState({
     current_page: 1,
     data: [],
     first_page_url: null,
@@ -14,20 +14,20 @@ export const TaskProvider = ({ children }) => {
     links: [],
     next_page_url: null,
     path: null,
-    per_page: 10, // Adjusted to 10 for consistency as per TaskController
+    per_page: 10,
     prev_page_url: null,
     to: null,
     total: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [taskCounts, setTaskCounts] = useState({}); // Added for task counts
+  const [cableCounts, setCableCounts] = useState({});
   const { token } = useAuth();
-  const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/tasks`;
+  const CABLES_API_URL = `${process.env.REACT_APP_BASE_URL}/api/cables`;
 
-  const fetchTasks = async (params = {}) => {
+  const fetchCables = async (params = {}) => {
     if (!token) {
-      setTaskPaginationData({
+      setCablePaginationData({
         current_page: 1,
         data: [],
         first_page_url: null,
@@ -37,7 +37,7 @@ export const TaskProvider = ({ children }) => {
         links: [],
         next_page_url: null,
         path: null,
-        per_page: 10, // Adjusted to 10
+        per_page: 10,
         prev_page_url: null,
         to: null,
         total: 0,
@@ -50,9 +50,11 @@ export const TaskProvider = ({ children }) => {
 
     const query = new URLSearchParams(params).toString();
     try {
-      const response = await fetch(`${TASKS_API_URL}?${query}`, {
+      const response = await fetch(`${CABLES_API_URL}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          "Content-Type" : 'application/json'
         },
       });
 
@@ -63,28 +65,29 @@ export const TaskProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch tasks");
+        throw new Error(errorData.message || "Failed to fetch cables");
       }
 
       const data = await response.json();
-      setTaskPaginationData(data);
+      setCablePaginationData(data);
     } catch (err) {
       setError(err);
-      console.error("Error fetching tasks:", err);
+      console.error("Error fetching cables:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchTaskCounts = async () => {
+  const fetchCableCounts = async () => {
     if (!token) return;
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL}/api/task/counts`,
+        `${process.env.REACT_APP_BASE_URL}/api/cable/counts`,
         {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
           },
         }
       );
@@ -95,28 +98,29 @@ export const TaskProvider = ({ children }) => {
       }
 
       if (!response.ok) {
-        throw new Error("Failed to fetch task counts");
+        throw new Error("Failed to fetch cable counts");
       }
       const data = await response.json();
-      setTaskCounts(data);
+      setCableCounts(data);
     } catch (err) {
-      console.error("Error fetching task counts:", err);
+      console.error("Error fetching cable counts:", err);
     }
   };
 
-  const addTask = async (taskData) => {
+  const addCable = async (cableData) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(TASKS_API_URL, {
+      const response = await fetch(CABLES_API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
-        body: JSON.stringify(taskData),
+        body: JSON.stringify(cableData),
       });
 
       if (response.status === 401) {
@@ -126,41 +130,42 @@ export const TaskProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add task");
+        throw new Error(errorData.message || "Failed to add cable");
       }
 
-      const newTask = await response.json();
-      fetchTasks({
-        page: taskPaginationData.current_page,
-        perPage: taskPaginationData.per_page,
-        ...(taskPaginationData.progress && {
-          progress: taskPaginationData.progress,
+      const newCable = await response.json();
+      fetchCables({
+        page: cablePaginationData.current_page,
+        perPage: cablePaginationData.per_page,
+        ...(cablePaginationData.progress && {
+          progress: cablePaginationData.progress,
         }),
-      }); // Re-fetch to update pagination data
-      fetchTaskCounts(); // Re-fetch counts
-      return newTask;
+      });
+      fetchCableCounts();
+      return newCable;
     } catch (err) {
       setError(err);
-      console.error("Error adding task:", err);
+      console.error("Error adding cable:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateTask = async (id, taskData) => {
+  const updateCable = async (id, cableData) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${TASKS_API_URL}/${id}`, {
+      const response = await fetch(`${CABLES_API_URL}/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
-        body: JSON.stringify(taskData),
+        body: JSON.stringify(cableData),
       });
 
       if (response.status === 401) {
@@ -170,39 +175,40 @@ export const TaskProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update task");
+        throw new Error(errorData.message || "Failed to update cable");
       }
 
-      const updatedTask = await response.json();
-      fetchTasks({
-        page: taskPaginationData.current_page,
-        perPage: taskPaginationData.per_page,
-        ...(taskPaginationData.progress && {
-          progress: taskPaginationData.progress,
+      const updatedCable = await response.json();
+      fetchCables({
+        page: cablePaginationData.current_page,
+        perPage: cablePaginationData.per_page,
+        ...(cablePaginationData.progress && {
+          progress: cablePaginationData.progress,
         }),
-      }); // Re-fetch to update pagination data
-      fetchTaskCounts(); // Re-fetch counts
-      return updatedTask;
+      });
+      fetchCableCounts();
+      return updatedCable;
     } catch (err) {
       setError(err);
-      console.error("Error updating task:", err);
+      console.error("Error updating cable:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteTask = async (id) => {
+  const deleteCable = async (id) => {
     if (!token) return false;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${TASKS_API_URL}/${id}`, {
+      const response = await fetch(`${CABLES_API_URL}/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
       });
 
@@ -213,35 +219,33 @@ export const TaskProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete task");
+        throw new Error(errorData.message || "Failed to delete cable");
       }
 
-      // Adjust page if current page becomes empty after deletion
-      let newPage = taskPaginationData.current_page;
-      if (taskPaginationData.data.length === 1 && newPage > 1) {
+      let newPage = cablePaginationData.current_page;
+      if (cablePaginationData.data.length === 1 && newPage > 1) {
         newPage -= 1;
       }
 
-      fetchTasks({
+      fetchCables({
         page: newPage,
-        perPage: taskPaginationData.per_page,
-        ...(taskPaginationData.progress && {
-          progress: taskPaginationData.progress,
+        perPage: cablePaginationData.per_page,
+        ...(cablePaginationData.progress && {
+          progress: cablePaginationData.progress,
         }),
       });
-      fetchTaskCounts(); // Re-fetch counts
+      fetchCableCounts();
       return true;
     } catch (err) {
       setError(err);
-      console.error("Error deleting task:", err);
+      console.error("Error deleting cable:", err);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // New function for exporting task data
-  const exportTasks = async (format, params = {}) => {
+  const exportCables = async (format, params = {}) => {
     if (!token) {
       setError(new Error("Authentication token not available."));
       return;
@@ -251,7 +255,7 @@ export const TaskProvider = ({ children }) => {
     setError(null);
 
     const queryParams = new URLSearchParams(params).toString();
-    const exportUrl = `${process.env.REACT_APP_BASE_URL}/api/task/export-${format}?${queryParams}`;
+    const exportUrl = `${process.env.REACT_APP_BASE_URL}/api/cable/export-${format}?${queryParams}`;
 
     try {
       const response = await fetch(exportUrl, {
@@ -267,12 +271,11 @@ export const TaskProvider = ({ children }) => {
       }
 
       if (!response.ok) {
-        let errorMessage = `Failed to export tasks as ${format}. Status: ${response.status}`;
+        let errorMessage = `Failed to export cables as ${format}. Status: ${response.status}`;
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
         } catch (jsonError) {
-          // If response is not JSON, use the default error message
         }
         throw new Error(errorMessage);
       }
@@ -281,49 +284,50 @@ export const TaskProvider = ({ children }) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `tasks_report.${format}`;
+      a.download = `cables_report.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
       setError(err);
-      console.error(`Error exporting tasks as ${format}:`, err);
+      console.error(`Error exporting cables as ${format}:`, err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTasks();
-    fetchTaskCounts();
+    fetchCables();
+    fetchCableCounts();
   }, [token]);
 
   return (
-    <TaskContext.Provider
+    <CableContext.Provider
       value={{
-        taskPaginationData,
-        tasks: taskPaginationData.data,
+        cablePaginationData,
+        cables: cablePaginationData.data,
         loading,
         error,
-        taskCounts, // Provide taskCounts
-        fetchTasks,
-        addTask,
-        updateTask,
-        deleteTask,
-        fetchTaskCounts,
-        exportTasks,
+        cableCounts,
+        fetchCables,
+        addCable,
+        updateCable,
+        deleteCable,
+        fetchCableCounts,
+        exportCables,
       }}
     >
       {children}
-    </TaskContext.Provider>
+    </CableContext.Provider>
   );
 };
 
-export const useTasks = () => {
-  const context = useContext(TaskContext);
+export const useCables = () => {
+  const context = useContext(CableContext);
   if (!context) {
-    throw new Error("useTasks must be used within a TaskProvider");
+    throw new Error("useCables must be used within a CableProvider");
   }
   return context;
 };
+
