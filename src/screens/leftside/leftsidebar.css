@@ -3,6 +3,13 @@
 .leftSideBar-container{
     padding: 1rem;
 }
+
+.vertical-dash{
+  height: 1px;
+  width: 100%;
+  background-color: rgb(216, 216, 216);
+  margin-bottom: 0.3rem;
+}
 /* .leftSideBar-logo-container{
     display: flex;
     justify-content: start;
@@ -69,4 +76,6 @@
   .leftSideBar.collapsed {
     width: 60px;
   }
+
+
   
