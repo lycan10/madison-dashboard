@@ -21,10 +21,9 @@ import RepairSelector from "../../components/repairs/Repairs";
 import PartSelector from "../../components/repairs/Parts";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
-import { useTasks } from "../../context/TaskContext";
+import { useCables } from "../../context/CableContext";
 import { useAuth } from "../../context/AuthContext";
-import ChangeUsersPassword  from "../ChangeUsersPassword/changeUsersPassword";
-import HitchSelector from "../../components/repairs/CableSelector";
+import ChangeUsersPassword from "../ChangeUsersPassword/changeUsersPassword";
 import CableSelector from "../../components/repairs/CableSelector";
 
 const getPriorityStyles = (priority) => {
@@ -42,21 +41,23 @@ const getPriorityStyles = (priority) => {
 
 const Cables = ({ selected }) => {
   const {
-    taskPaginationData,
-    tasks,
+    cablePaginationData,
+    cables,
     loading,
     error,
-    fetchTasks,
-    addTask,
-    updateTask,
-    deleteTask,
-    exportTasks,
-  } = useTasks();
+    fetchCables,
+    addCable,
+    updateCable,
+    deleteCable,
+    exportCables,
+    fetchCableCounts: fetchContextCableCounts,
+    cableCounts: contextCableCounts,
+  } = useCables();
 
-  const [currentPage, setCurrentPage] = useState(
-    taskPaginationData.current_page || 1
+  const [currentCablePage, setCurrentCablePage] = useState(
+    cablePaginationData.current_page || 1
   );
-  const itemsPerPage = taskPaginationData.per_page || 12;
+  const itemsPerPage = cablePaginationData.per_page || 12;
   const [selectedStatus, setSelectedStatus] = useState("All");
   const statuses = [
     "All",
@@ -66,19 +67,8 @@ const Cables = ({ selected }) => {
     "Awaiting Parts",
     "Awaiting Pickup",
     "Picked Up",
-    "Shipped"
+    "Shipped",
   ];
-
-  const [taskCounts, setTaskCounts] = useState({
-    All: 0,
-    New: 0,
-    "In Progress": 0,
-    "Returns": 0, 
-    "Awaiting Parts": 0,
-    "Rejected Jobs": 0,
-    "Awaiting Pickup": 0,
-    "Picked Up": 0,
-  });
 
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -120,7 +110,6 @@ const Cables = ({ selected }) => {
     cableType: "",
     address: "",
     email: "",
-    plateNumber: "",
     dateIn: "",
     dateOut: "",
     progress: "New",
@@ -138,7 +127,6 @@ const Cables = ({ selected }) => {
       cableType: "",
       address: "",
       email: "",
-      plateNumber: "",
       dateIn: "",
       dateOut: "",
       progress: "New",
@@ -146,6 +134,7 @@ const Cables = ({ selected }) => {
       comments: "",
       partsNeeded: [],
     });
+    setRepairs([]);
     setParts([]);
   };
 
@@ -160,15 +149,13 @@ const Cables = ({ selected }) => {
   const handleAddSubmit = async () => {
     const finalData = {
       ...formData,
-      phoneNumber: formData.phoneNumber,
-      email: formData.email,
-      plateNumber: formData.plateNumber,
       partsNeeded: parts,
+      repairNeeded: repairs,
     };
-    const success = await addTask(finalData);
+    const success = await addCable(finalData);
     if (success) {
       handleCloseAddModal();
-      fetchStatusCounts();
+      fetchContextCableCounts();
     }
   };
 
@@ -176,23 +163,21 @@ const Cables = ({ selected }) => {
     if (!selectedItem.id) return;
     const finalData = {
       ...formData,
-      phoneNumber: formData.phoneNumber,
-      email: formData.email,
-      plateNumber: formData.plateNumber,
       partsNeeded: parts,
+      repairNeeded: repairs,
     };
-    const success = await updateTask(selectedItem.id, finalData);
+    const success = await updateCable(selectedItem.id, finalData);
     if (success) {
       handleCloseEditModal();
-      fetchStatusCounts();
+      fetchContextCableCounts();
     }
   };
 
   const handleDelete = async (id) => {
-    const success = await deleteTask(id);
+    const success = await deleteCable(id);
     if (success) {
       handleCloseInfoModal();
-      fetchStatusCounts();
+      fetchContextCableCounts();
     }
   };
 
@@ -202,7 +187,8 @@ const Cables = ({ selected }) => {
       customerName: item.customerName || "",
       phoneNumber: item.phoneNumber || "",
       email: item.email || "",
-      plateNumber: item.plateNumber || "",
+      cableType: item.cableType || "",
+      address: item.address || "",
       dateIn: item.dateIn || "",
       dateOut: item.dateOut || "",
       progress: item.progress || "New",
@@ -215,39 +201,15 @@ const Cables = ({ selected }) => {
     handleShowEditModal();
   };
 
-  const fetchStatusCounts = async () => {
-    try {
-      const TASKS_API_URL = `${process.env.REACT_APP_BASE_URL}/api/task/counts`;
-      const params = new URLSearchParams();
-      if (startDate) params.append("startDate", startDate);
-      if (endDate) params.append("endDate", endDate);
-
-      const response = await fetch(`${TASKS_API_URL}?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setTaskCounts(data);
-    } catch (error) {
-      console.error("Error fetching status counts:", error);
-    }
-  };
-
   const countByStatus = (status) => {
-    return taskCounts[status] || 0;
+    return contextCableCounts[status] || 0;
   };
 
-  const displayedTasks = tasks;
-  const totalPages = taskPaginationData.last_page || 1;
+  const displayedCables = cables;
+  const totalPages = cablePaginationData.last_page || 1;
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    setCurrentCablePage(pageNumber);
   };
 
   const handleSortClick = (column) => {
@@ -257,12 +219,12 @@ const Cables = ({ selected }) => {
       setSortBy(column);
       setSortDirection("asc");
     }
-    setCurrentPage(1);
+    setCurrentCablePage(1);
   };
 
   useEffect(() => {
     const params = {
-      page: currentPage,
+      page: currentCablePage,
       per_page: itemsPerPage,
       ...(selectedStatus !== "All" && { progress: selectedStatus }),
       sortBy: sortBy,
@@ -271,9 +233,9 @@ const Cables = ({ selected }) => {
       ...(endDate && { endDate: endDate }),
       ...(searchTerm && { search: searchTerm }),
     };
-    fetchTasks(params);
+    fetchCables(params);
   }, [
-    currentPage,
+    currentCablePage,
     selectedStatus,
     sortBy,
     sortDirection,
@@ -284,17 +246,17 @@ const Cables = ({ selected }) => {
   ]);
 
   useEffect(() => {
-    fetchStatusCounts();
+    fetchContextCableCounts();
   }, [startDate, endDate, searchTerm]);
 
   useEffect(() => {
     if (
-      taskPaginationData.current_page &&
-      taskPaginationData.current_page !== currentPage
+      cablePaginationData.current_page &&
+      cablePaginationData.current_page !== currentCablePage
     ) {
-      setCurrentPage(taskPaginationData.current_page);
+      setCurrentCablePage(cablePaginationData.current_page);
     }
-  }, [taskPaginationData.current_page]);
+  }, [cablePaginationData.current_page]);
 
   const handleDateFilterChange = (e) => {
     const { name, value } = e.target;
@@ -303,454 +265,435 @@ const Cables = ({ selected }) => {
     } else if (name === "endDate") {
       setEndDate(value);
     }
-    setCurrentPage(1);
+    setCurrentCablePage(1);
   };
 
   const clearDateFilters = () => {
     setStartDate("");
     setEndDate("");
-    setCurrentPage(1);
+    setCurrentCablePage(1);
   };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1);
+    setCurrentCablePage(1);
   };
 
   const handleDownload = async (type) => {
-    console.log(`Downloading tasks as ${type}`);
+    console.log(`Downloading cables as ${type}`);
     const params = {
       sortBy: sortBy,
       sortDirection: sortDirection,
       ...(searchTerm && { search: searchTerm }),
-      // Do NOT include page or perPage for exports, as we want all data
     };
-    await exportTasks(type, params);
+    await exportCables(type, params);
     setShowDownloadModal(false);
   };
 
   return (
-      <div className="rightsidebar-container">
-        {/* Render Dashboard content if selected */}
-          <div className="rightsidebar-bottom">
-            <div className="rightsidebar-navbar">
-              <h3>Madison Generator</h3>
-              {/* Button to open the Add New Task modal */}
-              <div className="button-group d-flex flex-row">
-                {" "}
-                {/* Added a div for button grouping */}
-                <div
-                  className="rightsidebar-button"
-                  onClick={handleShowAddModal}
-                >
-                  <HugeiconsIcon
-                    icon={Add01Icon}
-                    size={16}
-                    color="#ffffff"
-                    strokeWidth={3}
-                  />
-                  <p>New Order</p>
-                </div>
-                <div
-                  className="rightsidebar-button"
-                  style={{ backgroundColor: "#3c58ae", marginLeft: "10px" }}
-                  onClick={() => setShowDownloadModal(true)}
-                >
-                  <HugeiconsIcon
-                    icon={Download04FreeIcons}
-                    size={16}
-                    color="#ffffff"
-                    strokeWidth={2}
-                  />
-                  <p>Download</p>
-                </div>
-              </div>
+    <div className="rightsidebar-container">
+      {selected === "Cables" && (
+      <div className="rightsidebar-bottom">
+        <div className="rightsidebar-navbar">
+          <h3>Madison Generator – Cables</h3>
+          <div className="button-group d-flex flex-row">
+            <div className="rightsidebar-button" onClick={handleShowAddModal}>
+              <HugeiconsIcon
+                icon={Add01Icon}
+                size={16}
+                color="#ffffff"
+                strokeWidth={3}
+              />
+              <p>New Order</p>
             </div>
-            <div className="rightsidebar-filter">
-              <div className="rightsidebar-filter-button">
-                {/* Buttons to switch between table and grid view */}
-                <div
-                  className={`custom-filter-button ${
-                    viewMode === "table" ? "active" : ""
-                  }`}
-                  onClick={() => setViewMode("table")}
-                >
-                  <HugeiconsIcon
-                    icon={LeftToRightListBulletIcon}
-                    size={14}
-                    color="#545454"
-                  />
-                  <p>List</p>
-                </div>
-                <div
-                  className={`custom-filter-button ${
-                    viewMode === "grid" ? "active" : ""
-                  }`}
-                  onClick={() => setViewMode("grid")}
-                >
-                  <HugeiconsIcon
-                    icon={GridViewIcon}
-                    size={14}
-                    color="#545454"
-                  />
-                  <p>Grid</p>
-                </div>
-              </div>
+            <div
+              className="rightsidebar-button"
+              style={{ backgroundColor: "#3c58ae", marginLeft: "10px" }}
+              onClick={() => setShowDownloadModal(true)}
+            >
+              <HugeiconsIcon
+                icon={Download04FreeIcons}
+                size={16}
+                color="#ffffff"
+                strokeWidth={2}
+              />
+              <p>Download</p>
+            </div>
+          </div>
+        </div>
+        <div className="rightsidebar-filter">
+          <div className="rightsidebar-filter-button">
+            <div
+              className={`custom-filter-button ${
+                viewMode === "table" ? "active" : ""
+              }`}
+              onClick={() => setViewMode("table")}
+            >
+              <HugeiconsIcon
+                icon={LeftToRightListBulletIcon}
+                size={14}
+                color="#545454"
+              />
+              <p>List</p>
+            </div>
+            <div
+              className={`custom-filter-button ${
+                viewMode === "grid" ? "active" : ""
+              }`}
+              onClick={() => setViewMode("grid")}
+            >
+              <HugeiconsIcon
+                icon={GridViewIcon}
+                size={14}
+                color="#545454"
+              />
+              <p>Grid</p>
+            </div>
+          </div>
 
-              <div className="search-input-container">
-                <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
-                <input
-                  type="text"
-                  placeholder="Search order..."
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="search-input"
-                />
-              </div>
+          <div className="search-input-container">
+            <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
+            <input
+              type="text"
+              placeholder="Search order..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="search-input"
+            />
+          </div>
 
-              <div className="rightsidebar-filter-date">
-                {/* Date Range Filter Inputs */}
-                <div className="date-range-picker">
-                  <label htmlFor="startDate">Start Date:</label>
-                  <input
-                    type="date"
-                    id="startDate"
-                    name="startDate"
-                    value={startDate}
-                    onChange={handleDateFilterChange}
-                    className="date-input custom-filter-button filter-date"
-                  />
-                </div>
-                <div className="date-range-picker mx-2">
-                  <label htmlFor="endDate">End Date:</label>
-                  <input
-                    type="date"
-                    id="endDate"
-                    name="endDate"
-                    value={endDate}
-                    onChange={handleDateFilterChange}
-                    className="date-input custom-filter-button filter-date"
-                  />
-                </div>
-
-                {(startDate || endDate) && (
-                  <button
-                    className="clear-date-button"
-                    onClick={clearDateFilters}
-                  >
-                    Clear Dates
-                  </button>
-                )}
-              </div>
+          <div className="rightsidebar-filter-date">
+            <div className="date-range-picker">
+              <label htmlFor="startDate">Start Date:</label>
+              <input
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={startDate}
+                onChange={handleDateFilterChange}
+                className="date-input custom-filter-button filter-date"
+              />
+            </div>
+            <div className="date-range-picker mx-2">
+              <label htmlFor="endDate">End Date:</label>
+              <input
+                type="date"
+                id="endDate"
+                name="endDate"
+                value={endDate}
+                onChange={handleDateFilterChange}
+                className="date-input custom-filter-button filter-date"
+              />
             </div>
 
-            <div className="custom-line no-margin"></div>
+            {(startDate || endDate) && (
+              <button
+                className="clear-date-button"
+                onClick={clearDateFilters}
+              >
+                Clear Dates
+              </button>
+            )}
+          </div>
+        </div>
 
-            {/* Progress status filters */}
-            <div className="rightsidebar-filter-progress">
-              {statuses.map((status) => (
-                <div
-                  key={status}
-                  onClick={() => setSelectedStatus(status)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <ProgressFilter
-                    title={status}
-                    count={countByStatus(status)} // Use the updated countByStatus
-                    bgColor={selectedStatus === status ? "#333" : "#f1f1f1"}
-                    color={selectedStatus === status ? "#fff" : "#000"}
-                  />
-                </div>
-              ))}
+        <div className="custom-line no-margin"></div>
+
+        <div className="rightsidebar-filter-progress">
+          {statuses.map((status) => (
+            <div
+              key={status}
+              onClick={() => setSelectedStatus(status)}
+              style={{ cursor: "pointer" }}
+            >
+              <ProgressFilter
+                title={status}
+                count={countByStatus(status)}
+                bgColor={selectedStatus === status ? "#333" : "#f1f1f1"}
+                color={selectedStatus === status ? "#fff" : "#000"}
+              />
             </div>
+          ))}
+        </div>
 
-            {/* Display loading, error, or task data */}
-            <div className="rightsidebar-table">
-              {loading ? (
-                <p>Loading tasks...</p>
-              ) : error ? (
-                <p>Error: {error.message}</p>
-              ) : viewMode === "table" ? (
-                <div className="order-table-container">
-                  <div className="rightsidebar-table">
-                    <table className="custom-table">
-                      <thead>
-                        <tr>
-                          <th
-                            onClick={() => handleSortClick("id")}
-                            style={{ cursor: "pointer" }}
+        <div className="rightsidebar-table">
+          {loading ? (
+            <p>Loading cables...</p>
+          ) : error ? (
+            <p>Error: {error.message}</p>
+          ) : viewMode === "table" ? (
+            <div className="order-table-container">
+              <div className="rightsidebar-table">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th
+                        onClick={() => handleSortClick("id")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        s/n{" "}
+                        {sortBy === "id" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
+                        onClick={() => handleSortClick("customerName")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Customer Name{" "}
+                        {sortBy === "customerName" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
+                        onClick={() => handleSortClick("cableType")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Cable Type{" "}
+                        {sortBy === "cableType" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
+                        onClick={() => handleSortClick("phoneNumber")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Phone Number{" "}
+                        {sortBy === "phoneNumber" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
+                        onClick={() => handleSortClick("email")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Email{" "}
+                        {sortBy === "email" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
+                        onClick={() => handleSortClick("dateIn")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Date-In{" "}
+                        {sortBy === "dateIn" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
+                        onClick={() => handleSortClick("dateOut")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Date-Out{" "}
+                        {sortBy === "dateOut" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
+                        onClick={() => handleSortClick("progress")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Progress{" "}
+                        {sortBy === "progress" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th>Parts Needed</th>
+                      <th
+                        onClick={() => handleSortClick("priority")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Priority{" "}
+                        {sortBy === "priority" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.isArray(displayedCables) &&
+                    displayedCables.length === 0 ? (
+                      <tr>
+                        <td colSpan="10">No data available</td>
+                      </tr>
+                    ) : (
+                      Array.isArray(displayedCables) &&
+                      displayedCables.map((item) => {
+                        const { color, bgColor, icon } = getPriorityStyles(
+                          item.priority
+                        );
+                        return (
+                          <tr
+                            key={item.id}
+                            onClick={() => {
+                              setSelectedItem(item);
+                              handleShowInfoModal();
+                            }}
                           >
-                            s/n{" "}
-                            {sortBy === "id" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                          <th
-                            onClick={() => handleSortClick("customerName")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Customer Name{" "}
-                            {sortBy === "customerName" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                          <th
-                            onClick={() => handleSortClick("phoneNumber")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Cable Type{" "}
-                            {sortBy === "cableType" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                          <th
-                            onClick={() => handleSortClick("plateNumber")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Phone Number{" "}
-                            {sortBy === "phoneNumber" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                          <th
-                            onClick={() => handleSortClick("email")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Email{" "}
-                            {sortBy === "email" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                         
-                          <th
-                            onClick={() => handleSortClick("dateIn")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Date-In{" "}
-                            {sortBy === "dateIn" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                          <th
-                            onClick={() => handleSortClick("dateOut")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Date-Out{" "}
-                            {sortBy === "dateOut" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                          <th
-                            onClick={() => handleSortClick("progress")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Progress{" "}
-                            {sortBy === "progress" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                          <th>Parts Needed</th>
-                          <th
-                            onClick={() => handleSortClick("priority")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            Priority{" "}
-                            {sortBy === "priority" &&
-                              (sortDirection === "asc" ? "▲" : "▼")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Array.isArray(displayedTasks) &&
-                        displayedTasks.length === 0 ? (
-                          <tr>
-                            <td colSpan="10">No data available</td>
+                            <td>{item.id}</td>
+                            <td>{item.customerName}</td>
+                            <td>{item.cableType}</td>
+                            <td>{item.phoneNumber}</td>
+                            <td>
+                              {item?.email ? 
+                                (item?.email.length > 10
+                                  ? `${item.email.slice(0, 10)}...`
+                                  : item?.email)
+                                :
+                                ""}
+                            </td>
+                            <td>{item.dateIn}</td>
+                            <td>{item.dateOut}</td>
+                            <td>{item.progress}</td>
+                            <td>
+                              {Array.isArray(item.partsNeeded)
+                                ? (() => {
+                                    const fullText = item.partsNeeded
+                                      .map(
+                                        (part) =>
+                                          `${part.name} (${part.quantity})`
+                                      )
+                                      .join(", ");
+
+                                    const maxLength = 35;
+
+                                    return fullText.length > maxLength
+                                      ? `${fullText.slice(0, maxLength)}...`
+                                      : fullText;
+                                  })()
+                                : item.partsNeeded}
+                            </td>
+                            <td>
+                              <Priority
+                                color={color}
+                                bgColor={bgColor}
+                                icon={icon}
+                                title={item.priority}
+                              />
+                            </td>
                           </tr>
-                        ) : (
-                          Array.isArray(displayedTasks) &&
-                          displayedTasks.map((item) => {
-                            const { color, bgColor, icon } = getPriorityStyles(
-                              item.priority
-                            );
-                            return (
-                              <tr
-                                key={item.id}
-                                onClick={() => {
-                                  setSelectedItem(item);
-                                  handleShowInfoModal();
-                                }}
-                              >
-                                <td>{item.id}</td>
-                                <td>{item.customerName}</td>
-                                <td>{item.customerName}</td>
-                                <td>{item.phoneNumber}</td>
-                                <td>
-                                  {item?.email ? 
-                                  (item?.email.length > 10
-                                    ? `${item.email.slice(0, 10)}...`
-                                    : item?.email)
-                                  :
-                                  ""}
-                                </td>
-                                <td>{item.dateIn}</td>
-                                <td>{item.dateOut}</td>
-                                <td>{item.progress}</td>
-                               
-                                <td>
-                                  {Array.isArray(item.partsNeeded)
-                                    ? (() => {
-                                        const fullText = item.partsNeeded
-                                          .map(
-                                            (part) =>
-                                              `${part.name} (${part.quantity})`
-                                          )
-                                          .join(", ");
-
-                                        const maxLength = 35; // adjust this to whatever max character length you want
-
-                                        return fullText.length > maxLength
-                                          ? `${fullText.slice(0, maxLength)}...`
-                                          : fullText;
-                                      })()
-                                    : item.partsNeeded}
-                                </td>
-                                <td>
-                                  <Priority
-                                    color={color}
-                                    bgColor={bgColor}
-                                    icon={icon}
-                                    title={item.priority}
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+                <div className="custom-grid-pagination table">
+                  <Pagination>
+                    <Pagination.First
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentCablePage === 1}
+                    />
+                    <Pagination.Prev
+                      onClick={() => handlePageChange(currentCablePage - 1)}
+                      disabled={currentCablePage === 1}
+                    />
+                    {[...Array(totalPages)].map((_, index) => (
+                      <Pagination.Item
+                        key={index + 1}
+                        active={index + 1 === currentCablePage}
+                        onClick={() => handlePageChange(index + 1)}
+                      >
+                        {index + 1}
+                      </Pagination.Item>
+                    ))}
+                    <Pagination.Next
+                      onClick={() => handlePageChange(currentCablePage + 1)}
+                      disabled={currentCablePage === totalPages}
+                    />
+                    <Pagination.Last
+                      onClick={() => handlePageChange(totalPages)}
+                      disabled={currentCablePage === totalPages}
+                    />
+                  </Pagination>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="order-table-container">
+              <div className="gridview-container">
+                {Array.isArray(displayedCables) &&
+                displayedCables.length === 0 ? (
+                  <div className="no-data-message">
+                    <p>No data available.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid-view">
+                      {Array.isArray(displayedCables) &&
+                        displayedCables.map((item) => {
+                          const { color, bgColor, icon } =
+                            getPriorityStyles(item.priority);
+                          return (
+                            <div
+                              key={item.id}
+                              className="custom-grid"
+                              onClick={() => {
+                                setSelectedItem(item);
+                                handleShowInfoModal();
+                              }}
+                            >
+                              <div className="custom-grid-top-container">
+                                <Priority
+                                  color={color}
+                                  bgColor={bgColor}
+                                  icon={icon}
+                                  title={item.priority}
+                                />
+                                <div className="custom-grid-edit">
+                                  <HugeiconsIcon
+                                    icon={MoreHorizontalIcon}
+                                    size={20}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditClick(item);
+                                    }}
                                   />
-                                </td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                    {/* Pagination for table view */}
-                    <div className="custom-grid-pagination table">
+                                </div>
+                              </div>
+                              <div className="custom-grid-bottom-container">
+                                <h3>{item.customerName}</h3>
+                                <p>Cable Type: {item.cableType}</p>
+                                <p>Phone: {item.phoneNumber}</p>
+                                <p>Email: {item.email}</p>
+                                <div className="custom-line"></div>
+                                <div className="custom-grid-bottom-date">
+                                  <p>{item.dateIn}</p>
+                                  <p>{item.progress}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    <div className="custom-grid-pagination">
                       <Pagination>
                         <Pagination.First
                           onClick={() => handlePageChange(1)}
-                          disabled={currentPage === 1}
+                          disabled={currentCablePage === 1}
                         />
                         <Pagination.Prev
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage === 1}
+                          onClick={() => handlePageChange(currentCablePage - 1)}
+                          disabled={currentCablePage === 1}
                         />
-                        {/* Render pagination items based on totalPages from backend */}
                         {[...Array(totalPages)].map((_, index) => (
                           <Pagination.Item
                             key={index + 1}
-                            active={index + 1 === currentPage}
+                            active={index + 1 === currentCablePage}
                             onClick={() => handlePageChange(index + 1)}
                           >
                             {index + 1}
                           </Pagination.Item>
                         ))}
                         <Pagination.Next
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage === totalPages}
+                          onClick={() => handlePageChange(currentCablePage + 1)}
+                          disabled={currentCablePage === totalPages}
                         />
                         <Pagination.Last
                           onClick={() => handlePageChange(totalPages)}
-                          disabled={currentPage === totalPages}
+                          disabled={currentCablePage === totalPages}
                         />
                       </Pagination>
                     </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="order-table-container">
-                  <div className="gridview-container">
-                    {/* Use displayedTasks (which is taskPaginationData.data) */}
-                    {Array.isArray(displayedTasks) &&
-                    displayedTasks.length === 0 ? (
-                      <div className="no-data-message">
-                        <p>No data available.</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="grid-view">
-                          {Array.isArray(displayedTasks) &&
-                            displayedTasks.map((item) => {
-                              const { color, bgColor, icon } =
-                                getPriorityStyles(item.priority);
-                              return (
-                                <div
-                                  key={item.id}
-                                  className="custom-grid"
-                                  onClick={() => {
-                                    setSelectedItem(item);
-                                    handleShowInfoModal();
-                                  }}
-                                >
-                                  <div className="custom-grid-top-container">
-                                    <Priority
-                                      color={color}
-                                      bgColor={bgColor}
-                                      icon={icon}
-                                      title={item.priority}
-                                    />
-                                    <div className="custom-grid-edit">
-                                      {/* Edit icon in grid view */}
-                                      <HugeiconsIcon
-                                        icon={MoreHorizontalIcon}
-                                        size={20}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleEditClick(item);
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="custom-grid-bottom-container">
-                                    <h3>{item.customerName}</h3>
-                                    <p>Phone: {item.phoneNumber}</p>
-                                    <p>Phone: {item.email}</p>
-                                    <p>Plate: {item.plateNumber}</p>
-                                    <div className="custom-line"></div>
-                                    <div className="custom-grid-bottom-date">
-                                      <p>{item.dateIn}</p>
-                                      <p>{item.progress}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                        </div>
-                        {/* Pagination for grid view */}
-                        <div className="custom-grid-pagination">
-                          <Pagination>
-                            <Pagination.First
-                              onClick={() => handlePageChange(1)}
-                              disabled={currentPage === 1}
-                            />
-                            <Pagination.Prev
-                              onClick={() => handlePageChange(currentPage - 1)}
-                              disabled={currentPage === 1}
-                            />
-                            {[...Array(totalPages)].map((_, index) => (
-                              <Pagination.Item
-                                key={index + 1}
-                                active={index + 1 === currentPage}
-                                onClick={() => handlePageChange(index + 1)}
-                              >
-                                {index + 1}
-                              </Pagination.Item>
-                            ))}
-                            <Pagination.Next
-                              onClick={() => handlePageChange(currentPage + 1)}
-                              disabled={currentPage === totalPages}
-                            />
-                            <Pagination.Last
-                              onClick={() => handlePageChange(totalPages)}
-                              disabled={currentPage === totalPages}
-                            />
-                          </Pagination>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+        </div>
+      </div>)}
 
-      {/* Add New Task Modal */}
       <Modal
         show={showAddModal}
         onHide={handleCloseAddModal}
@@ -777,7 +720,7 @@ const Cables = ({ selected }) => {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="customerName">Cable Type</label>
+              <label htmlFor="cableType">Cable Type</label>
               <input
                 type="text"
                 id="cableType"
@@ -787,7 +730,6 @@ const Cables = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-            {/* Added Phone Number Input */}
             <div className="form-group">
               <label htmlFor="phoneNumber">Phone Number</label>
               <input
@@ -799,19 +741,17 @@ const Cables = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-             {/* Added Address Input */}
-             <div className="form-group">
-              <label htmlFor="email">Address</label>
+            <div className="form-group">
+              <label htmlFor="address">Address</label>
               <input
                 type="text"
                 id="address"
                 name="address"
                 className="input-field"
-                value={formData.email}
+                value={formData.address}
                 onChange={handleChange}
               />
             </div>
-            {/* Added email Input */}
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
@@ -823,7 +763,6 @@ const Cables = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-           
             <div className="form-group">
               <label htmlFor="dateIn">Date In</label>
               <input
@@ -845,7 +784,6 @@ const Cables = ({ selected }) => {
                 value={formData.dateOut}
                 onChange={handleChange}
               />
-              
             </div>
             <div className="form-group">
               <label htmlFor="progress">Status</label>
@@ -865,18 +803,14 @@ const Cables = ({ selected }) => {
                 <option>Picked Up</option>
               </select>
             </div>
-
             <div className="form-group">
-              {/* RepairSelector component */}
               <CableSelector
                 selectedCable={repairs}
                 setSelectedCable={setRepairs}
               />
               <p>Selected Repairs: {repairs.join(", ")}</p>
             </div>
-           
             <div className="form-group">
-              {/* PartSelector component */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
               <p>
                 Selected Parts:{" "}
@@ -923,7 +857,6 @@ const Cables = ({ selected }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Task Info Modal */}
       <Modal
         show={showInfoModal}
         onHide={handleCloseInfoModal}
@@ -947,7 +880,6 @@ const Cables = ({ selected }) => {
                 <strong>Cable Type:</strong>
                 <p>{selectedItem.cableType}</p>
               </div>
-              {/* Display Phone Number in Info Modal */}
               <div className="info-group">
                 <strong>Phone Number:</strong>
                 <p>{selectedItem.phoneNumber}</p>
@@ -960,7 +892,6 @@ const Cables = ({ selected }) => {
                 <strong>Email:</strong>
                 <p>{selectedItem.email}</p>
               </div>
-            
               <div className="info-group">
                 <strong>Date In:</strong>
                 <p>{selectedItem.dateIn}</p>
@@ -981,7 +912,6 @@ const Cables = ({ selected }) => {
                     : selectedItem.repairNeeded}
                 </p>
               </div>
-             
               <div className="info-group">
                 <strong>Parts Needed:</strong>
                 <p>
@@ -999,22 +929,18 @@ const Cables = ({ selected }) => {
               {selectedItem.comments && (
                 <div className="info-group">
                   <strong>Comments:</strong>
-                  <p>{selectedItem.comments}</p> 
+                  <p>{selectedItem.comments}</p>
                 </div>
               )}
-
-              {/* Display Created By */}
               {selectedItem.author && (
                 <div className="info-group">
                   <strong>Created By:</strong>
                   <p>{selectedItem.author.name}</p>
                 </div>
               )}
-
-              {/* Display Task History */}
               {selectedItem.history && selectedItem.history.length > 0 && (
                 <div className="info-group">
-                  <strong>Task History:</strong>
+                  <strong>Cable History:</strong>
                   <ul>
                     {selectedItem.history.map((historyEntry) => (
                       <li key={historyEntry.id}>
@@ -1046,7 +972,6 @@ const Cables = ({ selected }) => {
           <button className="btn-secondary" onClick={handleCloseInfoModal}>
             Cancel
           </button>
-          {/* Delete button */}
           {user.name === "admin" && (
             <button
               className="btn-danger"
@@ -1055,7 +980,6 @@ const Cables = ({ selected }) => {
               Delete
             </button>
           )}
-          {/* Edit button */}
           <button
             className="btn-primary"
             onClick={() => {
@@ -1068,7 +992,6 @@ const Cables = ({ selected }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Edit Task Modal */}
       <Modal
         show={showEditModal}
         onHide={handleCloseEditModal}
@@ -1094,20 +1017,17 @@ const Cables = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-                {/* Added Cable type */}
-                <div className="form-group">
-              <label htmlFor="editEmail">Cable type</label>
+            <div className="form-group">
+              <label htmlFor="editCableType">Cable Type</label>
               <input
                 type="text"
                 id="editCableType"
-                name="adress"
+                name="cableType"
                 className="input-field"
                 value={formData.cableType}
                 onChange={handleChange}
               />
             </div>
-
-            {/* Added Phone Number Input for Edit */}
             <div className="form-group">
               <label htmlFor="editPhoneNumber">Phone Number</label>
               <input
@@ -1119,20 +1039,17 @@ const Cables = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-                 {/* Added Address */}
-                 <div className="form-group">
-              <label htmlFor="editEmail">Adress</label>
+            <div className="form-group">
+              <label htmlFor="editAddress">Address</label>
               <input
                 type="text"
-                id="editAdress"
-                name="adress"
+                id="editAddress"
+                name="address"
                 className="input-field"
                 value={formData.address}
                 onChange={handleChange}
               />
             </div>
-
-            {/* Added Phone Number Input for Edit */}
             <div className="form-group">
               <label htmlFor="editEmail">Email</label>
               <input
@@ -1185,7 +1102,6 @@ const Cables = ({ selected }) => {
               </select>
             </div>
             <div className="form-group">
-              {/* RepairSelector component for editing */}
               <CableSelector
                 selectedCable={repairs}
                 setSelectedCable={setRepairs}
@@ -1216,7 +1132,6 @@ const Cables = ({ selected }) => {
               </div>
             </div>
             <div className="form-group">
-              {/* PartSelector component for editing */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
               <div className="selected-parts-list">
                 {Array.isArray(parts) && parts.length > 0 ? (
@@ -1279,13 +1194,12 @@ const Cables = ({ selected }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Download Modal */}
       <Modal show={showDownloadModal} onHide={() => setShowDownloadModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Download Task Data</Modal.Title>
+          <Modal.Title>Download Cable Data</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>How would you like to download the task data?</p>
+          <p>How would you like to download the cable data?</p>
           <div className="modal-button-download">
             <Button className="download-button" variant="outline-primary" onClick={() => handleDownload('pdf')}>PDF</Button>
             <Button variant="outline-success" onClick={() => handleDownload('csv')}>CSV</Button>
