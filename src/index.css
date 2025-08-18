@@ -36,12 +36,11 @@ h3 {
 
 :root {
   --font-family: "Nunito Sans", sans-serif;
-  --color: #F4CE14;
+  --color: #Ffac1f;
   --border: #f0f4f8;
   --text-color: #121212;
   --text-color2: #545454;
-  --background-color: #3c58ae;
-  --background-color2: #3b67af;
+  --background-color: #Ffac1f;
 }
 
 .search-input-container {

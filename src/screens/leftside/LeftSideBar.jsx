@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from "react";
 import "./leftsidebar.css";
 import LeftNavLinks from "../../components/leftNavLinks/LeftNavLinks";
-import logo from "../../assets/black-icon.png";
+import logo from "../../assets/Icon-yellow.png";
 import {
   Task02Icon,
   Home02Icon,
   CheckListIcon,
-  Car02FreeIcons,
+  Notification01Icon,
+  UserMultipleIcon, 
   CalendarAdd01FreeIcons,
   LogoutIcon,
+  MessageMultiple01Icon,
   Tag01FreeIcons,
   TractorFreeIcons,
   WaterEnergyFreeIcons,
+  Notification01FreeIcons,
+  Note02Icon,
+  Mail01Icon,
 } from "@hugeicons/core-free-icons";
 import { useSidebar } from "../../context/SideBarContext";
 import { useAuth } from "../../context/AuthContext";
@@ -89,8 +94,45 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           isSelected={selected === "Order"}
           collapsed={collapsed}
         />
-        
+        <div className="vertical-dash"></div>
+        <LeftNavLinks
+          icon={Notification01FreeIcons} 
+          title="Notification"
+          onClick={() => handleLinkClick("Notification")}
+          isSelected={selected === "Notification"}
+          collapsed={collapsed}
+        />
+         <LeftNavLinks
+          icon={Mail01Icon} 
+          title="Emails"
+          onClick={() => handleLinkClick("Email")}
+          isSelected={selected === "Email"}
+          collapsed={collapsed}
+        />
+      
+         <LeftNavLinks
+          icon={Note02Icon} 
+          title="My Tasks"
+          onClick={() => handleLinkClick("MyProject")}
+          isSelected={selected === "MyProject"}
+          collapsed={collapsed}
+        />
+         <LeftNavLinks
+          icon={MessageMultiple01Icon} 
+          title="Messages"
+          onClick={() => handleLinkClick("Messages")}
+          isSelected={selected === "Messages"}
+          collapsed={collapsed}
+        />
        
+          <LeftNavLinks
+          icon={UserMultipleIcon}
+          title="Members"
+          onClick={() => handleLinkClick("Member")}
+          isSelected={selected === "Member"}
+          collapsed={collapsed}
+        />
+            <div className="vertical-dash"></div>
         <LeftNavLinks
           icon={CalendarAdd01FreeIcons}
           title="Time Card"
@@ -98,6 +140,7 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           isSelected={selected === "TimeCard"}
           collapsed={collapsed}
         />
+      
 
         {user?.name === "admin" && (
           <LeftNavLinks

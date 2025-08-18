@@ -1,0 +1,10 @@
+.notification-preview .message-pinned-texts p{
+    max-width: 150px;
+}
+.notification-text {
+    font-family: var(--font-family);
+    color: var(--text-color2);
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 1.5rem;
+}

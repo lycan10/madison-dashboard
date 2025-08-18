@@ -28,6 +28,11 @@ import Hitch from "../cables/Cables";
 import TimeCard from "../timecard/TimeCard";
 import ChangeUsersPassword  from "../ChangeUsersPassword/changeUsersPassword";
 import Hose from "../hose/Hose";
+import Messages from "../messages/Messages";
+import Notification from "../notification/Notification";
+import Member from "../member/Member";
+import Email from "../email/Email";
+import MyProject from "../myProject/MyProject";
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
@@ -775,6 +780,32 @@ const RightSideBar = ({ selected }) => {
         {selected === "Order" && (
           <div className="rightsidebar-bottom">
             <Order />
+          </div>
+        )}
+         {selected === "Member" && (
+          <div className="rightsidebar-bottom">
+            <Member />
+          </div>
+        )}
+         {selected === "Messages" && (
+          <div className="rightsidebar-bottom">
+            <Messages />
+          </div>
+        )}
+           {selected === "Email" && (
+          <div className="rightsidebar-bottom">
+            <Email />
+          </div>
+        )}
+        
+          {selected === "Notification" && (
+          <div className="rightsidebar-bottom">
+            <Notification />
+          </div>
+        )}
+         {selected === "MyProject" && (
+          <div className="rightsidebar-bottom">
+            <MyProject />
           </div>
         )}
         {selected === "Hose" && (
