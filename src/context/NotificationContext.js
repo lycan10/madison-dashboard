@@ -10,6 +10,8 @@ export const NotificationProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+
 
   const fetchNotifications = async (pageNumber = 1) => {
     if (!token) {
@@ -60,6 +62,38 @@ export const NotificationProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  const fetchUnreadCount = async () => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/notifications/unread-count`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        logout();
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch unread count");
+      }
+
+      const data = await response.json();
+      setUnreadCount(data.unread_count);
+    } catch (err) {
+      console.error("Fetch unread count error:", err);
+    }
+  };
+
   const markAsRead = async (notificationId) => {
     try {
       const response = await fetch(
@@ -88,11 +122,12 @@ export const NotificationProvider = ({ children }) => {
 
   useEffect(() => {
     fetchNotifications();
+    fetchUnreadCount();
   }, [token]);
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, loading, error, fetchNotifications, markAsRead, page, hasMore, setPage }}
+      value={{ notifications, loading, error, fetchNotifications, markAsRead, page, hasMore, setPage, fetchUnreadCount, unreadCount }}
     >
       {children}
     </NotificationContext.Provider>

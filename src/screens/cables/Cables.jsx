@@ -848,12 +848,14 @@ const Cables = ({ selected }) => {
           </form>
         </Modal.Body>
         <Modal.Footer>
+          <div className="flex gap-2 d-flex"> 
           <button className="btn-secondary" onClick={handleCloseAddModal}>
             Cancel
           </button>
           <button className="btn-primary" onClick={handleAddSubmit}>
             Save
           </button>
+          </div>
         </Modal.Footer>
       </Modal>
 
@@ -969,6 +971,7 @@ const Cables = ({ selected }) => {
           )}
         </Modal.Body>
         <Modal.Footer>
+          <div className="flex gap-2 d-flex"> 
           <button className="btn-secondary" onClick={handleCloseInfoModal}>
             Cancel
           </button>
@@ -989,6 +992,7 @@ const Cables = ({ selected }) => {
           >
             Edit
           </button>
+          </div>
         </Modal.Footer>
       </Modal>
 
@@ -1185,12 +1189,14 @@ const Cables = ({ selected }) => {
           </form>
         </Modal.Body>
         <Modal.Footer>
+          <div className="flex gap-2 d-flex"> 
           <button className="btn-secondary" onClick={handleCloseEditModal}>
             Cancel
           </button>
           <button className="btn-primary" onClick={handleEditSubmit}>
             Save Changes
           </button>
+          </div>
         </Modal.Footer>
       </Modal>
 

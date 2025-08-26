@@ -445,8 +445,10 @@ const MyProject = () => {
                     </form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <button className="btn-secondary" onClick={handleCloseAddModal}>Cancel</button>
-                    <button className="btn-primary" onClick={handleAddSubmit}>Save</button>
+                    <div className="flex gap-2 d-flex">  
+                        <button className="btn-secondary" onClick={handleCloseAddModal}>Cancel</button>
+                        <button className="btn-primary" style={{minWidth: 90}} onClick={handleAddSubmit}>Save</button>
+                    </div>
                 </Modal.Footer>
             </Modal>
 
@@ -506,8 +508,10 @@ const MyProject = () => {
                     </form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <button className="btn-secondary" onClick={handleCloseEditModal}>Cancel</button>
-                    <button className="btn-primary" onClick={handleEditSubmit}>Save Changes</button>
+                    <div className="flex gap-2 d-flex"> 
+                        <button className="btn-secondary" onClick={handleCloseEditModal}>Cancel</button>
+                        <button className="btn-primary" onClick={handleEditSubmit}>Save Changes</button>
+                    </div>
                 </Modal.Footer>
             </Modal>
 

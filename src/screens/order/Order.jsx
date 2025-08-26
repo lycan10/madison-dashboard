@@ -577,12 +577,14 @@ const Order = () => {
           </form>
         </Modal.Body>
         <Modal.Footer>
+          <div className="flex gap-2 d-flex"> 
           <button className="btn-secondary" onClick={handleCloseAddModal}>
             Cancel
           </button>
           <button className="btn-primary" onClick={handleAddSubmit}>
             Save
           </button>
+          </div>
         </Modal.Footer>
       </Modal>
 
@@ -694,12 +696,14 @@ const Order = () => {
           </form>
         </Modal.Body>
         <Modal.Footer>
+          <div className="flex gap-2 d-flex"> 
           <button className="btn-secondary" onClick={handleCloseEditModal}>
             Cancel
           </button>
           <button className="btn-primary" onClick={handleEditSubmit}>
             Save Changes
           </button>
+          </div>
         </Modal.Footer>
       </Modal>
 
@@ -719,6 +723,7 @@ const Order = () => {
           <strong>{orderToDelete?.partName}</strong>?
         </Modal.Body>
         <Modal.Footer>
+          <div className="flex gap-2 d-flex"> 
           <button
             className="btn-secondary"
             onClick={() => setShowDeleteConfirmModal(false)}
@@ -740,6 +745,7 @@ const Order = () => {
           >
             Confirm Delete
           </button>
+          </div>
         </Modal.Footer>
       </Modal>
     </div>

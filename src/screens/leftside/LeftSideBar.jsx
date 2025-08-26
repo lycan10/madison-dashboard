@@ -20,11 +20,16 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useSidebar } from "../../context/SideBarContext";
 import { useAuth } from "../../context/AuthContext";
+import { useMessages } from "../../context/MessageContext";
+import { useNotifications } from "../../context/NotificationContext";
 
 const LeftSideBar = ({ selected, onSelect, collapsed }) => {
   const { toggleSidebar } = useSidebar();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 300);
   const { user, logout } = useAuth();
+  const { fetchConversations, totalUnreadCount } = useMessages();
+    const { unreadCount, fetchUnreadCount } = useNotifications();
+  
 
   useEffect(() => {
     const handleResize = () => {
@@ -44,6 +49,24 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
       toggleSidebar();
     }
   };
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+      const interval = setInterval(
+        () => {
+          fetchConversations();
+          fetchUnreadCount()
+        },
+        60000
+      );
+      return () => clearInterval(interval);
+      
+    }, [fetchConversations, fetchUnreadCount]);
+
+console.log(totalUnreadCount);
 
   const handleLogout = async () => {
     await logout();
@@ -101,6 +124,7 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           onClick={() => handleLinkClick("Notification")}
           isSelected={selected === "Notification"}
           collapsed={collapsed}
+          badgeCount={unreadCount}
         />
          <LeftNavLinks
           icon={Mail01Icon} 
@@ -117,12 +141,14 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           isSelected={selected === "MyProject"}
           collapsed={collapsed}
         />
-         <LeftNavLinks
+
+        <LeftNavLinks
           icon={MessageMultiple01Icon} 
           title="Messages"
           onClick={() => handleLinkClick("Messages")}
           isSelected={selected === "Messages"}
           collapsed={collapsed}
+          badgeCount={totalUnreadCount}
         />
        
           <LeftNavLinks

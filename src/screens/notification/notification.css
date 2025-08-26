@@ -8,3 +8,9 @@
     font-weight: 600;
     margin-top: 1.5rem;
 }
+
+.unread {
+    background-color: rgba(102, 255, 31, 0.1);
+    border-radius: 0.5rem;
+    margin-top: 0.2rem;
+}

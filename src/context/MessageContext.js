@@ -12,6 +12,8 @@ export const MessageProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+
   const messagesPerPage = 20;
 
   const fetchConversations = useCallback(async () => {
@@ -42,6 +44,8 @@ export const MessageProvider = ({ children }) => {
 
       const data = await response.json();
       setConversations(data);
+      const total = data.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+      setTotalUnreadCount(total);
     } catch (err) {
       console.error("Fetch conversations error:", err);
       setError(err.message);
@@ -58,7 +62,6 @@ export const MessageProvider = ({ children }) => {
     
     setError(null);
     
-    // Reset pagination when switching conversations or refreshing
     const page = isRefresh ? 1 : 1;
     
     try {
@@ -84,11 +87,9 @@ export const MessageProvider = ({ children }) => {
 
       const data = await response.json();
       
-      // Reverse the messages to show newest at bottom
       const reversedMessages = [...data.data].reverse();
       
       if (isRefresh) {
-        // For refresh, only update if there are new messages
         const latestMessageTime = messages.length > 0 ? new Date(messages[messages.length - 1].created_at) : null;
         const newMessages = reversedMessages.filter(msg => 
           !latestMessageTime || new Date(msg.created_at) > latestMessageTime
@@ -116,6 +117,34 @@ export const MessageProvider = ({ children }) => {
       setLoading(false);
     }
   }, [token, logout, conversations, messages]);
+
+  const markMessagesAsRead = useCallback(async (conversationId) => {
+    if (!token || !conversationId) return;
+
+    try {
+        await fetch(
+            `${process.env.REACT_APP_BASE_URL}/api/conversations/${conversationId}/messages/mark-read`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        // Optimistically update the UI after a successful call
+        setConversations(prev => prev.map(conv =>
+            conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
+        ));
+
+        // Recalculate total unread count
+        setTotalUnreadCount(prev => prev - (conversations.find(c => c.id === conversationId)?.unread_count || 0));
+
+    } catch (err) {
+        console.error("Mark as read error:", err);
+    }
+}, [token, conversations]);
 
   const loadMoreMessages = useCallback(async (conversationId, receiverId) => {
     if (!token || !conversationId || !hasMoreMessages) return;
@@ -292,7 +321,9 @@ export const MessageProvider = ({ children }) => {
         editMessage,
         deleteMessage,
         fetchAllUsers,
-        createDirectConversation
+        createDirectConversation,
+        totalUnreadCount,
+        markMessagesAsRead
       }}
     >
       {children}

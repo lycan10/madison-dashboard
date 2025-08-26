@@ -59,3 +59,16 @@
 .leftSideBar.collapsed .LeftNavLinks-title{
   max-width: 0;
 }
+
+
+.badge-count {
+  background-color: #d9534f;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 12px;
+  margin-left: auto;
+  min-width: 20px;
+  text-align: center;
+}

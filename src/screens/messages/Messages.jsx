@@ -29,6 +29,8 @@ const Messages = () => {
     deleteMessage,
     fetchAllUsers,
     createDirectConversation,
+    markMessagesAsRead,
+
   } = useMessages();
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [currentMessage, setCurrentMessage] = useState("");
@@ -38,9 +40,11 @@ const Messages = () => {
   const chatContainerRef = useRef(null);
   const [showMenu, setShowMenu] = useState({}); // State to track which message menu is open
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const unreadHeaderRef = useRef(null);
   
   const handleSelectChat = (conversationId, receiverId) => {
     fetchMessages(conversationId, receiverId);
+    markMessagesAsRead(conversationId);
   };
   
   const handleStartNewChat = async (userId) => {
@@ -109,6 +113,7 @@ const Messages = () => {
   // Group messages by date
   const groupMessagesByDate = (messages) => {
     const groups = {};
+    let unreadSectionAdded = false;
     
     messages.forEach(message => {
       const messageDate = new Date(message.created_at);
@@ -129,6 +134,12 @@ const Messages = () => {
           day: 'numeric' 
         });
       }
+
+      if (message.status === 'sent' && message.user_id !== user.id && !unreadSectionAdded) {
+            if (!groups[dateKey]) groups[dateKey] = [];
+            groups[dateKey].push({ type: 'unread-header', id: 'unread-header' });
+            unreadSectionAdded = true;
+        }
       
       if (!groups[dateKey]) {
         groups[dateKey] = [];
@@ -147,18 +158,6 @@ const Messages = () => {
   }, [fetchConversations, fetchAllUsers]);
 
   useEffect(() => {
-    const interval = setInterval(
-      () => {
-         fetchConversations();
-         fetchAllUsers().then(setUsers);
-      },
-      160000
-    );
-    return () => clearInterval(interval);
-    
-  }, [fetchConversations, fetchAllUsers]);
-
-  useEffect(() => {
     let intervalId;
     if (currentConversation) {
         intervalId = setInterval(() => {
@@ -172,12 +171,15 @@ const Messages = () => {
     };
   }, [currentConversation, fetchMessages]);
 
-  // Scroll to bottom when new messages arrive or conversation changes
+
   useEffect(() => {
-    if (chatBottomRef.current && !isLoadingMore) {
-      chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    if (unreadHeaderRef.current) {
+        unreadHeaderRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (chatBottomRef.current && !isLoadingMore) {
+        chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, currentConversation]);
+}, [messages, currentConversation, isLoadingMore]);
+
 
   const handleCloseNewChatModal = () => setShowNewChatModal(false);
   const handleShowNewChatModal = () => setShowNewChatModal(true);
@@ -233,11 +235,14 @@ const Messages = () => {
                       <div className="messages-pinned-image">
                         <img src={avatar} alt="user avatar" />
                       </div>
+                      {conv.unread_count > 0 && (
+                      <div className="unread-count-badge">{conv.unread_count}</div>
+                    )}
                       <div className="message-pinned-texts">
                         <div className="message-pinned-texts-title">
                           <h1>{conv.name}</h1>
                         </div>
-                        <p>{conv.last_message_content?.length > 40 ? conv.last_message_content.slice(0, 35) + "..." : conv.last_message_content}</p>
+                        <p>{conv.last_message_content?.length > 20 ? conv.last_message_content.slice(0, 19) + "..." : conv.last_message_content}</p>
                       </div>
                       <p>{getLastMessageDate(conv.last_message_at)}</p>
                     </div>
@@ -280,7 +285,17 @@ const Messages = () => {
                   <div className="message-chat-date">
                     <p>{date}</p>
                   </div>
-                  {dateMessages.map((message) => (
+                  {dateMessages.map((message) => {
+                    if (message.type === 'unread-header') {
+                      return (
+                          <div key="unread-header-label" className="unread-header" ref={unreadHeaderRef}>
+                              <hr />
+                              <span>Unread Messages</span>
+                              <hr />
+                          </div>
+                      );
+                  }
+                  return (
                     <div
                       key={message.id}
                       className={`message-chat-user ${message.user_id === user.id ? "main-user" : ""}`}
@@ -315,8 +330,8 @@ const Messages = () => {
                           <p>{message.content}</p>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    </div>)
+                })}
                 </div>
               ))}
               <div ref={chatBottomRef}></div>

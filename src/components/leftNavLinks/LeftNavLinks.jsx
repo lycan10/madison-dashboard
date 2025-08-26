@@ -2,7 +2,7 @@ import React from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import './leftnavlinks.css';
 
-const LeftNavLinks = ({ icon, title, onClick, isSelected, collapsed }) => {
+const LeftNavLinks = ({ icon, title, onClick, isSelected, collapsed, badgeCount }) => {
   return (
     <div
       className={`LeftNavLinks ${isSelected ? 'selected' : ''}`}
@@ -17,8 +17,12 @@ const LeftNavLinks = ({ icon, title, onClick, isSelected, collapsed }) => {
         <HugeiconsIcon icon={icon} color='#545454' size={16} />
       </div>
       <div className='LeftNavLinks-title'>
-      {!collapsed && <p>{title}</p>}
+        {!collapsed && <p>{title}</p>}
       </div>
+      {/* Conditionally render the badge if badgeCount is greater than 0 */}
+      {!collapsed && badgeCount > 0 && (
+          <div className="badge-count">{badgeCount}</div>
+      )}
     </div>
   );
 };

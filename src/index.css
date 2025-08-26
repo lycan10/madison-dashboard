@@ -36,12 +36,25 @@ h3 {
 
 :root {
   --font-family: "Nunito Sans", sans-serif;
-  --color: #Ffac1f;
+  --color: rgb(255, 173, 31);
   --border: #f0f4f8;
   --text-color: #121212;
   --text-color2: #545454;
-  --background-color: #Ffac1f;
+  --background-color: rgb(255, 173, 31);
 }
+
+.btn-primary{
+  background-color: var(--background-color) !important;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;}
 
 .search-input-container {
   display: flex;

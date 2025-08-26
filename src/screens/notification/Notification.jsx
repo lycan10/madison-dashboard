@@ -9,7 +9,7 @@ import avatar from "../../assets/a4.png"
 import "./notification.css"
 
 const Notification = () => {
-  const { notifications, loading, error, markAsRead, fetchNotifications, page, hasMore } = useNotifications();
+  const { notifications, loading, error, markAsRead, fetchNotifications, page, hasMore, fetchUnreadCount } = useNotifications();
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const listContainerRef = useRef(null);
@@ -21,6 +21,7 @@ const Notification = () => {
     setSelectedNotification(notification);
     if (!notification.read) {
       markAsRead(notification.id);
+      fetchUnreadCount();
     }
   };
 
@@ -32,6 +33,10 @@ const Notification = () => {
       }
     }
   };
+
+  useEffect(() => {
+      fetchNotifications();
+  }, []);
 
   useEffect(() => {
     const container = listContainerRef.current;
@@ -100,9 +105,9 @@ const Notification = () => {
                       <img src={avatar} alt={msg.title} />
                     </div>
                     <div className="message-pinned-texts">
-                      <h1>{msg.title}</h1>
+                      <h1>{msg.title.length > 15 ? msg.title.slice(0, 15) + "..." : msg.title }</h1>
                       <p>
-                        {msg.message.length > 25 ? msg.message.slice(0, 25) + "..." : msg.message}
+                        {msg.message.length > 20 ? msg.message.slice(0, 19) + "..." : msg.message}
                       </p>
                     </div>
                   </div>
