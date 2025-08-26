@@ -1,720 +1,259 @@
 import React, { useState, useEffect } from "react";
 import Modal from "react-bootstrap/Modal";
-import "../order/order.css";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Search01Icon } from "@hugeicons/core-free-icons";
-import ProgressFilter from "../../components/progressfilter/ProgressFilter";
-import Pagination from "react-bootstrap/Pagination";
-import { useOrders } from "../../context/OrderContext";
+import { Add01Icon, Edit01Icon, Delete01Icon, Cancel02Icon, MoreVerticalIcon, Message01Icon } from "@hugeicons/core-free-icons";
+import { useMembers } from "../../context/MembersContext";
 import { useAuth } from "../../context/AuthContext";
+import { useMessages } from "../../context/MessageContext";
+import avatar from "../../assets/a4.png";
+import "./member.css";
 
-const getStatusStyles = (status) => {
-  switch (status) {
-    case "New Order":
-      return { color: "#FFA500", bgColor: "#FFF5E6" };
-    case "Processing":
-      return { color: "#007BFF", bgColor: "#E6F0FF" };
-    case "Shipped":
-      return { color: "#17A2B8", bgColor: "#E0F7FA" };
-    case "Delivered":
-      return { color: "#28a745", bgColor: "#E8F6EA" };
-    case "Order Complete":
-      return { color: "#20c997", bgColor: "#E6FFFA" };
-    default:
-      return { color: "#6c757d", bgColor: "#f8f9fa" };
-  }
-};
-
-const Member = () => {
-  const {
-    orderPaginationData,
-    orders,
-    loading,
-    error,
-    fetchOrders,
-    addOrder,
-    updateOrder,
-    deleteOrder,
-  } = useOrders();
-
-  const { token } = useAuth();
-
-
-  const [currentPage, setCurrentPage] = useState(
-    orderPaginationData.current_page || 1
-  );
-  const itemsPerPage = orderPaginationData.per_page || 10;
-
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const statuses = [
-    "All",
-    "New Order",
-    "Processing",
-    "Shipped",
-    "Delivered",
-    "Order Complete",
-  ];
-
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortDirection, setSortDirection] = useState("desc");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  const [orderCounts, setOrderCounts] = useState({
-    All: 0,
-    "New Order": 0,
-    Processing: 0,
-    Shipped: 0,
-    Delivered: 0,
-    "Order Complete": 0,
-  });
-
-  const [orderFormData, setOrderFormData] = useState({
-    partName: "",
-    quantity: 1,
-    vendor: "",
-    status: "New Order",
-    comments: "",
-  });
-
-  const [editingOrder, setEditingOrder] = useState(null);
-
-  const handleCloseAddModal = () => {
-    setShowAddModal(false);
-    resetOrderFormData();
-  };
-  const handleShowAddModal = () => setShowAddModal(true);
-
-  const handleCloseEditModal = () => {
-    setShowEditModal(false);
-    setEditingOrder(null);
-    resetOrderFormData();
-  };
-  const handleShowEditModal = () => setShowEditModal(true);
-
-  const resetOrderFormData = () => {
-    setOrderFormData({
-      partName: "",
-      quantity: 1,
-      vendor: "",
-      status: "New Order",
-      comments: "",
+const Members = () => {
+    const { members, loading, error, fetchMembers, createMember, updateMember, banMember, unbanMember, deleteMember } = useMembers();
+    const { user } = useAuth();
+    const { createDirectConversation } = useMessages();
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [currentMember, setCurrentMember] = useState(null);
+    const [showMenu, setShowMenu] = useState({});
+    const [formData, setFormData] = useState({
+        name: "",
+        first_name: "",
+        last_name: "",
+        email: "",
+        password: "",
+        role: "staff",
+        profile_picture: null,
     });
-  };
 
-  const handleFilterClick = (status) => {
-    setSelectedStatus(status);
-    setCurrentPage(1);
-  };
+    useEffect(() => {
+        fetchMembers();
+    }, [fetchMembers]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setOrderFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const increaseQuantity = () => {
-    setOrderFormData((prevData) => ({
-      ...prevData,
-      quantity: prevData.quantity + 1,
-    }));
-  };
-
-  const decreaseQuantity = () => {
-    if (orderFormData.quantity > 1) {
-      setOrderFormData((prevData) => ({
-        ...prevData,
-        quantity: prevData.quantity - 1,
-      }));
-    }
-  };
-
-  const handleAddSubmit = async () => {
-    const success = await addOrder({
-        ...orderFormData,
-        comments: orderFormData.comments
-    });
-    if (success) {
-      handleCloseAddModal(); 
-      fetchStatusCounts(); 
-    }
-  };
-
-  const handleEditClick = (order) => {
-    setEditingOrder(order);
-    setOrderFormData({
-      partName: order.partName || "",
-      quantity: order.quantity || 1,
-      vendor: order.vendor || "",
-      status: order.status || "New Order",
-      comments: order.comments || "",
-    });
-    handleShowEditModal();
-  };
-
-  const handleEditSubmit = async () => {
-    if (!editingOrder) return;
-
-    const success = await updateOrder(editingOrder.id, {
-        ...orderFormData,
-        comments: orderFormData.comments
-    });
-    if (success) {
-      handleCloseEditModal(); 
-      fetchStatusCounts(); 
-    }
-  };
-
-  const handleDelete = async (id) => {
-    const success = await deleteOrder(id); 
-    if (success) {
-      console.log(`Order with ID ${id} deleted successfully.`);
-      fetchStatusCounts();
-    }
-  };
-
-  const displayedOrders = orders; 
-  const totalPages = orderPaginationData.last_page || 1; 
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleSortClick = (column) => {
-    if (sortBy === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column); 
-      setSortDirection("asc");
-    }
-    setCurrentPage(1);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); 
-  };
-
-  const fetchStatusCounts = async () => {
-    try {
-      const API_URL = `${process.env.REACT_APP_BASE_URL}/api/orders/counts`;
-
-      const response = await fetch(`${API_URL}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setOrderCounts(data); 
-    } catch (error) {
-      console.error("Error fetching status counts:", error);
-    }
-  };
-
-
-  useEffect(() => {
-    const params = {
-      page: currentPage,
-      perPage: itemsPerPage,
-      ...(selectedStatus !== "All" && { status: selectedStatus }), 
-      sortBy: sortBy,
-      sortDirection: sortDirection,
-      ...(searchTerm && { search: searchTerm }), 
+    const handleNewMemberChange = (e) => {
+        const { name, value, files } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: files ? files[0] : value
+        }));
     };
-    fetchOrders(params);
-  }, [
-    selectedStatus,
-    sortBy,
-    sortDirection,
-    currentPage,
-    itemsPerPage,
-    fetchOrders,
-    searchTerm,
-  ]);
 
-  useEffect(() => {
-    fetchStatusCounts();
-  }, []);
+    const handleCreateSubmit = async (e) => {
+        e.preventDefault();
+        const form = new FormData();
+        for (const key in formData) {
+            form.append(key, formData[key]);
+        }
+        await createMember(form);
+        setShowCreateModal(false);
+        setFormData({ name: "", first_name: "", last_name: "", email: "", password: "", role: "staff", profile_picture: null });
+    };
 
+    const handleEditClick = (member) => {
+        setCurrentMember(member);
+        setFormData({
+            name: member.name,
+            first_name: member.first_name,
+            last_name: member.last_name,
+            email: member.email,
+            password: "",
+            role: member.role,
+            profile_picture: null
+        });
+        setShowEditModal(true);
+        setShowMenu({});
+    };
 
-  useEffect(() => {
-    if (
-      orderPaginationData.current_page &&
-      orderPaginationData.current_page !== currentPage
-    ) {
-      setCurrentPage(orderPaginationData.current_page);
-    }
-  }, [orderPaginationData.current_page]);
+    const handleUpdateSubmit = async (e) => {
+        e.preventDefault();
+        const form = new FormData();
+        for (const key in formData) {
+            if (formData[key]) {
+                form.append(key, formData[key]);
+            }
+        }
+        form.append('_method', 'PUT'); // Necessary for Laravel to handle PUT with FormData
+        await updateMember(currentMember.id, form);
+        setShowEditModal(false);
+        setCurrentMember(null);
+    };
 
-  const countByStatus = (status) => {
-    return orderCounts[status] || 0;
-  };
+    const handleDeleteClick = async (memberId) => {
+        if (window.confirm("Are you sure you want to delete this member?")) {
+            await deleteMember(memberId);
+        }
+        setShowMenu({});
+    };
 
-  const promptDeleteConfirmation = (order) => {
-    setOrderToDelete(order);
-    setShowDeleteConfirmModal(true);
-  };
+    const handleBanClick = async (memberId) => {
+        if (window.confirm("Are you sure you want to ban this member?")) {
+            await banMember(memberId);
+        }
+        setShowMenu({});
+    };
 
-  return (
-    <div className="order-page">
-      <div className="rightsidebar-navbar">
-        <h3>Madison Team</h3> {/* Updated title */}
+    const handleUnbanClick = async (memberId) => {
+        if (window.confirm("Are you sure you want to unban this member?")) {
+            await unbanMember(memberId);
+        }
+        setShowMenu({});
+    };
 
-        <div className="rightsidebar-button" onClick={handleShowAddModal}>
-          <HugeiconsIcon
-            icon={Add01Icon}
-            size={16}
-            color="#ffffff"
-            strokeWidth={3}
-          />
-          <p>New Member</p>
-        </div>
-      </div>
+    const handleStartChatClick = async (memberId) => {
+        await createDirectConversation(memberId);
+        setShowMenu({});
+    };
 
-     
-
-      <div className="custom-line no-margin" style={{marginTop: "1rem"}}></div>
-
+    const toggleMenu = (memberId) => {
+        setShowMenu(prev => ({ [memberId]: !prev[memberId] }));
+    };
     
-      {/* Order Table */}
-      {loading ? (
-        <p>Loading orders...</p>
-      ) : error ? (
-        <p>Error: {error.message}</p>
-      ) : (
-        <div className="order-table-container" s>
-          <table className="order-table">
-            <thead>
-              <tr>
-                <th
-                  onClick={() => handleSortClick("id")}
-                  style={{ cursor: "pointer" }}
-                >
-                  # {sortBy === "id" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("partName")}
-                  style={{ cursor: "pointer" }}
-                >
-                Employee Name{" "}
-                  {sortBy === "partName" &&
-                    (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("quantity")}
-                  style={{ cursor: "pointer" }}
-                >
-                   Assigned Task{" "}
-                  {sortBy === "quantity" &&
-                    (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("comments")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Projects{" "}
-                  {sortBy === "comments" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  onClick={() => handleSortClick("status")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Status{" "}
-                  {sortBy === "status" && (sortDirection === "asc" ? "▲" : "▼")}
-                </th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.isArray(displayedOrders) &&
-              displayedOrders.length === 0 ? (
-                <tr>
-                  <td colSpan="7">No data available</td>
-                </tr>
-              ) : (
-                Array.isArray(displayedOrders) &&
-                displayedOrders.map((order) => {
-                  const { color, bgColor } = getStatusStyles(order.status);
-                  return (
-                    <tr key={order.id}>
-                      <td>{order.id}</td>
-                      <td>{order.partName}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.comments}</td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            color,
-                            backgroundColor: bgColor,
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            fontWeight: 500,
-                            width: "fit-content",
-                          }}
-                        >
-                          {order.status}
+    return (
+        <div className="members-page">
+            <div className="members-header">
+                <h3>Members</h3>
+                {user?.role === 'admin' && (
+                    <div className="rightsidebar-button" onClick={() => setShowCreateModal(true)}>
+                        <HugeiconsIcon icon={Add01Icon} size={16} color="#ffffff" strokeWidth={3} />
+                        <p>Create Member</p>
+                    </div>
+                )}
+            </div>
+
+            <div className="members-list-container">
+                {loading ? (
+                    <p>Loading members...</p>
+                ) : (
+                    <table className="members-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {members.map(member => (
+                                <tr key={member.id}>
+                                    <td>
+                                        <div className="member-info">
+                                            <img src={member.profile_picture ? `${process.env.REACT_APP_BASE_URL}/storage/${member.profile_picture}` : avatar} alt="Profile" className="member-avatar" />
+                                            <div>
+                                                <p className="member-name">{member.name}</p>
+                                                <small>{member.email}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{member.role}</td>
+                                    <td>
+                                        <span className={`member-status status-${member.status}`}>{member.status}</span>
+                                    </td>
+     
+                                        {user?.role === 'admin' && (
+                                        <td>
+                                        {/* Remove the action-menu-container and its contents */}
+                                        {user?.role === 'admin' && (
+                                             <div className="action-buttons" style={{ display: "flex", gap: "8px" }}>
+                                                <button
+                                                    className="edit-btn"
+                                                    onClick={() => handleEditClick(member)}
+                                                >
+                                                    <HugeiconsIcon icon={Edit01Icon} size={16} /> Edit
+                                                </button>
+                                                {member.status === 'active' ? (
+                                                    <button
+                                                        className="delete-btn"
+                                                        onClick={() => handleBanClick(member.id)}
+                                                    >
+                                                        <HugeiconsIcon icon={Cancel02Icon} size={16} /> Ban
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        className="delete-btn"
+                                                        onClick={() => handleUnbanClick(member.id)}
+                                                    >
+                                                        <HugeiconsIcon icon={Cancel02Icon} size={16} /> Unban
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </td>
+                                        )}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
+            {/* Create Member Modal */}
+            <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered>
+                <Modal.Header closeButton><Modal.Title>Create New Member</Modal.Title></Modal.Header>
+                <Modal.Body>
+                    <form onSubmit={handleCreateSubmit}>
+                        <div className="form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="name" value={formData.name} onChange={handleNewMemberChange} required />
                         </div>
-                      </td>
-                      <td>
-                        <div
-                          className="action-buttons"
-                          style={{ display: "flex", gap: "8px" }}
-                        >
-                          <button
-                            className="edit-btn"
-                            style={{backgroundColor: "green"}}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(order);
-                            }}
-                          >
-                            New Message
-                          </button>
-                          <button
-                            className="edit-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(order);
-                            }}
-                          >
-                            New Task
-                          </button>
-                          {user.name === "admin" && (
-                          <button
-                            className="delete-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              promptDeleteConfirmation(order);
-                            }}
-                          >
-                            Delete User
-                          </button>)}
+                        <div className="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" value={formData.email} onChange={handleNewMemberChange} required />
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        <div className="form-group">
+                            <label>Password</label>
+                            <input type="password" name="password" value={formData.password} onChange={handleNewMemberChange} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Role</label>
+                            <select name="role" value={formData.role} onChange={handleNewMemberChange} required>
+                                <option value="staff">Staff</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Profile Picture</label>
+                            <input type="file" name="profile_picture" onChange={handleNewMemberChange} />
+                        </div>
+                        <button type="submit" className="btn-primary">Create</button>
+                    </form>
+                </Modal.Body>
+            </Modal>
+            
+            {/* Edit Member Modal */}
+            <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
+                <Modal.Header closeButton><Modal.Title>Edit Member</Modal.Title></Modal.Header>
+                <Modal.Body>
+                    <form onSubmit={handleUpdateSubmit}>
+                        <div className="form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="name" value={formData.name} onChange={handleNewMemberChange} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" value={formData.email} onChange={handleNewMemberChange} required />
+                        </div>
+                        <div className="form-group">
+                            <label>New Password (Optional)</label>
+                            <input type="password" name="password" value={formData.password} onChange={handleNewMemberChange} />
+                        </div>
+                        <div className="form-group">
+                            <label>Role</label>
+                            <select name="role" value={formData.role} onChange={handleNewMemberChange} required>
+                                <option value="staff">Staff</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Profile Picture</label>
+                            <input type="file" name="profile_picture" onChange={handleNewMemberChange} />
+                        </div>
+                        <button type="submit" className="btn-primary">Save Changes</button>
+                    </form>
+                </Modal.Body>
+            </Modal>
         </div>
-      )}
-
-      <div className="custom-grid-pagination table">
-        <Pagination>
-          <Pagination.First
-            onClick={() => handlePageChange(1)}
-            disabled={currentPage === 1}
-          />
-          <Pagination.Prev
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          />
-          {[...Array(totalPages)].map((_, index) => (
-            <Pagination.Item
-              key={index + 1}
-              active={index + 1 === currentPage}
-              onClick={() => handlePageChange(index + 1)}
-            >
-              {index + 1}
-            </Pagination.Item>
-          ))}
-          <Pagination.Next
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          />
-          <Pagination.Last
-            onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage === totalPages}
-          />
-        </Pagination>
-      </div>
-
-      <Modal
-        show={showAddModal}
-        onHide={handleCloseAddModal}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {" "}
-            <h3>Add New Order</h3>{" "}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form className="custom-form">
-            <div className="form-group">
-              <label htmlFor="partName">Part Name</label>
-              <input
-                type="text"
-                id="partName"
-                name="partName"
-                className="input-field"
-                value={orderFormData.partName}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="vendor">Vendor</label>
-              <input
-                type="text"
-                id="vendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="quantity">Quantity</label>
-              <div className="quantity-container">
-                <button
-                  type="button"
-                  className="quantity-btn"
-                  onClick={decreaseQuantity}
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  className="input-field quantity-input"
-                  value={orderFormData.quantity}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
-                    if (!isNaN(value) && value > 0) {
-                      setOrderFormData((prev) => ({
-                        ...prev,
-                        quantity: value,
-                      }));
-                    } else if (value === 0) {
-                      setOrderFormData((prev) => ({ ...prev, quantity: 1 }));
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  className="quantity-btn"
-                  onClick={increaseQuantity}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="comments">Comments</label>
-              <textarea
-                id="comments"
-                name="comments"
-                className="input-field textarea"
-                value={orderFormData.comments}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="status">Status</label>
-              <select
-                id="status"
-                name="status"
-                className="input-field"
-                value={orderFormData.status}
-                onChange={handleChange}
-              >
-                <option>New Order</option>
-                <option>Processing</option>
-                <option>Shipped</option>
-                <option>Delivered</option>
-                <option>Order Complete</option>
-              </select>
-            </div>
-          </form>
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn-secondary" onClick={handleCloseAddModal}>
-            Cancel
-          </button>
-          <button className="btn-primary" onClick={handleAddSubmit}>
-            Save
-          </button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal
-        show={showEditModal}
-        onHide={handleCloseEditModal}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {" "}
-            <h3>Edit Order</h3>{" "}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form className="custom-form">
-            <div className="form-group">
-              <label htmlFor="editPartName">Part Name</label>
-              <input
-                type="text"
-                id="editPartName"
-                name="partName"
-                className="input-field"
-                value={orderFormData.partName}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="editVendor">Vendor</label>
-              <input
-                type="text"
-                id="editVendor"
-                name="vendor"
-                className="input-field"
-                value={orderFormData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="editQuantity">Quantity</label>
-              <div className="quantity-container">
-                <button
-                  type="button"
-                  className="quantity-btn"
-                  onClick={decreaseQuantity}
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  id="editQuantity"
-                  name="quantity"
-                  className="input-field quantity-input"
-                  value={orderFormData.quantity}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
-                    if (!isNaN(value) && value > 0) {
-                      setOrderFormData((prev) => ({
-                        ...prev,
-                        quantity: value,
-                      }));
-                    } else if (value === 0) {
-                      setOrderFormData((prev) => ({ ...prev, quantity: 1 }));
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  className="quantity-btn"
-                  onClick={increaseQuantity}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-             {/* Added Comments Input for Edit Form */}
-            <div className="form-group">
-              <label htmlFor="editComments">Comments</label>
-              <textarea
-                id="editComments"
-                name="comments"
-                className="input-field textarea"
-                value={orderFormData.comments}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="editStatus">Status</label>
-              <select
-                id="editStatus"
-                name="status"
-                className="input-field"
-                value={orderFormData.status}
-                onChange={handleChange}
-              >
-                <option>New Order</option>
-                <option>Processing</option>
-                <option>Shipped</option>
-                <option>Delivered</option>
-                <option>Order Complete</option>
-              </select>
-            </div>
-          </form>
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn-secondary" onClick={handleCloseEditModal}>
-            Cancel
-          </button>
-          <button className="btn-primary" onClick={handleEditSubmit}>
-            Save Changes
-          </button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        show={showDeleteConfirmModal}
-        onHide={() => setShowDeleteConfirmModal(false)}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the order{" "}
-          <strong>{orderToDelete?.partName}</strong>?
-        </Modal.Body>
-        <Modal.Footer>
-          <button
-            className="btn-secondary"
-            onClick={() => setShowDeleteConfirmModal(false)}
-          >
-            Cancel
-          </button>
-          <button
-            className="btn-danger"
-            onClick={async () => {
-              if (orderToDelete) {
-                const success = await deleteOrder(orderToDelete.id);
-                if (success) {
-                  console.log(`Order ${orderToDelete.id} deleted.`);
-                }
-                setShowDeleteConfirmModal(false);
-                setOrderToDelete(null);
-              }
-            }}
-          >
-            Confirm Delete
-          </button>
-        </Modal.Footer>
-      </Modal>
-    </div>
-  );
+    );
 };
 
-export default Member;
+export default Members;

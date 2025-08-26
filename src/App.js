@@ -12,6 +12,11 @@ import Hose from "./screens/hose/Hose";
 import {CableProvider} from "./context/CableContext";
 import {HoseProvider} from "./context/HoseContext";
 import {AlternatorProvider} from "./context/AlternatorContext";
+import { NotificationProvider } from './context/NotificationContext';
+import { MyProjectProvider } from './context/MyProjectContext';
+import { MessageProvider } from './context/MessageContext'; 
+import { MembersProvider } from "./context/MembersContext"; 
+import { EmailProvider } from "./context/EmailContext";
 
 const ProtectedRoute = ({ element: Component, ...rest }) => {
   const { user, loading } = useAuth();
@@ -29,35 +34,45 @@ function App() {
           <CableProvider>
             <HoseProvider>
               <AlternatorProvider>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route
-                  path="/"
-                  element={<ProtectedRoute element={Dashboard} />}
-                />
-                <Route
-                  path="/orders"
-                  element={<ProtectedRoute element={OrderPage} />}
-                />
-                <Route
-                  path="/hose"
-                  element={<ProtectedRoute element={Hose} />}
-                />
-                <Route
-                  path="/cables"
-                  element={<ProtectedRoute element={Cables} />}
-                />
-                <Route
-                  path="/change-password"
-                  element={<ProtectedRoute element={ChangeUsersPassword} />}
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </AlternatorProvider>
-          </HoseProvider>
-        </CableProvider>
-      </TimeCardProvider>
-    </OrderProvider>
+                <NotificationProvider>
+                  <MyProjectProvider>
+                    <MessageProvider>
+                      <MembersProvider>
+                        <EmailProvider>
+                          <Routes>
+                            <Route path="/login" element={<Login />} />
+                            <Route
+                              path="/"
+                              element={<ProtectedRoute element={Dashboard} />}
+                            />
+                            <Route
+                              path="/orders"
+                              element={<ProtectedRoute element={OrderPage} />}
+                            />
+                            <Route
+                              path="/hose"
+                              element={<ProtectedRoute element={Hose} />}
+                            />
+                            <Route
+                              path="/cables"
+                              element={<ProtectedRoute element={Cables} />}
+                            />
+                            <Route
+                              path="/change-password"
+                              element={<ProtectedRoute element={ChangeUsersPassword} />}
+                            />
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                          </Routes>
+                        </EmailProvider>
+                      </MembersProvider>
+                    </MessageProvider>
+                  </MyProjectProvider>
+                </NotificationProvider>
+              </AlternatorProvider>
+            </HoseProvider>
+          </CableProvider>
+        </TimeCardProvider>
+      </OrderProvider>
     </AuthProvider>
   );
 }

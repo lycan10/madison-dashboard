@@ -44,7 +44,7 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  background-color: red;
+  background-color: var(--background-color);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -453,9 +453,9 @@
 .active>.page-link,
 .page-link.active {
   z-index: 3;
-  color: var(--bs-pagination-active-color);
-  background-color: var(--background-color);
-  border-color: var(--background-color);
+  color: var(--bs-pagination-active-color) !important;
+  background-color: var(--background-color) !important;
+  border-color: var(--background-color) !important;
   color: white !important;
 }
 

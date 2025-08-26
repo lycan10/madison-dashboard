@@ -1,3 +1,4 @@
+// src/pages/messages/Messages.jsx
 import React, { useState, useEffect, useRef } from "react";
 import Modal from "react-bootstrap/Modal";
 import "../order/order.css";
@@ -8,468 +9,356 @@ import {
   MoreVerticalIcon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
-import { useOrders } from "../../context/OrderContext";
 import { useAuth } from "../../context/AuthContext";
+import { useMessages } from "../../context/MessageContext";
 import avatar from "../../assets/a4.png";
 
-const teamMessages = [
-  {
-    name: "John Larry",
-    text: "Hi bolt, please don't forget blah blah blah blah",
-    time: "9:43 AM",
-  },
-];
-
-const allMessages = [
-  {
-    name: "John Larry",
-    text: "Hi bolt, please don't forget blah blah blah blah",
-    time: "9:43 AM",
-  },
-  {
-    name: "Sarah James",
-    text: "Meeting is scheduled for tomorrow morning.",
-    time: "10:15 AM",
-  },
-  {
-    name: "Mike Daniels",
-    text: "Check the latest updates on the project dashboard.",
-    time: "11:30 AM",
-  },
-  {
-    name: "Sarah James",
-    text: "Meeting is scheduled for tomorrow morning.",
-    time: "10:15 AM",
-  },
-  {
-    name: "Mike Daniels",
-    text: "Check the latest updates on the project dashboard.",
-    time: "11:30 AM",
-  },
-];
-
-const allMembers = [
-  { name: "Mike Jones", status: "online" },
-  { name: "Sarah James", status: "offline" },
-  { name: "Mike Daniels", status: "online" },
-  { name: "Emily Carter", status: "offline" },
-];
-
-const teamConversation = {
-  id: "team",
-  title: "Team Chat",
-  participants: ["John Paul", "Team"],
-  messages: [
-    {
-      id: 1,
-      from: "John Paul",
-      text: "Standup in 10 minutes",
-      time: "9:00 AM",
-    },
-    {
-      id: 2,
-      from: "Emily Carter",
-      text: "Got it — joining now",
-      time: "9:02 AM",
-    },
-    { id: 3, from: "Mike Daniels", text: "Already on it", time: "9:05 AM" },
-  ],
-};
-
 const Messages = () => {
+  const {
+    conversations,
+    messages,
+    currentConversation,
+    loading,
+    user,
+    hasMoreMessages,
+    fetchConversations,
+    fetchMessages,
+    loadMoreMessages,
+    sendMessage,
+    editMessage,
+    deleteMessage,
+    fetchAllUsers,
+    createDirectConversation,
+  } = useMessages();
   const [showNewChatModal, setShowNewChatModal] = useState(false);
-  const [selectedChat, setSelectedChat] = useState(teamConversation);
-  const [selected, setSelected] = useState("team");
-
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [users, setUsers] = useState([]);
+  const [editingMessageId, setEditingMessageId] = useState(null);
   const chatBottomRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const [showMenu, setShowMenu] = useState({}); // State to track which message menu is open
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  const handleSelectChat = (conversationId, receiverId) => {
+    fetchMessages(conversationId, receiverId);
+  };
+  
+  const handleStartNewChat = async (userId) => {
+    const newConv = await createDirectConversation(userId);
+    if (newConv) {
+      setShowNewChatModal(false);
+    }
+  };
 
-  const handleLinkClick = (chatType) => {
-    setSelected(chatType);
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!currentMessage.trim() || !currentConversation) return;
+
+    if (editingMessageId) {
+      await editMessage(editingMessageId, currentMessage);
+      setEditingMessageId(null);
+    } else {
+      await sendMessage(currentConversation.id, currentMessage);
+    }
+    setCurrentMessage("");
+  };
+
+  const handleEditClick = (message) => {
+    setEditingMessageId(message.id);
+    setCurrentMessage(message.content);
+    setShowMenu({}); // Close the menu after clicking
+  };
+
+  const handleDeleteClick = async (messageId) => {
+    if (window.confirm("Are you sure you want to delete this message?")) {
+      await deleteMessage(messageId);
+      setShowMenu({}); // Close the menu after clicking
+    }
+  };
+
+  const toggleMenu = (messageId) => {
+    setShowMenu((prev) => ({
+      [messageId]: !prev[messageId],
+    }));
+  };
+
+  // Handle scroll to load more messages
+  const handleScroll = async () => {
+    if (!chatContainerRef.current || !currentConversation || !hasMoreMessages || isLoadingMore) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    const scrolledToTop = scrollTop < 100; // Load more when near top
+    
+    if (scrolledToTop) {
+      setIsLoadingMore(true);
+      const previousScrollHeight = scrollHeight;
+      
+      await loadMoreMessages(currentConversation.id, currentConversation.receiver_id);
+      
+      // Maintain scroll position after loading
+      setTimeout(() => {
+        if (chatContainerRef.current) {
+          const newScrollHeight = chatContainerRef.current.scrollHeight;
+          chatContainerRef.current.scrollTop = newScrollHeight - previousScrollHeight;
+        }
+        setIsLoadingMore(false);
+      }, 100);
+    }
+  };
+
+  // Group messages by date
+  const groupMessagesByDate = (messages) => {
+    const groups = {};
+    
+    messages.forEach(message => {
+      const messageDate = new Date(message.created_at);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      let dateKey;
+      if (messageDate.toDateString() === today.toDateString()) {
+        dateKey = 'Today';
+      } else if (messageDate.toDateString() === yesterday.toDateString()) {
+        dateKey = 'Yesterday';
+      } else {
+        dateKey = messageDate.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      }
+      
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(message);
+    });
+    
+    return groups;
   };
 
   useEffect(() => {
-    if (chatBottomRef.current) {
+
+    fetchConversations();
+    fetchAllUsers().then(setUsers);
+    
+  }, [fetchConversations, fetchAllUsers]);
+
+  useEffect(() => {
+    const interval = setInterval(
+      () => {
+         fetchConversations();
+         fetchAllUsers().then(setUsers);
+      },
+      160000
+    );
+    return () => clearInterval(interval);
+    
+  }, [fetchConversations, fetchAllUsers]);
+
+  useEffect(() => {
+    let intervalId;
+    if (currentConversation) {
+        intervalId = setInterval(() => {
+            fetchMessages(currentConversation.id, currentConversation.receiver_id, true); // true for refresh
+        }, 3000);
+    }
+    return () => {
+        if (intervalId) {
+            clearInterval(intervalId);
+        }
+    };
+  }, [currentConversation, fetchMessages]);
+
+  // Scroll to bottom when new messages arrive or conversation changes
+  useEffect(() => {
+    if (chatBottomRef.current && !isLoadingMore) {
       chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [selectedChat]);
+  }, [messages, currentConversation]);
 
-  const { orderPaginationData } = useOrders();
-
-  const { token } = useAuth();
-
-  const [currentPage, setCurrentPage] = useState(
-    orderPaginationData.current_page || 1
-  );
-  const itemsPerPage = orderPaginationData.per_page || 10;
-
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  const handleCloseNewChatModal = () => {
-    setShowNewChatModal(false);
-  };
+  const handleCloseNewChatModal = () => setShowNewChatModal(false);
   const handleShowNewChatModal = () => setShowNewChatModal(true);
+
+  const groupedMessages = groupMessagesByDate(messages);
+
+  const getLastMessageDate = (conv) => {
+  const messageDate = new Date(conv);
+  const today = new Date();
+
+  if (messageDate.toDateString() === today.toDateString()) {
+    // Show time if today
+    return messageDate.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } else {
+    // Show date otherwise (MM/DD/YY)
+    return messageDate.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: '2-digit',
+    });
+  }
+};
+
 
   return (
     <div className="order-page">
       <div className="rightsidebar-navbar">
-        <h3>Messages</h3> {/* Updated title */}
-        {/* <div
-          className="rightsidebar-button message-button"
-          onClick={handleShowNewChatModal}
-        >
-          <HugeiconsIcon
-            icon={Add01Icon}
-            size={16}
-            color="#ffffff"
-            strokeWidth={3}
-          />
+        <h3>Messages</h3>
+        <div className="rightsidebar-button message-button" onClick={handleShowNewChatModal}>
+          <HugeiconsIcon icon={Add01Icon} size={16} color="#ffffff" strokeWidth={3} />
           <p>New Chat</p>
-        </div> */}
+        </div>
       </div>
       <div className="messages-container">
         <div className="messages-list-container">
           <div className="messages-list-pinned">
-            <h1>TEAM CHAT</h1>
+            <h1>CONVERSATIONS</h1>
             <div className="messages-pinned-list">
-              {teamMessages.map((msg, index) => (
-                <div
-                  className="messages-pinned-container"
-                  key={index}
-                  onClick={() => handleLinkClick("team")}
-                >
-                  <div className="messages-pinned">
-                    <div className="messages-pinned-image">
-                      <img src={avatar} alt={msg.name} />
-                    </div>
-                    <div className="message-pinned-texts">
-                      <div className="message-pinned-texts-title">
-                        <h1>{msg.name}</h1>
-                        <p>{msg.time}</p>
+              {loading ? (
+                <p style={{ padding: "10px" }}>Loading conversations...</p>
+              ) : conversations.length > 0 ? (
+                conversations.map((conv) => (
+                  <div
+                    className="messages-pinned-container"
+                    key={conv.id}
+                    onClick={() => handleSelectChat(conv.id, conv.receiver_id)}
+                    style={{ backgroundColor: currentConversation?.id === conv.id ? "#f1f1f1" : "transparent" }}
+                  >
+                    <div className="messages-pinned">
+                      <div className="messages-pinned-image">
+                        <img src={avatar} alt="user avatar" />
                       </div>
-
-                      <p>
-                        {msg.text.length > 45
-                          ? msg.text.slice(0, 35) + "..."
-                          : msg.text}
-                      </p>
+                      <div className="message-pinned-texts">
+                        <div className="message-pinned-texts-title">
+                          <h1>{conv.name}</h1>
+                        </div>
+                        <p>{conv.last_message_content?.length > 40 ? conv.last_message_content.slice(0, 35) + "..." : conv.last_message_content}</p>
+                      </div>
+                      <p>{getLastMessageDate(conv.last_message_at)}</p>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="messages-list-pinned message-margin">
-            <h1>ALL MESSAGES</h1>
-            <div className="messages-pinned-list">
-              {allMessages.map((msg, index) => (
-                <div className="messages-pinned-container" key={index}        
-                onClick={() => setSelected("direct")}>
-                   <div className="messages-pinned">
-                    <div className="messages-pinned-image">
-                      <img src={avatar} alt={msg.name} />
-                    </div>
-                    <div className="message-pinned-texts">
-                      <div className="message-pinned-texts-title">
-                        <h1>{msg.name}</h1>
-                        <p>{msg.time}</p>
-                      </div>
-
-                      <p>
-                        {msg.text.length > 40
-                          ? msg.text.slice(0, 35) + "..."
-                          : msg.text}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="messages-list-pinned message-margin">
-            <h1>ALL MEMBERS</h1>
-            <div className="messages-pinned-list">
-              {allMembers.map((msg, index) => (
-                <div className="messages-pinned-container" key={index} 
-                onClick={() => setSelected("new")}>
-                   <div className="messages-pinned" >
-                    <div className="messages-pinned-image">
-                      <img src={avatar} alt={msg.name} />
-                    </div>
-                    <div className="message-pinned-texts">
-                      <div className="message-pinned-texts-title">
-                        <h1>{msg.name}</h1>
-                      </div>
-
-                      <p>
-                        {msg.status}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p style={{ padding: "10px" }}>No conversations found.</p>
+              )}
             </div>
           </div>
         </div>
-        {selected === "direct" && (
+        {currentConversation ? (
           <div className="messages-chats">
             <div className="messages-chats-top">
               <div className="messages-pinned">
                 <div className="messages-pinned-image">
-                  <img src={avatar} alt="apple bees" />
+                  <img src={avatar} alt="conversation avatar" />
                 </div>
                 <div className="message-pinned-texts">
-                  <h1>John Paul</h1>
-                  <p style={{ color: "red" }}>John Jones is typing...</p>
+                  <h1>{currentConversation.name}</h1>
                 </div>
               </div>
-
               <div className="message-chat-top-icon">
                 <HugeiconsIcon icon={MoreVerticalIcon} />
               </div>
             </div>
-
-            <div className="messages-chat-middle">
-              <div className="message-chat-date">
-                <p>07 August 2025.</p>
-              </div>
-              <div className="message-chat-user ">
-                <p>
-                  Check the latest updates on the project dashboard. Don’t
-                  forget to submit your timesheet today
-                </p>
-              </div>
-              <div className="message-chat-user main-user">
-                <p>Hi bolt, please don't forget blah blah blah blah</p>
-              </div>
+            <div 
+              className="messages-chat-middle"
+              ref={chatContainerRef}
+              onScroll={handleScroll}
+            >
+              {isLoadingMore && (
+                <div className="loading-more">
+                  <p>Loading more messages...</p>
+                </div>
+              )}
+              
+              {Object.entries(groupedMessages).map(([date, dateMessages]) => (
+                <div key={date}>
+                  <div className="message-chat-date">
+                    <p>{date}</p>
+                  </div>
+                  {dateMessages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`message-chat-user ${message.user_id === user.id ? "main-user" : ""}`}
+                    >
+                      <div className="messages-pinned">
+                        <div className="messages-pinned-image">
+                          <img src={avatar} alt="user avatar" />
+                        </div>
+                        <div className="message-pinned-texts">
+                          <div className="d-flex flex-row justify-content-between align-items-center">
+                            <div className="d-flex flex-row align-items-center">
+                              <h1>{message.user_name}</h1>
+                              <small className="message-time">{new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                            </div>
+                            {message.user_id === user.id && (
+                              <div className="message-actions-container">
+                                <button 
+                                  className="more-options-btn" 
+                                  onClick={() => toggleMenu(message.id)}
+                                >
+                                  <HugeiconsIcon icon={MoreVerticalIcon} size={16} />
+                                </button>
+                                {showMenu[message.id] && (
+                                  <div className="message-actions-menu">
+                                    <button onClick={() => handleEditClick(message)}>Edit</button>
+                                    <button onClick={() => handleDeleteClick(message.id)}>Delete</button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <p>{message.content}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <div ref={chatBottomRef}></div>
             </div>
             <div className="messages-chats-bottom">
-              <div className="message-chat-input">
-                <input type="text" placeholder="Type a message..." />
-              </div>
-
-              <div className="message-chat-bottom-icon">
-                <HugeiconsIcon icon={SentIcon} size={16} />
-              </div>
+              <form onSubmit={handleSendMessage} className="messages-input-form">
+                <div className="message-chat-input">
+                  <input
+                    type="text"
+                    placeholder="Type a message..."
+                    value={currentMessage}
+                    onChange={(e) => setCurrentMessage(e.target.value)}
+                  />
+                </div>
+                <button type="submit" className="message-chat-bottom-icon">
+                  <HugeiconsIcon icon={SentIcon} size={16} />
+                </button>
+              </form>
             </div>
           </div>
-        )}
-
-        {selected === "team" && (
-          <div className="messages-chats">
-            <div className="messages-chats-top">
-              <div className="messages-pinned">
-                <div className="messages-pinned-image">
-                  <img src={avatar} alt="apple bees" />
-                </div>
-                <div className="message-pinned-texts">
-                  <h1>Cable Crushers</h1>
-                  <p style={{ color: "red" }}>John Jones is typing...</p>
-                </div>
-              </div>
-
-              <div className="message-chat-top-icon">
-                <HugeiconsIcon icon={MoreVerticalIcon} />
-              </div>
-            </div>
-
-            <div className="messages-chat-middle">
-              <div className="message-chat-date">
-                <p>07 August 2025.</p>
-              </div>
-              <div className="message-chat-user group-chat ">
-                <div className="messages-pinned">
-                  <div className="messages-pinned-image">
-                    <img src={avatar} alt="apple bees" />
-                  </div>
-                  <div className="message-pinned-texts ">
-                    <h1>John Paul</h1>
-                    <p>John Jones is typing are you blah blah blah</p>
-                  </div>
-                </div>
-              </div>
-              <div className="message-chat-user group-chat ">
-                <div className="messages-pinned">
-                  <div className="messages-pinned-image">
-                    <img src={avatar} alt="apple bees" />
-                  </div>
-                  <div className="message-pinned-texts ">
-                    <h1>Jimmy Johns</h1>
-                    <p>John Jones is typing are you blah blah blah</p>
-                  </div>
-                </div>
-              </div>
-              <div className="message-chat-user group-chat main-user ">
-                <div className="messages-pinned group-chat-user">
-                  <div className="messages-pinned-image">
-                    <img src={avatar} alt="apple bees" />
-                  </div>
-                  <div className="message-pinned-texts group-chat-flex">
-                    <h1>You</h1>
-                    <p>Lets get that Cable money....</p>
-                  </div>
-                </div>
-              </div>
-              <div className="message-chat-user group-chat ">
-                <div className="messages-pinned">
-                  <div className="messages-pinned-image">
-                    <img src={avatar} alt="apple bees" />
-                  </div>
-                  <div className="message-pinned-texts ">
-                    <h1>Jimmy Johns</h1>
-                    <p>John Jones is typing are you blah blah blah</p>
-                  </div>
-                </div>
-              </div>
-              <div className="message-chat-user group-chat main-user ">
-                <div className="messages-pinned group-chat-user">
-                  <div className="messages-pinned-image">
-                    <img src={avatar} alt="apple bees" />
-                  </div>
-                  <div className="message-pinned-texts group-chat-flex">
-                    <h1>You</h1>
-                    <p>Lets get that Cable money....</p>
-                  </div>
-                </div>
-              </div>
-              <div className="message-chat-user group-chat ">
-                <div className="messages-pinned">
-                  <div className="messages-pinned-image">
-                    <img src={avatar} alt="apple bees" />
-                  </div>
-                  <div className="message-pinned-texts ">
-                    <h1>Jimmy Johns</h1>
-                    <p>John Jones is typing are you blah blah blah</p>
-                  </div>
-                </div>
-              </div>
-              <div className="message-chat-user group-chat main-user ">
-                <div className="messages-pinned group-chat-user">
-                  <div className="messages-pinned-image">
-                    <img src={avatar} alt="apple bees" />
-                  </div>
-                  <div className="message-pinned-texts group-chat-flex">
-                    <h1>You</h1>
-                    <p>Lets get that Cable money....</p>
-                  </div>
-                </div>
-              </div>
-              <div className="message-chat-user group-chat main ">
-                <div className="messages-pinned">
-                  <div className="messages-pinned-image">
-                    <img src={avatar} alt="apple bees" />
-                  </div>
-                  <div className="message-pinned-texts ">
-                    <h1>Bill Xander</h1>
-                    <p>Lets get that Cable money....</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="messages-chats-bottom">
-              <div className="message-chat-input">
-                <input type="text" placeholder="Type a message..." />
-              </div>
-
-              <div className="message-chat-bottom-icon">
-                <HugeiconsIcon icon={SentIcon} size={16} />
-              </div>
-            </div>
-          </div>
-        )}
-           {selected === "new" && (
-          <div className="messages-chats">
-            <div className="messages-chats-top">
-              <div className="messages-pinned">
-                <div className="messages-pinned-image">
-                  <img src={avatar} alt="apple bees" />
-                </div>
-                <div className="message-pinned-texts">
-                  <h1>New Chat</h1>
-                  <p style={{ color: "red" }}>John Jones is typing...</p>
-                </div>
-              </div>
-
-              <div className="message-chat-top-icon">
-                <HugeiconsIcon icon={MoreVerticalIcon} />
-              </div>
-            </div>
-
-            <div className="messages-chat-middle">
-              <div className="message-chat-date">
-                <p>07 August 2025.</p>
-              </div>
-              <div className="new-message-chat">
-                new message place holder
-              </div>
-            </div>
-
-            <div className="messages-chats-bottom">
-              <div className="message-chat-input">
-                <input type="text" placeholder="Type a message..." />
-              </div>
-
-              <div className="message-chat-bottom-icon">
-                <HugeiconsIcon icon={SentIcon} size={16} />
-              </div>
-            </div>
+        ) : (
+          <div className="messages-placeholder">
+            <p>Select a conversation to view messages</p>
           </div>
         )}
       </div>
 
-      <Modal
-        show={showNewChatModal}
-        onHide={handleCloseNewChatModal}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
+      <Modal show={showNewChatModal} onHide={handleCloseNewChatModal} backdrop="static" keyboard={false} centered>
         <Modal.Header closeButton>
-          <Modal.Title>
-            <h3>New Chat</h3>
-          </Modal.Title>
+          <Modal.Title><h3>New Chat</h3></Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="messages-pinned new-chat">
-            <div className="messages-pinned-image">
-              <img src={avatar} />
+          {users.map((u) => (
+            <div className="messages-pinned new-chat" key={u.id} onClick={() => handleStartNewChat(u.id)}>
+              <div className="messages-pinned-image">
+                <img src={avatar} />
+              </div>
+              <div className="message-pinned-texts">
+                <h1>{u.name}</h1>
+              </div>
             </div>
-            <div className="message-pinned-texts">
-              <h1>John Doe</h1>
-            </div>
-          </div>
-          <div className="messages-pinned new-chat">
-            <div className="messages-pinned-image">
-              <img src={avatar} />
-            </div>
-            <div className="message-pinned-texts">
-              <h1>John Doe</h1>
-            </div>
-          </div>
-          <div className="messages-pinned new-chat">
-            <div className="messages-pinned-image">
-              <img src={avatar} />
-            </div>
-            <div className="message-pinned-texts">
-              <h1>John Doe</h1>
-            </div>
-          </div>
-          <div className="messages-pinned new-chat">
-            <div className="messages-pinned-image">
-              <img src={avatar} />
-            </div>
-            <div className="message-pinned-texts">
-              <h1>John Doe</h1>
-            </div>
-          </div>
-          <div className="messages-pinned new-chat">
-            <div className="messages-pinned-image">
-              <img src={avatar} />
-            </div>
-            <div className="message-pinned-texts">
-              <h1>John Doe</h1>
-            </div>
-          </div>
+          ))}
         </Modal.Body>
         <Modal.Footer>
           <button className="btn-secondary" onClick={handleCloseNewChatModal}>
