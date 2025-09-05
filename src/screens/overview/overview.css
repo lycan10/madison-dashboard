@@ -1,0 +1,41 @@
+.overview-cable-container{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+.overview-piechart{
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr ;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+
+}
+.piechart-circle{
+    margin-top: 1rem;
+    width: 300px; 
+    position: relative;
+}
+.piechart-cable{
+    padding: 3rem;
+    background-color: #f1f1f1;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.piechart-cable h1{
+    font-family: var(--font-family);
+    color: black;
+    font-size: 19px;
+    font-weight: 600;
+}
+
+.bar-graph{
+    margin-top: 1.5rem ;
+    background-color: #f1f1f1;
+    padding: 2rem;
+    border-radius: 10px;
+}

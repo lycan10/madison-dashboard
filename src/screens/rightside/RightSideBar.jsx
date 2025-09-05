@@ -33,6 +33,7 @@ import Notification from "../notification/Notification";
 import Member from "../member/Member";
 import Email from "../email/Email";
 import MyProject from "../myProject/MyProject";
+import Overview from "../overview/Overview";
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
@@ -310,6 +311,11 @@ const RightSideBar = ({ selected }) => {
     <div className="rightsidebar">
       <div className="rightsidebar-container">
         <Navbar />
+        {selected === "Overview" && (
+          <div className="rightsidebar-bottom">
+            <Overview />
+          </div>
+        )}
         {/* Render Dashboard content if selected */}
         {selected === "Dashboard" && (
           <div className="rightsidebar-bottom">
