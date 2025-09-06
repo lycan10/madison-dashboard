@@ -12,10 +12,7 @@ export const MyProjectProvider = ({ children }) => {
         last_page: 1,
         total: 0,
     });
-    const [taskCounts, setTaskCounts] = useState({
-        All: 0, "New Task": 0, "In Progress": 0, "Pending Review": 0,
-        "On Hold": 0, "Completed": 0, "Cancelled": 0, "Overdue": 0
-    });
+    const [taskCounts, setTaskCounts] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -69,11 +66,12 @@ export const MyProjectProvider = ({ children }) => {
         if (!token) return;
         try {
             const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/tasks/counts`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    'Authorization': `Bearer ${token}`,
-                },
+                method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                    },
             });
             if (!response.ok) throw new Error("Failed to fetch task counts");
             const data = await response.json();
@@ -121,6 +119,7 @@ export const MyProjectProvider = ({ children }) => {
             );
             if (!response.ok) throw new Error('Failed to update task');
             fetchTasks({ page: taskPaginationData.current_page, perPage: taskPaginationData.per_page });
+            fetchStatusCounts();
             return true;
         } catch (error) {
             console.error("Update task error:", error);

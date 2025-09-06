@@ -320,16 +320,17 @@
 }
 
 .assigned-info {
-    padding: 8px 12px;
+    padding: 0 6px 3px 6px;
     background-color: #d5f4e6;
     border-radius: 6px;
     border: 1px solid #27ae60;
 }
 
 .assigned-info span {
-    font-size: 12px;
+    font-size: 11px;
     color: #27ae60;
     font-weight: 600;
+    text-transform: uppercase;
 }
 
 .email-body {
@@ -339,10 +340,12 @@
     font-size: 15px;
     line-height: 1.6;
     color: #2c3e50;
+    max-width: 720px;
+    flex-wrap: wrap;
 }
 
 .email-body-content {
-    max-width: 100%;
+    width: 100%;
     word-wrap: break-word;
 }
 
@@ -441,4 +444,25 @@
         width: 100%;
         min-width: auto;
     }
+}
+
+.email-search-input {
+  margin-top: 10px;
+  padding: 8px 12px;
+  width: 100%;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.email-search-input:focus, .source-filter-dropdown:focus {
+  outline: none;
+  border-color: var(--background-color);
+  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+}
+
+.source-filter-dropdown {
+    border: 1px solid #ced4da;
+    background-color: #fff;
+    color: #2c3e50;
+    margin-top: 6px;
 }

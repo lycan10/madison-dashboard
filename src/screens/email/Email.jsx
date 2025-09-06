@@ -11,7 +11,6 @@ import "../messages/messages.css";
 import "../notification/notification.css";
 import "./email.css";
 
-
 const Email = () => {
     const { user } = useAuth();
     const { emails, loading, pagination, fetchEmails, fetchMoreEmails, assignTaskFromEmail, connectGoogleAccount, exchangeGoogleCode, saveImapCredentials, fetchImapCredentials } = useEmails();
@@ -24,6 +23,8 @@ const Email = () => {
     const [showImapModal, setShowImapModal] = useState(false);
     const [hasInitialLoad, setHasInitialLoad] = useState(false);
     const [isMobileView, setIsMobileView] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sourceFilter, setSourceFilter] = useState("all");
 
     const [imapCredentials, setImapCredentials] = useState({
         imap_host: "",
@@ -33,7 +34,6 @@ const Email = () => {
         imap_encryption: "ssl",
     });
 
-    // Handle responsive design
     useEffect(() => {
         const handleResize = () => {
             setIsMobileView(window.innerWidth <= 768);
@@ -44,7 +44,6 @@ const Email = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
     
-    // Handle OAuth redirect - only run once
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -57,21 +56,17 @@ const Email = () => {
                 } else {
                     alert('Failed to connect Google account.');
                 }
-                // Clear the URL to remove the code, preventing re-execution on refresh
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         };
 
         handleOAuthRedirect();
-    }, []); // Empty dependency array - only run once
+    }, []);
 
-    // Fetch initial data - only run once
     useEffect(() => {
         if (!hasInitialLoad) {
-            // Fetch emails for the initial load
-            fetchEmails();
+            fetchEmails(1, searchTerm, sourceFilter);
             
-            // Fetch members if the user is an admin
             if (user?.role === 'admin') {
                 fetchMembers();
             }
@@ -80,7 +75,16 @@ const Email = () => {
         }
     }, [hasInitialLoad, user?.role, fetchEmails, fetchMembers]);
 
-    // This useEffect handles setting the initial selected email
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+        fetchEmails(1, searchTerm, sourceFilter);
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+    }, [searchTerm, sourceFilter, fetchEmails]);
+
+
     useEffect(() => {
         if (emails.length > 0 && !selectedEmail) {
             setSelectedEmail(emails[0]);
@@ -95,9 +99,9 @@ const Email = () => {
             !loading &&
             pagination.current_page < pagination.last_page
         ) {
-            fetchMoreEmails();
+            fetchMoreEmails(searchTerm, sourceFilter);
         }
-    }, [loading, pagination.current_page, pagination.last_page, fetchMoreEmails]);
+    }, [loading, pagination.current_page, pagination.last_page, fetchMoreEmails, searchTerm, sourceFilter]);
 
     useEffect(() => {
         const listRef = emailListRef.current;
@@ -174,6 +178,7 @@ const Email = () => {
             case 'read': return '#3498db';
             case 'assigned': return '#27ae60';
             case 'completed': return '#9b59b6';
+            case 'new': return 'rgb(255, 173, 31)';
             default: return '#95a5a6';
         }
     };
@@ -185,12 +190,11 @@ const Email = () => {
 
     return (
         <div className="email-page">
-            {/* Header */}
             <div className="email-header">
                 <div className="email-header-content">
                     <h2 className="email-title">
                         <HugeiconsIcon icon={MailIcon} size={24} color="#3498db" />
-                        Email
+                        Emails ({pagination.total || 0})
                     </h2>
                     
                     {user?.role === 'admin' && (
@@ -212,15 +216,33 @@ const Email = () => {
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className={`email-main-content ${isMobileView && selectedEmail ? 'mobile-hide' : ''}`}>
-                {/* Email List */}
                 <div className={`email-list-container ${isMobileView && selectedEmail ? 'mobile-hide' : ''}`}>
                     <div className="email-list-header">
-                        <h4>
-                            All Emails ({pagination.total || 0})
-                        </h4>
+                        <input
+                            type="text"
+                            className="email-search-input"
+                            placeholder="Search emails..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <select 
+                            className="source-filter-dropdown"
+                            value={sourceFilter}
+                            onChange={(e) => setSourceFilter(e.target.value)}
+                            style={{
+                                padding: '8px 12px',
+                                borderRadius: '6px',
+                                fontSize: '14px',
+                                marginRight: '12px',
+                            }}
+                        >
+                            <option value="all">All Sources</option>
+                            <option value="gmail">Gmail</option>
+                            <option value="imap">Others</option>
+                        </select>
                     </div>
+
                     
                     <div 
                         ref={emailListRef}
@@ -257,6 +279,9 @@ const Email = () => {
                                             </span>
                                             
                                         </div>
+                                        <span className="email-status" style={{ backgroundColor: '#95a5a6' }}>
+                                            {email.source}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -275,11 +300,9 @@ const Email = () => {
                     </div>
                 </div>
 
-                {/* Email Detail */}
                 <div className={`email-detail-container ${isMobileView && selectedEmail ? 'mobile-show' : ''}`}>
                     {selectedEmail ? (
                         <>
-                            {/* Email Header */}
                             <div className="email-detail-header">
                                 <div className="email-detail-header-top">
                                     <div className="email-sender-info">
@@ -316,9 +339,9 @@ const Email = () => {
                                                 {isMobileView ? '' : 'Assign Task'}
                                             </button>
                                         )}
-                                        <button className="btn-options">
+                                        {/*<button className="btn-options">
                                             <HugeiconsIcon icon={MoreVerticalIcon} size={20} />
-                                        </button>
+                                        </button>*/}
                                     </div>
                                 </div>
                                 
@@ -328,9 +351,19 @@ const Email = () => {
                                             {selectedEmail.subject}
                                         </h4>
                                         <div className="email-date-info">
-                                            <span className="email-status" style={{ backgroundColor: getStatusColor(selectedEmail.status) }}>
-                                                {selectedEmail.status}
-                                            </span>
+                                            {selectedEmail.assigned_to_user_id ? (
+                                                <div className="assigned-info">
+                                                    <span>
+                                                        Assigned to: {assigneeName || getAssignedMemberName(selectedEmail.assigned_to_user_id)}
+                                                    </span>
+                                                </div>
+                                            ):
+                                                (
+                                                    <span className="email-status" style={{ backgroundColor: getStatusColor(selectedEmail.status) }}>
+                                                        {selectedEmail.status}
+                                                    </span>
+                                                )
+                                            }
                                             <span className="email-detail-date">
                                                 <HugeiconsIcon icon={CalendarIcon} size={16} />
                                                 {new Date(selectedEmail.created_at).toLocaleDateString('en-US', {
@@ -343,18 +376,9 @@ const Email = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    
-                                    {selectedEmail.assigned_to_user_id && (
-                                        <div className="assigned-info">
-                                            <span>
-                                                Assigned to: {assigneeName || getAssignedMemberName(selectedEmail.assigned_to_user_id)}
-                                            </span>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                             
-                            {/* Email Body */}
                             <div className="email-body">
                                 <div 
                                     dangerouslySetInnerHTML={{ __html: selectedEmail.body }}
@@ -374,7 +398,6 @@ const Email = () => {
                 </div>
             </div>
             
-            {/* Assign Task Modal */}
             <Modal
                 show={showAssignModal}
                 onHide={() => setShowAssignModal(false)}
@@ -446,7 +469,6 @@ const Email = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* IMAP Modal */}
             <Modal
                 show={showImapModal}
                 onHide={() => setShowImapModal(false)}

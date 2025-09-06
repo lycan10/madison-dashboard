@@ -1,4 +1,3 @@
-// src/pages/myproject/MyProject.jsx
 import React, { useState, useEffect, useRef } from "react";
 import Modal from "react-bootstrap/Modal";
 import "../order/order.css";
@@ -87,7 +86,7 @@ const MyProject = () => {
         deadlineDate: "",
         priority: "Low",
         status: "New Task",
-        assignedToUserId: authUser?.id || null, // Default to current user
+        assignedToUserId: authUser?.id || null,
     });
 
     const [editingTask, setEditingTask] = useState(null);

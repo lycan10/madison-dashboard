@@ -78,7 +78,7 @@ export const MembersProvider = ({ children }) => {
       const response = await fetch(
         `${process.env.REACT_APP_BASE_URL}/api/users/${memberId}`,
         {
-          method: "POST", // Laravel uses POST for PUT/PATCH with form data
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
           },

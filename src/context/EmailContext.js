@@ -20,99 +20,100 @@ export const EmailProvider = ({ children }) => {
     logoutRef.current = logout;
   }, [token, logout]);
 
-  const fetchEmails = useCallback(async (page = 1) => {
-    if (!tokenRef.current) {
-      setLoading(false);
+  const fetchEmails = useCallback(async (page = 1, search = "", source = "all") => {
+  if (!tokenRef.current) {
+    setLoading(false);
+    return;
+  }
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await fetch(
+      `${process.env.REACT_APP_BASE_URL}/api/emails?page=${page}&search=${encodeURIComponent(search)}&source=${source !== "all" ? source : undefined}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenRef.current}`,
+        },
+      }
+    );
+
+    if (response.status === 401) {
+      logoutRef.current();
       return;
     }
+    if (!response.ok) {
+      throw new Error("Failed to fetch emails");
+    }
+
+    const data = await response.json();
+    setEmails(data.data);
+    setPagination({
+      current_page: data.current_page,
+      last_page: data.last_page,
+      per_page: data.per_page,
+      total: data.total,
+    });
+  } catch (err) {
+    console.error("Fetch emails error:", err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+
+  const fetchMoreEmails = useCallback(async (search = "", source = "all") => {
+  if (loading) {
+    return;
+  }
+  
+  setPagination(currentPagination => {
+    if (currentPagination.current_page >= currentPagination.last_page) {
+      return currentPagination;
+    }
+
     setLoading(true);
     setError(null);
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL}/api/emails?page=${page}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${tokenRef.current}`,
-          },
-        }
-      );
 
-      if (response.status === 401) {
-        logoutRef.current();
-        return;
+    fetch(
+      `${process.env.REACT_APP_BASE_URL}/api/emails?page=${currentPagination.current_page + 1}&search=${encodeURIComponent(search)}&source=${source !== "all" ? source : undefined}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenRef.current}`,
+        },
       }
+    )
+    .then(response => {
       if (!response.ok) {
-        throw new Error("Failed to fetch emails");
+        throw new Error("Failed to fetch more emails");
       }
-
-      const data = await response.json();
-      setEmails(data.data);
+      return response.json();
+    })
+    .then(data => {
+      setEmails(prevEmails => [...prevEmails, ...data.data]);
       setPagination({
         current_page: data.current_page,
         last_page: data.last_page,
         per_page: data.per_page,
         total: data.total,
       });
-    } catch (err) {
-      console.error("Fetch emails error:", err);
+    })
+    .catch(err => {
+      console.error("Fetch more emails error:", err);
       setError(err.message);
-    } finally {
+    })
+    .finally(() => {
       setLoading(false);
-    }
-  }, []); // Empty dependency array since we're using refs
-
-  const fetchMoreEmails = useCallback(async () => {
-    if (loading) {
-      return;
-    }
-    
-    // Get current pagination state
-    setPagination(currentPagination => {
-      if (currentPagination.current_page >= currentPagination.last_page) {
-        return currentPagination;
-      }
-      
-      setLoading(true);
-      setError(null);
-      
-      fetch(
-        `${process.env.REACT_APP_BASE_URL}/api/emails?page=${currentPagination.current_page + 1}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${tokenRef.current}`,
-          },
-        }
-      )
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch more emails");
-        }
-        return response.json();
-      })
-      .then(data => {
-        setEmails(prevEmails => [...prevEmails, ...data.data]);
-        setPagination({
-          current_page: data.current_page,
-          last_page: data.last_page,
-          per_page: data.per_page,
-          total: data.total,
-        });
-      })
-      .catch(err => {
-        console.error("Fetch more emails error:", err);
-        setError(err.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-      
-      return currentPagination;
     });
-  }, [loading]); // Only depend on loading state
+
+    return currentPagination;
+  });
+}, [loading]);
+
 
   const assignTaskFromEmail = useCallback(async (emailId, userId) => {
     try {

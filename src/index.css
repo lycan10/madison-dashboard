@@ -83,3 +83,14 @@ h3 {
 .search-input::placeholder {
   color: #888;
 }
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--background-color) !important;
+}
+
+.form-group input:focus{
+  outline: none;
+  border-color: var(--background-color) !important;
+  box-shadow: 0 0 0 1px var(--background-color)!important;
+}

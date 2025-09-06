@@ -132,9 +132,9 @@ const Notification = () => {
                     <p>{selectedNotification.title}</p>
                   </div>
                 </div>
-                <div className="message-chat-top-icon" onClick={handleShowNewChatModal}>
+                {/*<div className="message-chat-top-icon" onClick={handleShowNewChatModal}>
                   <HugeiconsIcon icon={MoreVerticalIcon} />
-                </div>
+                </div>*/}
               </div>
 
               <div className="messages-chat-middle">
@@ -153,42 +153,6 @@ const Notification = () => {
           )}
         </div>
       </div>
-     
-      <Modal
-        show={showNewChatModal}
-        onHide={handleCloseNewChatModal}
-        backdrop="static"
-        keyboard={false}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <h3>Assign to</h3>
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-        <div className="messages-pinned new-chat">
-            <div className="messages-pinned-image">
-              <img src={avatar} alt="John Doe" />
-            </div>
-            <div className="message-pinned-texts">
-              <h1>John Doe</h1>
-            </div>
-          </div>
-          <div className="messages-pinned new-chat">
-            <div className="messages-pinned-image">
-              <img src={avatar} alt="Jane Doe" />
-            </div>
-            <div className="message-pinned-texts">
-              <h1>Jane Doe</h1>
-            </div>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn-secondary" onClick={handleCloseNewChatModal}>Done</button>
-          <button className="btn-secondary" onClick={handleCloseNewChatModal}>Cancel</button>
-        </Modal.Footer>
-      </Modal>
     </div>
   );
 };
