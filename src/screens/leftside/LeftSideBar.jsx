@@ -5,6 +5,7 @@ import logo from "../../assets/Icon-yellow.png";
 import {
   Task02Icon,
   Home02Icon,
+  DashboardSquare01Icon,
   CheckListIcon,
   Notification01Icon,
   UserMultipleIcon, 
@@ -89,6 +90,13 @@ console.log(totalUnreadCount);
             </div>
           )}
         </div> 
+        <LeftNavLinks
+          icon={DashboardSquare01Icon}
+          title="Overview"
+          onClick={() => handleLinkClick("Overview")}
+          isSelected={selected === "Overview"}
+          collapsed={collapsed}
+        />
         <LeftNavLinks
           icon={TractorFreeIcons}
           title="Cables"
