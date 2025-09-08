@@ -24,7 +24,7 @@ export const TimeCardProvider = ({ children }) => {
     prev_page_url: null,
     to: null,
     total: 0,
-    date: new Date().toISOString().slice(0, 10), // Add date to initial state
+    date: new Date().toISOString().slice(0, 10),
   });
   const [currentActiveTimeCard, setCurrentActiveTimeCard] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -724,3 +724,4 @@ export const useTimeCards = () => {
   }
   return context;
 };
+

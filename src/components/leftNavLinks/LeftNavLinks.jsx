@@ -19,7 +19,6 @@ const LeftNavLinks = ({ icon, title, onClick, isSelected, collapsed, badgeCount 
       <div className='LeftNavLinks-title'>
         {!collapsed && <p>{title}</p>}
       </div>
-      {/* Conditionally render the badge if badgeCount is greater than 0 */}
       {!collapsed && badgeCount > 0 && (
           <div className="badge-count">{badgeCount}</div>
       )}

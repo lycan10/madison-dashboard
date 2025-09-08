@@ -39,7 +39,6 @@ const Order = () => {
 
   const { token } = useAuth();
 
-
   const [currentPage, setCurrentPage] = useState(
     orderPaginationData.current_page || 1
   );
@@ -60,6 +59,8 @@ const Order = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const user = JSON.parse(localStorage.getItem("user"));
@@ -95,6 +96,16 @@ const Order = () => {
     resetOrderFormData();
   };
   const handleShowEditModal = () => setShowEditModal(true);
+
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedOrder(null);
+  };
+
+  const handleRowClick = (order) => {
+    setSelectedOrder(order);
+    setShowDetailsModal(true);
+  };
 
   const resetOrderFormData = () => {
     setOrderFormData({
@@ -219,7 +230,6 @@ const Order = () => {
     }
   };
 
-
   useEffect(() => {
     const params = {
       page: currentPage,
@@ -244,7 +254,6 @@ const Order = () => {
     fetchStatusCounts();
   }, []);
 
-
   useEffect(() => {
     if (
       orderPaginationData.current_page &&
@@ -266,7 +275,7 @@ const Order = () => {
   return (
     <div className="order-page">
       <div className="rightsidebar-navbar">
-        <h3>Madison Generator</h3> {/* Updated title */}
+        <h3>Madison Generator</h3>
 
         <div className="rightsidebar-button" onClick={handleShowAddModal}>
           <HugeiconsIcon
@@ -283,7 +292,6 @@ const Order = () => {
         <h3>Order List</h3>
       </div>
 
-      {/* Search Input */}
       <div className="search-input-container">
         <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
         <input
@@ -321,7 +329,7 @@ const Order = () => {
       ) : error ? (
         <p>Error: {error.message}</p>
       ) : (
-        <div className="order-table-container" s>
+        <div className="order-table-container">
           <table className="order-table">
             <thead>
               <tr>
@@ -382,7 +390,12 @@ const Order = () => {
                 displayedOrders.map((order) => {
                   const { color, bgColor } = getStatusStyles(order.status);
                   return (
-                    <tr key={order.id}>
+                    <tr 
+                      key={order.id} 
+                      onClick={() => handleRowClick(order)}
+                      style={{ cursor: "pointer" }}
+                      className="clickable-row"
+                    >
                       <td>{order.id}</td>
                       <td>{order.partName}</td>
                       <td>{order.quantity}</td>
@@ -471,6 +484,111 @@ const Order = () => {
       </div>
 
       <Modal
+        show={showDetailsModal}
+        onHide={handleCloseDetailsModal}
+        backdrop="static"
+        keyboard={false}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <h3>Order Details - #{selectedOrder?.id}</h3>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedOrder && (
+            <div className="order-details-container">
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="detail-label">Order ID:</label>
+                    <p className="detail-value">#{selectedOrder.id}</p>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <label className="detail-label">Part Name:</label>
+                    <p className="detail-value">{selectedOrder.partName}</p>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <label className="detail-label">Vendor:</label>
+                    <p className="detail-value">{selectedOrder.vendor}</p>
+                  </div>
+                </div>
+                
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="detail-label">Quantity:</label>
+                    <p className="detail-value">{selectedOrder.quantity}</p>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <label className="detail-label">Status:</label>
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        ...getStatusStyles(selectedOrder.status),
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        fontWeight: 500,
+                        width: "fit-content",
+                      }}
+                    >
+                      {selectedOrder.status}
+                    </div>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <label className="detail-label">Created At:</label>
+                    <p className="detail-value">
+                      {selectedOrder.created_at 
+                        ? new Date(selectedOrder.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : 'N/A'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {selectedOrder.comments && (
+                <div className="detail-group full-width">
+                  <label className="detail-label">Comments:</label>
+                  <div className="detail-comments">
+                    {selectedOrder.comments}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="flex gap-2 d-flex">
+            <button className="btn-secondary" onClick={handleCloseDetailsModal}>
+              Close
+            </button>
+            <button 
+              className="btn-primary" 
+              onClick={() => {
+                handleCloseDetailsModal();
+                handleEditClick(selectedOrder);
+              }}
+            >
+              Edit Order
+            </button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
         show={showAddModal}
         onHide={handleCloseAddModal}
         backdrop="static"
@@ -479,8 +597,7 @@ const Order = () => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {" "}
-            <h3>Add New Order</h3>{" "}
+            <h3>Add New Order</h3>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -597,8 +714,7 @@ const Order = () => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {" "}
-            <h3>Edit Order</h3>{" "}
+            <h3>Edit Order</h3>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -665,7 +781,6 @@ const Order = () => {
               </div>
             </div>
 
-             {/* Added Comments Input for Edit Form */}
             <div className="form-group">
               <label htmlFor="editComments">Comments</label>
               <textarea
@@ -707,7 +822,6 @@ const Order = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         show={showDeleteConfirmModal}
         onHide={() => setShowDeleteConfirmModal(false)}

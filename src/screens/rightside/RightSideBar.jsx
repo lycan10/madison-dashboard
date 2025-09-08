@@ -21,7 +21,7 @@ import RepairSelector from "../../components/repairs/Repairs";
 import PartSelector from "../../components/repairs/Parts";
 import ProgressFilter from "../../components/progressfilter/ProgressFilter";
 import Pagination from "react-bootstrap/Pagination";
-import Order from "./../order/Order";
+import Order from "../order/Order";
 import { useAlternators } from "../../context/AlternatorContext";
 import { useAuth } from "../../context/AuthContext";
 import Cables from "../cables/Cables";
@@ -250,16 +250,7 @@ const RightSideBar = ({ selected }) => {
       ...(searchTerm && { search: searchTerm }),
     };
     fetchAlternators(params);
-  }, [
-    currentPage,
-    selectedStatus,
-    sortBy,
-    sortDirection,
-    itemsPerPage,
-    startDate,
-    endDate,
-    searchTerm,
-  ]);
+  }, [currentPage, selectedStatus, sortBy, sortDirection, itemsPerPage, startDate, endDate, searchTerm]);
 
   useEffect(() => {
     fetchAlternatorCounts();
@@ -301,7 +292,6 @@ const RightSideBar = ({ selected }) => {
       sortBy: sortBy,
       sortDirection: sortDirection,
       ...(searchTerm && { search: searchTerm }),
-      // Do NOT include page or perPage for exports, as we want all data
     };
     await exportAlternators(type, params);
     setShowDownloadModal(false);
@@ -316,15 +306,12 @@ const RightSideBar = ({ selected }) => {
             <Overview />
           </div>
         )}
-        {/* Render Dashboard content if selected */}
         {selected === "Dashboard" && (
           <div className="rightsidebar-bottom">
             <div className="rightsidebar-navbar">
               <h3>Madison Generator – Alternators</h3>
-              {/* Button to open the Add New Alternator modal */}
               <div className="button-group d-flex flex-row">
                 {" "}
-                {/* Added a div for button grouping */}
                 <div
                   className="rightsidebar-button"
                   onClick={handleShowAddModal}
@@ -354,7 +341,6 @@ const RightSideBar = ({ selected }) => {
             </div>
             <div className="rightsidebar-filter">
               <div className="rightsidebar-filter-button">
-                {/* Buttons to switch between table and grid view */}
                 <div
                   className={`custom-filter-button ${
                     viewMode === "table" ? "active" : ""
@@ -395,7 +381,6 @@ const RightSideBar = ({ selected }) => {
               </div>
 
               <div className="rightsidebar-filter-date">
-                {/* Date Range Filter Inputs */}
                 <div className="date-range-picker">
                   <label htmlFor="startDate">Start Date:</label>
                   <input
@@ -432,7 +417,6 @@ const RightSideBar = ({ selected }) => {
 
             <div className="custom-line no-margin"></div>
 
-            {/* Progress status filters */}
             <div className="rightsidebar-filter-progress">
               {statuses.map((status) => (
                 <div
@@ -450,7 +434,6 @@ const RightSideBar = ({ selected }) => {
               ))}
             </div>
 
-            {/* Display loading, error, or alternator data */}
             <div className="rightsidebar-table">
               {loading ? (
                 <p>Loading alternators...</p>
@@ -599,7 +582,7 @@ const RightSideBar = ({ selected }) => {
                                           )
                                           .join(", ");
 
-                                        const maxLength = 35; // adjust this to whatever max character length you want
+                                        const maxLength = 35;
 
                                         return fullText.length > maxLength
                                           ? `${fullText.slice(0, maxLength)}...`
@@ -621,7 +604,6 @@ const RightSideBar = ({ selected }) => {
                         )}
                       </tbody>
                     </table>
-                    {/* Pagination for table view */}
                     <div className="custom-grid-pagination table">
                       <Pagination>
                         <Pagination.First
@@ -632,7 +614,6 @@ const RightSideBar = ({ selected }) => {
                           onClick={() => handlePageChange(currentPage - 1)}
                           disabled={currentPage === 1}
                         />
-                        {/* Render pagination items based on totalPages from backend */}
                         {[...Array(totalPages)].map((_, index) => (
                           <Pagination.Item
                             key={index + 1}
@@ -657,7 +638,6 @@ const RightSideBar = ({ selected }) => {
               ) : (
                 <div className="order-table-container">
                   <div className="gridview-container">
-                    {/* Use displayedAlternators (which is alternatorPaginationData.data) */}
                     {Array.isArray(displayedAlternators) &&
                     displayedAlternators.length === 0 ? (
                       <div className="no-data-message">
@@ -687,7 +667,6 @@ const RightSideBar = ({ selected }) => {
                                       title={item.priority}
                                     />
                                     <div className="custom-grid-edit">
-                                      {/* Edit icon in grid view */}
                                       <HugeiconsIcon
                                         icon={MoreHorizontalIcon}
                                         size={20}
@@ -713,7 +692,6 @@ const RightSideBar = ({ selected }) => {
                               );
                             })}
                         </div>
-                        {/* Pagination for grid view */}
                         <div className="custom-grid-pagination">
                           <Pagination>
                             <Pagination.First
@@ -805,7 +783,6 @@ const RightSideBar = ({ selected }) => {
         )}
       </div>
 
-      {/* Add New Alternator Modal */}
       <Modal
         show={showAddModal}
         onHide={handleCloseAddModal}
@@ -831,7 +808,6 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-            {/* Added Phone Number Input */}
             <div className="form-group">
               <label htmlFor="phoneNumber">Phone Number</label>
               <input
@@ -843,7 +819,6 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-            {/* Added email Input */}
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
@@ -905,14 +880,12 @@ const RightSideBar = ({ selected }) => {
               </select>
             </div>
             <div className="form-group">
-              {/* RepairSelector component */}
               <RepairSelector
                 selectedRepairs={repairs}
                 setSelectedRepairs={setRepairs}
               />
             </div>
             <div className="form-group">
-              {/* PartSelector component */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
             </div>
             <div className="form-group">
@@ -953,7 +926,6 @@ const RightSideBar = ({ selected }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Alternator Info Modal */}
       <Modal
         show={showInfoModal}
         onHide={handleCloseInfoModal}
@@ -973,7 +945,6 @@ const RightSideBar = ({ selected }) => {
                 <strong>Customer Name:</strong>
                 <p>{selectedItem.customerName}</p>
               </div>
-              {/* Display Phone Number in Info Modal */}
               <div className="info-group">
                 <strong>Phone Number:</strong>
                 <p>{selectedItem.phoneNumber}</p>
@@ -1027,7 +998,6 @@ const RightSideBar = ({ selected }) => {
                 </div>
               )}
 
-              {/* Display Created By */}
               {selectedItem.author && (
                 <div className="info-group">
                   <strong>Created By:</strong>
@@ -1035,7 +1005,6 @@ const RightSideBar = ({ selected }) => {
                 </div>
               )}
 
-              {/* Display Alternator History */}
               {selectedItem.history && selectedItem.history.length > 0 && (
                 <div className="info-group">
                   <strong>Alternator History:</strong>
@@ -1071,7 +1040,6 @@ const RightSideBar = ({ selected }) => {
           <button className="btn-secondary" onClick={handleCloseInfoModal}>
             Cancel
           </button>
-          {/* Delete button */}
           {user.name === "admin" && (
             <button
               className="btn-danger"
@@ -1080,7 +1048,6 @@ const RightSideBar = ({ selected }) => {
               Delete
             </button>
           )}
-          {/* Edit button */}
           <button
             className="btn-primary"
             onClick={() => {
@@ -1094,7 +1061,6 @@ const RightSideBar = ({ selected }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Edit Alternator Modal */}
       <Modal
         show={showEditModal}
         onHide={handleCloseEditModal}
@@ -1120,7 +1086,6 @@ const RightSideBar = ({ selected }) => {
                 onChange={handleChange}
               />
             </div>
-            {/* Added Phone Number Input for Edit */}
             <div className="form-group">
               <label htmlFor="editPhoneNumber">Phone Number</label>
               <input
@@ -1133,7 +1098,6 @@ const RightSideBar = ({ selected }) => {
               />
             </div>
 
-            {/* Added Phone Number Input for Edit */}
             <div className="form-group">
               <label htmlFor="editEmail">Email</label>
               <input
@@ -1195,7 +1159,6 @@ const RightSideBar = ({ selected }) => {
               </select>
             </div>
             <div className="form-group">
-              {/* RepairSelector component for editing */}
               <RepairSelector
                 selectedRepairs={repairs}
                 setSelectedRepairs={setRepairs}
@@ -1226,7 +1189,6 @@ const RightSideBar = ({ selected }) => {
               </div>
             </div>
             <div className="form-group">
-              {/* PartSelector component for editing */}
               <PartSelector selectedParts={parts} setSelectedParts={setParts} />
               <div className="selected-parts-list">
                 {Array.isArray(parts) && parts.length > 0 ? (
@@ -1291,7 +1253,6 @@ const RightSideBar = ({ selected }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Download Modal */}
       <Modal
         show={showDownloadModal}
         onHide={() => setShowDownloadModal(false)}

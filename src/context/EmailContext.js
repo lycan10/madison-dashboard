@@ -10,11 +10,9 @@ export const EmailProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  // Use refs to store the latest values without causing re-renders
   const tokenRef = useRef(token);
   const logoutRef = useRef(logout);
   
-  // Update refs when values change
   React.useEffect(() => {
     tokenRef.current = token;
     logoutRef.current = logout;
@@ -132,7 +130,6 @@ export const EmailProvider = ({ children }) => {
         throw new Error("Failed to assign email as a task");
       }
       const result = await response.json();
-      // Update the local email state to reflect the change
       setEmails((prevEmails) =>
         prevEmails.map((email) =>
           email.id === emailId ? { ...email, status: 'assigned', assigned_to_user_id: userId } : email
@@ -146,10 +143,8 @@ export const EmailProvider = ({ children }) => {
   }, []);
 
   const connectGoogleAccount = useCallback(async () => {
-    // You must hardcode the redirect URI here for the Google client to work
     const redirectUri = process.env.REACT_APP_URL;
 
-    // Build the Google OAuth URL
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.readonly&` +
       `access_type=offline&` +
@@ -158,7 +153,6 @@ export const EmailProvider = ({ children }) => {
       `redirect_uri=${redirectUri}&` +
       `client_id=${process.env.REACT_APP_GOOGLE_CLIENT_ID}`;
       
-    // Redirect the user to Google for authorization
     window.location.href = authUrl;
   }, []);
 

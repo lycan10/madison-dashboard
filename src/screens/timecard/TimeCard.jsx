@@ -60,12 +60,11 @@ const TimeCard = () => {
   );
   const itemsPerPage = timeCardPaginationData.per_page || 50;
 
-  // New state for date filter, defaulting to today
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
 
-  const [selectedStatus, setSelectedStatus] = useState("All"); // Keep for admin filter
+  const [selectedStatus, setSelectedStatus] = useState("All");
   const statuses = [
     "All",
     "Active",
@@ -82,7 +81,6 @@ const TimeCard = () => {
   const [timeCardToDelete, setTimeCardToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showDownloadModal, setShowDownloadModal] = useState(false);
-  // New state for clock-out confirmation modal
   const [showClockOutConfirmModal, setShowClockOutConfirmModal] =
     useState(false);
 
@@ -282,7 +280,7 @@ const TimeCard = () => {
 
     let totalWorkingHoursMs = 0;
     let totalBreakDurationMs = 0;
-    const targetWorkingHoursMs = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+    const targetWorkingHoursMs = 8 * 60 * 60 * 1000;
 
     breaks.forEach((b) => {
       const breakStart = b.break_start ? new Date(b.break_start) : null;
@@ -321,7 +319,7 @@ const TimeCard = () => {
       overtime = msToHoursMinutes(netWorkingHoursMs - targetWorkingHoursMs);
     } else if (
       netWorkingHoursMs < targetWorkingHoursMs &&
-      !includeCurrent && // Only show undertime if clocked out
+      !includeCurrent &&
       clockIn &&
       clockOut
     ) {
@@ -427,7 +425,6 @@ const TimeCard = () => {
     transition: "background-color 0.3s ease",
   };
 
-  // Function to handle clock out button click
   const handleClockOutClick = () => {
     if (isClockedIn) {
       setShowClockOutConfirmModal(true);
@@ -436,7 +433,6 @@ const TimeCard = () => {
     }
   };
 
-  // Function to confirm clock out
   const confirmClockOut = async () => {
     await clockOut();
     setShowClockOutConfirmModal(false);
@@ -630,7 +626,7 @@ const TimeCard = () => {
                   <th>Clock In</th>
                   <th>Breaks</th>
                   <th>Working Hours</th>
-                  <th>Overtime</th> {/* New table header */}
+                  <th>Overtime</th>
                   <th>Clock Out</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -655,7 +651,6 @@ const TimeCard = () => {
                     <td>{timeCard.total_break_duration || "0h 0m"}</td>
                     <td>{timeCard.working_hours || "0h 0m"}</td>
                     <td>{timeCard.overtime || "0h 0m"}</td>{" "}
-                    {/* Display overtime */}
                     <td>
                       {timeCard.clock_out
                         ? new Date(timeCard.clock_out).toLocaleTimeString([], {
@@ -979,7 +974,6 @@ const TimeCard = () => {
         </Modal>
       )}
 
-      {/* Clock Out Confirmation Modal */}
       <Modal
         show={showClockOutConfirmModal}
         onHide={() => setShowClockOutConfirmModal(false)}

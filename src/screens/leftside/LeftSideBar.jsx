@@ -29,8 +29,7 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 300);
   const { user, logout } = useAuth();
   const { fetchConversations, totalUnreadCount } = useMessages();
-    const { unreadCount, fetchUnreadCount } = useNotifications();
-  
+  const { unreadCount, fetchUnreadCount } = useNotifications();
 
   useEffect(() => {
     const handleResize = () => {
@@ -45,6 +44,7 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
   }, []);
 
   const handleLinkClick = (linkTitle) => {
+    console.log('LeftSideBar: handleLinkClick called with:', linkTitle);
     onSelect(linkTitle);
     if (isMobile) {
       toggleSidebar();
@@ -56,23 +56,81 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
   }, []);
 
   useEffect(() => {
-      const interval = setInterval(
-        () => {
-          fetchConversations();
-          fetchUnreadCount()
-        },
-        60000
-      );
-      return () => clearInterval(interval);
+    const interval = setInterval(
+      () => {
+        fetchConversations();
+        fetchUnreadCount()
+      },
+      60000
+    );
+    return () => clearInterval(interval);
       
-    }, [fetchConversations, fetchUnreadCount]);
+  }, [fetchConversations, fetchUnreadCount]);
 
-console.log(totalUnreadCount);
+  console.log(totalUnreadCount);
 
   const handleLogout = async () => {
     await logout();
     window.location.reload();
   };
+
+  const navigationItems = [
+    {
+      icon: DashboardSquare01Icon,
+      title: "Overview",
+      componentName: "Overview"
+    },
+    {
+      icon: TractorFreeIcons,
+      title: "Cables",
+      componentName: "Cables"
+    },
+    {
+      icon: WaterEnergyFreeIcons,
+      title: "Hydraulic Hose",
+      componentName: "Hose"
+    },
+    {
+      icon: Tag01FreeIcons,
+      title: "Starters/Alternators",
+      componentName: "Dashboard"
+    },
+    {
+      icon: Task02Icon,
+      title: "Order",
+      componentName: "Order"
+    }
+  ];
+
+  const communicationItems = [
+    {
+      icon: Notification01FreeIcons,
+      title: "Notification",
+      componentName: "Notification",
+      badgeCount: unreadCount
+    },
+    {
+      icon: Mail01Icon,
+      title: "Emails",
+      componentName: "Email"
+    },
+    {
+      icon: Note02Icon,
+      title: "My Tasks",
+      componentName: "MyProject"
+    },
+    {
+      icon: MessageMultiple01Icon,
+      title: "Messages",
+      componentName: "Messages",
+      badgeCount: totalUnreadCount
+    },
+    {
+      icon: UserMultipleIcon,
+      title: "Members",
+      componentName: "Member"
+    }
+  ];
 
   return (
     <div className={`leftSideBar ${collapsed ? "collapsed" : ""}`}>
@@ -90,83 +148,35 @@ console.log(totalUnreadCount);
             </div>
           )}
         </div> 
-        <LeftNavLinks
-          icon={DashboardSquare01Icon}
-          title="Overview"
-          onClick={() => handleLinkClick("Overview")}
-          isSelected={selected === "Overview"}
-          collapsed={collapsed}
-        />
-        <LeftNavLinks
-          icon={TractorFreeIcons}
-          title="Cables"
-          onClick={() => handleLinkClick("Cables")}
-          isSelected={selected === "Cables"}
-          collapsed={collapsed}
-        />
-        <LeftNavLinks
-          icon={WaterEnergyFreeIcons}
-          title="Hydraulic Hose"
-          onClick={() => handleLinkClick("Hose")}
-          isSelected={selected === "Hose"}
-          collapsed={collapsed}
-        />
-        <LeftNavLinks
-          icon={Tag01FreeIcons}
-          title="Starters/Alternators"
-          onClick={() => handleLinkClick("Dashboard")}
-          isSelected={selected === "Dashboard"}
-          collapsed={collapsed}
-        />
-        <LeftNavLinks
-          icon={Task02Icon}
-          title="Order"
-          onClick={() => handleLinkClick("Order")}
-          isSelected={selected === "Order"}
-          collapsed={collapsed}
-        />
-        <div className="vertical-dash"></div>
-        <LeftNavLinks
-          icon={Notification01FreeIcons} 
-          title="Notification"
-          onClick={() => handleLinkClick("Notification")}
-          isSelected={selected === "Notification"}
-          collapsed={collapsed}
-          badgeCount={unreadCount}
-        />
-         <LeftNavLinks
-          icon={Mail01Icon} 
-          title="Emails"
-          onClick={() => handleLinkClick("Email")}
-          isSelected={selected === "Email"}
-          collapsed={collapsed}
-        />
-      
-         <LeftNavLinks
-          icon={Note02Icon} 
-          title="My Tasks"
-          onClick={() => handleLinkClick("MyProject")}
-          isSelected={selected === "MyProject"}
-          collapsed={collapsed}
-        />
 
-        <LeftNavLinks
-          icon={MessageMultiple01Icon} 
-          title="Messages"
-          onClick={() => handleLinkClick("Messages")}
-          isSelected={selected === "Messages"}
-          collapsed={collapsed}
-          badgeCount={totalUnreadCount}
-        />
-       
+        {navigationItems.map((item) => (
           <LeftNavLinks
-          icon={UserMultipleIcon}
-          title="Members"
-          onClick={() => handleLinkClick("Member")}
-          isSelected={selected === "Member"}
-          collapsed={collapsed}
-        />
-            <div className="vertical-dash"></div>
+            key={item.componentName}
+            icon={item.icon}
+            title={item.title}
+            onClick={() => handleLinkClick(item.componentName)}
+            isSelected={selected === item.componentName}
+            collapsed={collapsed}
+            badgeCount={item.badgeCount}
+          />
+        ))}
+
+        <div className="vertical-dash"></div>
+
+        {communicationItems.map((item) => (
+          <LeftNavLinks
+            key={item.componentName}
+            icon={item.icon}
+            title={item.title}
+            onClick={() => handleLinkClick(item.componentName)}
+            isSelected={selected === item.componentName}
+            collapsed={collapsed}
+            badgeCount={item.badgeCount}
+          />
+        ))}
+
+        <div className="vertical-dash"></div>
+
         <LeftNavLinks
           icon={CalendarAdd01FreeIcons}
           title="Time Card"
@@ -174,7 +184,6 @@ console.log(totalUnreadCount);
           isSelected={selected === "TimeCard"}
           collapsed={collapsed}
         />
-      
 
         {user?.name === "admin" && (
           <LeftNavLinks

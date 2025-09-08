@@ -1,9 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
-/* The following line can be included in a src/App.scss */
 @import 'bootstrap/dist/css/bootstrap.min.css';
-
-
-
 
 body {
   margin: 0;

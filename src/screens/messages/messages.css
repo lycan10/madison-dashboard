@@ -143,16 +143,15 @@
    Messages Middle
    =========================== */
 .messages-chat-middle {
-  flex-grow: 1; /* Allows it to take up remaining space */
+  flex-grow: 1;
   padding: 1rem;
   overflow-y: auto;
   scroll-behavior: smooth;
-  display: flex; /* Flex container for messages */
+  display: flex; 
   flex-direction: column;
-  gap: 12px; /* Consistent spacing between bubbles */
+  gap: 12px;
 }
 
-/* Loading More Indicator */
 .loading-more {
   display: flex;
   justify-content: center;
@@ -395,10 +394,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%; /* Make it fill the available space */
+  height: 100%;
   text-align: center;
   padding: 2rem;
-  background-color: #f8f9fa; /* A subtle, light background color */
+  background-color: #f8f9fa;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
@@ -406,19 +405,17 @@
 .messages-placeholder p {
   font-size: 1.25rem;
   font-weight: 500;
-  color: #7f8c8d; /* A muted color for a professional look */
+  color: #7f8c8d;
   margin: 0;
   line-height: 1.5;
 }
 
-/* You may need to adjust the parent flexbox to ensure it takes up the full height */
 .messages-container {
     display: flex;
     gap: 20px;
-    height: calc(100vh - 120px); /* Adjust based on your header/navbar height */
+    height: calc(100vh - 120px);
 }
 
-/* Ensure the messages-chats container has a defined height */
 .messages-chats {
   display: flex;
   flex-direction: column;
@@ -428,10 +425,9 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Ensure the chat middle section is scrollable */
 .messages-chat-middle {
-    flex-grow: 1; /* Allows it to take up all available vertical space */
-    overflow-y: auto; /* Enables scrolling for messages */
+    flex-grow: 1;
+    overflow-y: auto;
     padding: 1rem;
 }
 
@@ -445,7 +441,6 @@
     margin-left: -12px;
 }
 
-/* Unread Messages Header in chat */
 .unread-header {
     display: flex;
     align-items: center;

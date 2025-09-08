@@ -1,4 +1,3 @@
-// src/pages/messages/Messages.jsx
 import React, { useState, useEffect, useRef } from "react";
 import Modal from "react-bootstrap/Modal";
 import "../order/order.css";
@@ -38,7 +37,7 @@ const Messages = () => {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const chatBottomRef = useRef(null);
   const chatContainerRef = useRef(null);
-  const [showMenu, setShowMenu] = useState({}); // State to track which message menu is open
+  const [showMenu, setShowMenu] = useState({});
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const unreadHeaderRef = useRef(null);
   
@@ -70,13 +69,13 @@ const Messages = () => {
   const handleEditClick = (message) => {
     setEditingMessageId(message.id);
     setCurrentMessage(message.content);
-    setShowMenu({}); // Close the menu after clicking
+    setShowMenu({});
   };
 
   const handleDeleteClick = async (messageId) => {
     if (window.confirm("Are you sure you want to delete this message?")) {
       await deleteMessage(messageId);
-      setShowMenu({}); // Close the menu after clicking
+      setShowMenu({});
     }
   };
 
@@ -86,12 +85,11 @@ const Messages = () => {
     }));
   };
 
-  // Handle scroll to load more messages
   const handleScroll = async () => {
     if (!chatContainerRef.current || !currentConversation || !hasMoreMessages || isLoadingMore) return;
     
     const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
-    const scrolledToTop = scrollTop < 100; // Load more when near top
+    const scrolledToTop = scrollTop < 100;
     
     if (scrolledToTop) {
       setIsLoadingMore(true);
@@ -99,7 +97,6 @@ const Messages = () => {
       
       await loadMoreMessages(currentConversation.id, currentConversation.receiver_id);
       
-      // Maintain scroll position after loading
       setTimeout(() => {
         if (chatContainerRef.current) {
           const newScrollHeight = chatContainerRef.current.scrollHeight;
@@ -110,7 +107,6 @@ const Messages = () => {
     }
   };
 
-  // Group messages by date
   const groupMessagesByDate = (messages) => {
     const groups = {};
     let unreadSectionAdded = false;
@@ -161,7 +157,7 @@ const Messages = () => {
     let intervalId;
     if (currentConversation) {
         intervalId = setInterval(() => {
-            fetchMessages(currentConversation.id, currentConversation.receiver_id, true); // true for refresh
+            fetchMessages(currentConversation.id, currentConversation.receiver_id, true);
         }, 3000);
     }
     return () => {
@@ -191,13 +187,11 @@ const Messages = () => {
   const today = new Date();
 
   if (messageDate.toDateString() === today.toDateString()) {
-    // Show time if today
     return messageDate.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     });
   } else {
-    // Show date otherwise (MM/DD/YY)
     return messageDate.toLocaleDateString('en-US', {
       month: '2-digit',
       day: '2-digit',

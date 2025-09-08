@@ -12,9 +12,7 @@
     box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
     border-radius: 0.5rem;
     position: relative;
-    transition: width 0.5s ease;
-    /*width: 300px;*/
-    
+    transition: width 0.5s ease;    
     z-index: 0;
   }
   

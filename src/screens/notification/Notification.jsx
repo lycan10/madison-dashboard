@@ -46,7 +46,6 @@ const Notification = () => {
     }
   }, [loading, hasMore, page]);
 
-  // Use this for the initial display, defaulting to the first notification
   useEffect(() => {
     if (notifications.length > 0 && !selectedNotification) {
       setSelectedNotification(notifications[0]);

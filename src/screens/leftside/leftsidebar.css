@@ -20,8 +20,8 @@
     display: flex;
     align-items: center;
     margin-bottom: 1rem;
-    white-space: nowrap; /* Prevents text from wrapping */
-    overflow: hidden;     /* Hides overflow if needed */
+    white-space: nowrap; 
+    overflow: hidden; 
   }
 .leftSideBar-logo{
     width: 25px;

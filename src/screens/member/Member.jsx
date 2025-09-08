@@ -28,7 +28,6 @@ const Members = () => {
   const [showMenu, setShowMenu] = useState({});
   const [formData, setFormData] = useState(initialFormData);
 
-  // Refs to file inputs so we can clear them after submission
   const createFileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
 
@@ -40,7 +39,6 @@ const Members = () => {
     const { name, value, files } = e.target;
 
     if (files && files.length > 0) {
-      // store File object in state
       setFormData((prev) => ({ ...prev, [name]: files[0] }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -50,14 +48,14 @@ const Members = () => {
   const resetCreateForm = () => {
     setFormData(initialFormData);
     if (createFileInputRef.current) {
-      createFileInputRef.current.value = ""; // clear file input UI
+      createFileInputRef.current.value = "";
     }
   };
 
   const resetEditForm = () => {
     setFormData(initialFormData);
     if (editFileInputRef.current) {
-      editFileInputRef.current.value = ""; // clear file input UI
+      editFileInputRef.current.value = "";
     }
     setCurrentMember(null);
   };
@@ -67,7 +65,6 @@ const Members = () => {
 
     const form = new FormData();
 
-    // append only if value exists; append file only if it's a File
     for (const key in formData) {
       const val = formData[key];
       if (val === null || val === "") continue;
@@ -82,12 +79,11 @@ const Members = () => {
     }
 
     try {
-      await createMember(form); // ensure createMember doesn't set Content-Type manually
+      await createMember(form);
       resetCreateForm();
       setShowCreateModal(false);
     } catch (err) {
       console.error("Create member failed", err);
-      // keep form so user can correct
     }
   };
 
@@ -100,9 +96,8 @@ const Members = () => {
       email: member.email || "",
       password: "",
       role: member.role || "staff",
-      profile_picture: null, // leave file state empty until user picks a new file
+      profile_picture: null,
     });
-    // clear any leftover file input UI
     if (editFileInputRef.current) editFileInputRef.current.value = "";
     setShowEditModal(true);
     setShowMenu({});
@@ -115,7 +110,6 @@ const Members = () => {
 
     const form = new FormData();
 
-    // only append fields that have values; append profile_picture only if a File
     for (const key in formData) {
       const val = formData[key];
       if (val === null || val === "") continue;
@@ -125,7 +119,6 @@ const Members = () => {
           form.append("profile_picture", val);
         }
       } else {
-        // if password is empty we skip it (user doesn't want to change password)
         form.append(key, val);
       }
     }
@@ -141,14 +134,12 @@ const Members = () => {
     }
   };
 
-  // ... other handlers (delete/ban/unban/etc) remain unchanged, except ensure they reset state/showMenu as you had
-
   return (
     <div className="members-page">
       <div className="members-header">
         <h3>Members</h3>
         {user?.role === "admin" && (
-          <div className="rightsidebar-button" onClick={() => setShowCreateModal(true)}>
+          <div className="rightsidebar-button " onClick={() => setShowCreateModal(true)}>
             <HugeiconsIcon icon={Add01Icon} size={16} color="#ffffff" strokeWidth={3} />
             <p>Create Member</p>
           </div>
@@ -213,7 +204,6 @@ const Members = () => {
         )}
       </div>
 
-      {/* Create Modal */}
       <Modal show={showCreateModal} onHide={() => { setShowCreateModal(false); resetCreateForm(); }} centered>
         <Modal.Header closeButton>
           <Modal.Title>Create New Member</Modal.Title>
@@ -254,7 +244,6 @@ const Members = () => {
         </Modal.Body>
       </Modal>
 
-      {/* Edit Modal */}
       <Modal show={showEditModal} onHide={() => { setShowEditModal(false); resetEditForm(); }} centered>
         <Modal.Header closeButton>
           <Modal.Title>Edit Member</Modal.Title>

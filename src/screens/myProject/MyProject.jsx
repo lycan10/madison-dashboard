@@ -75,7 +75,9 @@ const MyProject = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState(null);
+    const [selectedTask, setSelectedTask] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [users, setUsers] = useState([]);
     
@@ -112,6 +114,12 @@ const MyProject = () => {
             fetchUsers().then(setUsers);
         }
         setShowEditModal(true);
+    };
+
+    const handleShowDetailsModal = () => setShowDetailsModal(true);
+    const handleCloseDetailsModal = () => {
+        setShowDetailsModal(false);
+        setSelectedTask(null);
     };
 
     const resetTaskFormData = () => {
@@ -170,6 +178,11 @@ const MyProject = () => {
         if (success) {
             console.log(`Task with ID ${id} deleted successfully.`);
         }
+    };
+
+    const handleRowClick = (task) => {
+        setSelectedTask(task);
+        handleShowDetailsModal();
     };
 
     const totalPages = taskPaginationData.last_page;
@@ -239,7 +252,6 @@ const MyProject = () => {
                 </div>
             </div>
 
-            {/* Search Input */}
             <div className="search-input-container">
                 <HugeiconsIcon icon={Search01Icon} size={16} color="#545454" />
                 <input
@@ -253,7 +265,6 @@ const MyProject = () => {
 
             <div className="custom-line no-margin"></div>
 
-            {/* Status Filters */}
             <div className="rightsidebar-filter-progress">
                 {statuses.map((status) => (
                     <div
@@ -271,7 +282,6 @@ const MyProject = () => {
                 ))}
             </div>
 
-            {/* Task Table */}
             {loading ? (
                 <p>Loading tasks...</p>
             ) : error ? (
@@ -322,7 +332,11 @@ const MyProject = () => {
                                     const { color, bgColor } = getStatusStyles(task.status);
                                     const { icon: priorityIcon, ...priorityStyles } = getPriorityStyles(task.priority);
                                     return (
-                                        <tr key={task.id}>
+                                        <tr 
+                                            key={task.id}
+                                            onClick={() => handleRowClick(task)}
+                                            style={{ cursor: "pointer" }}
+                                        >
                                             <td>{task.id}</td>
                                             <td>{task.task_name.length > 20 ? task.task_name.slice(0, 20) + "..." : task.task_name}</td>
                                             <td dangerouslySetInnerHTML={{ __html: task.description.length > 20 ? task.description.slice(0, 20) + "..." : task.description }}></td>
@@ -388,7 +402,147 @@ const MyProject = () => {
                 </Pagination>
             </div>
 
-            {/* Add Task Modal */}
+            <Modal
+                show={showDetailsModal}
+                onHide={handleCloseDetailsModal}
+                backdrop="static"
+                keyboard={false}
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <h3>Task Details</h3>
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedTask && (
+                        <>
+                            <div className="info-group">
+                                <strong>Task ID:</strong>
+                                <p>{selectedTask.id}</p>
+                            </div>
+                            <div className="info-group">
+                                <strong>Task Name:</strong>
+                                <p>{selectedTask.task_name}</p>
+                            </div>
+                            <div className="info-group">
+                                <strong>Description:</strong>
+                                <div dangerouslySetInnerHTML={{ __html: selectedTask.description }}></div>
+                            </div>
+                            <div className="info-group">
+                                <strong>Start Date:</strong>
+                                <p>
+                                    {selectedTask.start_date
+                                        ? new Date(selectedTask.start_date).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })
+                                        : 'N/A'
+                                    }
+                                </p>
+                            </div>
+                            <div className="info-group">
+                                <strong>Deadline Date:</strong>
+                                <p>
+                                    {selectedTask.deadline_date
+                                        ? new Date(selectedTask.deadline_date).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })
+                                        : 'N/A'
+                                    }
+                                </p>
+                            </div>
+                            <div className="info-group">
+                                <strong>Priority:</strong>
+                                <p>{selectedTask.priority}</p>
+                            </div>
+                            <div className="info-group">
+                                <strong>Status:</strong>
+                                <p>{selectedTask.status}</p>
+                            </div>
+                            {selectedTask.assigned_user && (
+                                <div className="info-group">
+                                    <strong>Assigned To:</strong>
+                                    <p>{selectedTask.assigned_user.name}</p>
+                                </div>
+                            )}
+                            {selectedTask.created_by && (
+                                <div className="info-group">
+                                    <strong>Created By:</strong>
+                                    <p>{selectedTask.created_by.name}</p>
+                                </div>
+                            )}
+                            <div className="info-group">
+                                <strong>Created Date:</strong>
+                                <p>
+                                    {selectedTask.created_at
+                                        ? new Date(selectedTask.created_at).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })
+                                        : 'N/A'
+                                    }
+                                </p>
+                            </div>
+                            {selectedTask.updated_at && selectedTask.updated_at !== selectedTask.created_at && (
+                                <div className="info-group">
+                                    <strong>Last Updated:</strong>
+                                    <p>
+                                        {selectedTask.updated_at
+                                        ? new Date(selectedTask.updated_at).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })
+                                        : 'N/A'
+                                    }
+                                    </p>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <div className="flex gap-2 d-flex">
+                        <button className="btn-secondary" onClick={handleCloseDetailsModal}>
+                            Close
+                        </button>
+                        {(authUser?.role === 'admin' || selectedTask?.user_id === authUser?.id) && (
+                            <button
+                                className="btn-danger"
+                                onClick={() => {
+                                    handleCloseDetailsModal();
+                                    promptDeleteConfirmation(selectedTask);
+                                }}
+                            >
+                                Delete
+                            </button>
+                        )}
+                        <button
+                            className="btn-primary"
+                            onClick={() => {
+                                handleCloseDetailsModal();
+                                handleEditClick(selectedTask);
+                            }}
+                        >
+                            Edit
+                        </button>
+                    </div>
+                </Modal.Footer>
+            </Modal>
+
             <Modal show={showAddModal} onHide={handleCloseAddModal} backdrop="static" keyboard={false} centered>
                 <Modal.Header closeButton>
                     <Modal.Title><h3>Add New Task</h3></Modal.Title>
@@ -451,7 +605,6 @@ const MyProject = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Edit Task Modal */}
             <Modal show={showEditModal} onHide={handleCloseEditModal} backdrop="static" keyboard={false} centered>
                 <Modal.Header closeButton>
                     <Modal.Title><h3>Edit Task</h3></Modal.Title>
@@ -514,7 +667,6 @@ const MyProject = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Delete Confirmation Modal */}
             <Modal show={showDeleteConfirmModal} onHide={() => setShowDeleteConfirmModal(false)} backdrop="static" keyboard={false} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Confirm Delete</Modal.Title>
