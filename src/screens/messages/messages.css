@@ -7,6 +7,7 @@
   column-gap: 1.5rem;
   row-gap: 2rem;
   margin-top: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .message-margin {
@@ -16,10 +17,10 @@
 .messages-list-container {
   border: 1px solid rgb(236, 235, 235);
   border-radius: 1rem;
-  padding: 0.6rem;
-  max-height: 660px;
+  padding: 1.2rem 1rem;
   overflow-y: auto;
   scroll-behavior: smooth;
+  width: 275px;
 }
 
 .message-button {
@@ -40,8 +41,13 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 0.5px solid rgb(236, 235, 235);
+  padding: 1rem 0;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  border-radius: 10px;
+  margin-top: 1rem;
+
+
 }
 .messages-pinned-container:hover {
   background-color: #f9f9f9;
@@ -55,6 +61,7 @@
   color: var(--text-color2);
   font-size: 11px;
   font-weight: 800;
+  width: 125px;
 }
 
 .messages-pinned {
@@ -117,7 +124,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 79vh;
+  height: 100%;
   background: #fff;
 }
 .messages-chats-top {
@@ -230,7 +237,8 @@
 }
 .main-user p {
   background: var(--background-color);
-  color: #252525;
+  color: white;
+  font-weight: 600;
 }
 .message-chat-user p {
   border-bottom-left-radius: 1px;
@@ -461,319 +469,4 @@
     text-transform: uppercase;
     font-weight: bold;
     white-space: nowrap;
-}
-
-
-
-
-
-
-
-
-
-
-
-/* Add these styles to your messages.css file */
-
-/* Conversation type badges */
-.conversation-type-badge {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  background: white;
-  border-radius: 50%;
-  padding: 2px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.messages-pinned-image {
-  position: relative;
-}
-
-/* Participants count styling */
-.participants-count {
-  color: #666;
-  font-size: 0.8em;
-  margin-left: 8px;
-}
-
-.group-description {
-  font-size: 0.9em;
-  color: #666;
-  margin: 0;
-  font-style: italic;
-}
-
-/* Group chat placeholder actions */
-.messages-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  text-align: center;
-}
-
-.placeholder-actions {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 200px;
-}
-
-.placeholder-actions button {
-  padding: 10px 20px;
-  border-radius: 5px;
-  border: none;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.placeholder-actions .btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.placeholder-actions .btn-success {
-  background-color: #28a745;
-  color: white;
-}
-
-.placeholder-actions .btn-info {
-  background-color: #17a2b8;
-  color: white;
-}
-
-.placeholder-actions button:hover {
-  opacity: 0.8;
-  transform: translateY(-1px);
-}
-
-/* Chat type selector */
-.chat-type-selector {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.chat-type-selector button {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.chat-type-selector button.btn-primary,
-.chat-type-selector button.btn-success {
-  color: white;
-}
-
-.chat-type-selector button.btn-outline-primary {
-  color: #007bff;
-  border-color: #007bff;
-}
-
-.chat-type-selector button.btn-outline-success {
-  color: #28a745;
-  border-color: #28a745;
-}
-
-/* Participants selection */
-.participants-selection {
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 10px;
-}
-
-.participant-option {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-bottom: 5px;
-}
-
-.participant-option:hover {
-  background-color: #f8f9fa;
-}
-
-.participant-option.selected {
-  background-color: #e3f2fd;
-  border: 1px solid #2196F3;
-}
-
-.participant-option input[type="checkbox"] {
-  margin-right: 10px;
-}
-
-.participant-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  margin-right: 10px;
-  object-fit: cover;
-}
-
-.participant-option span {
-  flex-grow: 1;
-}
-
-/* Group info sections */
-.group-info-section {
-  margin-bottom: 20px;
-}
-
-.group-info-section h5 {
-  color: #333;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.participants-list {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.participant-item {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-  gap: 10px;
-}
-
-.participant-item:last-child {
-  border-bottom: none;
-}
-
-.participant-item span {
-  font-weight: 500;
-  flex-grow: 1;
-}
-
-.joined-date {
-  color: #666;
-  font-size: 0.8em;
-}
-
-/* Group actions */
-.group-actions {
-  display: flex;
-  justify-content: flex-start;
-  gap: 10px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-.group-actions button {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  border-radius: 5px;
-  border: 1px solid;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.group-actions .btn-outline-warning {
-  color: #ffc107;
-  border-color: #ffc107;
-}
-
-.group-actions .btn-outline-danger {
-  color: #dc3545;
-  border-color: #dc3545;
-}
-
-.group-actions button:hover {
-  opacity: 0.8;
-}
-
-.read-count {
-  color: #4CAF50;
-  font-size: 0.7em;
-  margin-left: 8px;
-  font-weight: 600;
-}
-
-.message-pinned-texts h1 {
-  font-size: 0.8em;
-  font-weight: 600;
-  margin: 0;
-}
-
-.messages-pinned-container {
-  transition: background-color 0.2s;
-}
-
-.messages-pinned-container:hover {
-  background-color: #f8f9fa !important;
-}
-
-
-@media (max-width: 768px) {
-  .placeholder-actions {
-    width: 100%;
-  }
-  
-  .chat-type-selector {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .group-actions {
-    flex-direction: column;
-  }
-  
-  .participant-item {
-    flex-wrap: wrap;
-  }
-  
-  .joined-date {
-    width: 100%;
-    margin-top: 5px;
-  }
-}
-
-.loading-participants {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-}
-
-.rightsidebar-navbar .d-flex {
-  gap: 10px;
-}
-
-.rightsidebar-button.message-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9em;
-}
-
-.rightsidebar-button.message-button:hover {
-  transform: translateY(-1px);
-}
-
-.rightsidebar-button.message-button p {
-  margin: 0;
-  font-weight: 500;
 }

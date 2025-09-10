@@ -54,7 +54,7 @@ align-items: center;
         border-radius: 0.5rem;
         position: relative;
         transition: width 0.5s ease;
-        width: 180px;
+        width: 220px;
         
         z-index: 0;
       }
@@ -71,7 +71,7 @@ align-items: center;
         border-radius: 0.5rem;
         position: relative;
         transition: width 0.5s ease;
-        width: 150px;
+        width: 200px;
         
         z-index: 2;
         position: absolute;

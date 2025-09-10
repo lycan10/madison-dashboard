@@ -87,3 +87,13 @@
     border-radius: 20px;
     margin-left: -12px;
 }
+
+@media screen and (max-width: 1200px) {
+  .leftSideBar{
+ 
+  }
+  .leftSideBar-container{
+      padding: 1rem;
+    
+  }
+}

@@ -19,7 +19,8 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 1200px; /* Adjust as per your layout */
+ /* Adjust as per your layout */
+
 }
 
 /* Date Section Styles */
@@ -55,7 +56,8 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    position: relative; /* Absolutely crucial for positioning the dropdown relative to this section */
+    position: relative;
+   padding-right: 1rem;
 }
 
 /* Profile Picture Container - This is the clickable element in Navbar.jsx */
