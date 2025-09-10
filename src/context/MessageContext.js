@@ -13,6 +13,10 @@ export const MessageProvider = ({ children }) => {
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+  
+  const [globalGroupChat, setGlobalGroupChat] = useState(null);
+  const [participants, setParticipants] = useState([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
 
   const messagesPerPage = 20;
 
@@ -46,6 +50,12 @@ export const MessageProvider = ({ children }) => {
       setConversations(data);
       const total = data.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
       setTotalUnreadCount(total);
+      
+      // Find global group chat if it exists
+      const globalChat = data.find(conv => conv.type === 'group' && conv.is_global);
+      if (globalChat) {
+        setGlobalGroupChat(globalChat);
+      }
     } catch (err) {
       console.error("Fetch conversations error:", err);
       setError(err.message);
@@ -133,18 +143,16 @@ export const MessageProvider = ({ children }) => {
             }
         );
 
-        // Optimistically update the UI after a successful call
         setConversations(prev => prev.map(conv =>
             conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
         ));
 
-        // Recalculate total unread count
         setTotalUnreadCount(prev => prev - (conversations.find(c => c.id === conversationId)?.unread_count || 0));
 
     } catch (err) {
         console.error("Mark as read error:", err);
     }
-}, [token, conversations]);
+  }, [token, conversations]);
 
   const loadMoreMessages = useCallback(async (conversationId, receiverId) => {
     if (!token || !conversationId || !hasMoreMessages) return;
@@ -169,7 +177,6 @@ export const MessageProvider = ({ children }) => {
 
       const data = await response.json();
       
-      // Reverse and prepend older messages to the beginning
       const olderMessages = [...data.data].reverse();
       setMessages(prev => [...olderMessages, ...prev]);
       setCurrentPage(nextPage);
@@ -304,16 +311,239 @@ export const MessageProvider = ({ children }) => {
     }
   }, [token]);
 
+  const fetchGlobalGroupChat = useCallback(async () => {
+    if (!token) return null;
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/conversations/global-group`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch global group chat");
+      const globalChat = await response.json();
+      setGlobalGroupChat(globalChat);
+      
+      setConversations(prev => {
+        const exists = prev.some(conv => conv.id === globalChat.id);
+        return exists ? prev : [globalChat, ...prev];
+      });
+      
+      return globalChat;
+    } catch (error) {
+      console.error("Error fetching global group chat:", error);
+      return null;
+    }
+  }, [token]);
+
+  const createCustomGroupChat = useCallback(async (name, description, participantIds) => {
+    if (!token) return null;
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/conversations/group`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name,
+            description,
+            participant_ids: participantIds,
+          }),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to create group chat");
+      const newGroupChat = await response.json();
+      
+      setConversations(prev => [newGroupChat, ...prev]);
+      return newGroupChat;
+    } catch (error) {
+      console.error("Error creating group chat:", error);
+      return null;
+    }
+  }, [token]);
+
+  const fetchGroupParticipants = useCallback(async (conversationId) => {
+    if (!token || !conversationId) return [];
+    setLoadingParticipants(true);
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/conversations/${conversationId}/participants`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch participants");
+      const participantsData = await response.json();
+      setParticipants(participantsData);
+      return participantsData;
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+      return [];
+    } finally {
+      setLoadingParticipants(false);
+    }
+  }, [token]);
+
+  const addParticipants = useCallback(async (conversationId, userIds) => {
+    if (!token) return false;
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/conversations/${conversationId}/participants`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ user_ids: userIds }),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to add participants");
+      
+      fetchGroupParticipants(conversationId);
+      return true;
+    } catch (error) {
+      console.error("Error adding participants:", error);
+      return false;
+    }
+  }, [token, fetchGroupParticipants]);
+
+  const removeParticipant = useCallback(async (conversationId, userId) => {
+    if (!token) return false;
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/conversations/${conversationId}/participants/${userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to remove participant");
+      
+      fetchGroupParticipants(conversationId);
+      return true;
+    } catch (error) {
+      console.error("Error removing participant:", error);
+      return false;
+    }
+  }, [token, fetchGroupParticipants]);
+
+  const leaveGroup = useCallback(async (conversationId) => {
+    if (!token) return false;
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/conversations/${conversationId}/leave`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to leave group");
+      
+      setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+      
+      if (currentConversation?.id === conversationId) {
+        setCurrentConversation(null);
+        setMessages([]);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      return false;
+    }
+  }, [token, currentConversation]);
+
+  const joinGroup = useCallback(async (conversationId) => {
+    if (!token) return false;
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/conversations/${conversationId}/join`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to join group");
+      return true;
+    } catch (error) {
+      console.error("Error joining group:", error);
+      return false;
+    }
+  }, [token]);
+
+  const updateGroupInfo = useCallback(async (conversationId, name, description) => {
+    if (!token) return false;
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/conversations/${conversationId}/info`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name, description }),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to update group info");
+      
+      const updatedGroup = await response.json();
+      
+      setConversations(prev => prev.map(conv => 
+        conv.id === conversationId 
+          ? { ...conv, name: updatedGroup.conversation.name, description: updatedGroup.conversation.description }
+          : conv
+      ));
+      
+      if (currentConversation?.id === conversationId) {
+        setCurrentConversation(prev => ({ 
+          ...prev, 
+          name: updatedGroup.conversation.name, 
+          description: updatedGroup.conversation.description 
+        }));
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating group info:", error);
+      return false;
+    }
+  }, [token, currentConversation]);
+
   return (
     <MessageContext.Provider
       value={{
         conversations,
         messages,
+        setMessages,
         currentConversation,
+        setCurrentConversation,
         loading,
         error,
         user,
         hasMoreMessages,
+        totalUnreadCount,
+        globalGroupChat,
+        participants,
+        loadingParticipants,
         fetchConversations,
         fetchMessages,
         loadMoreMessages,
@@ -322,8 +552,15 @@ export const MessageProvider = ({ children }) => {
         deleteMessage,
         fetchAllUsers,
         createDirectConversation,
-        totalUnreadCount,
-        markMessagesAsRead
+        markMessagesAsRead,
+        fetchGlobalGroupChat,
+        createCustomGroupChat,
+        fetchGroupParticipants,
+        addParticipants,
+        removeParticipant,
+        leaveGroup,
+        joinGroup,
+        updateGroupInfo,
       }}
     >
       {children}
