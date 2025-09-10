@@ -123,7 +123,7 @@ export const TimeCardProvider = ({ children }) => {
     setError(null);
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL}/api/timecard/today`,
+        `${process.env.REACT_APP_BASE_URL}/api/timecards/today`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

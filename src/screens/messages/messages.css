@@ -41,7 +41,7 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 0.5px solid rgb(236, 235, 235);
-  padding: 1rem 0.5rem;
+  padding: 1rem 0;
   cursor: pointer;
   transition: background-color 0.2s ease;
   border-radius: 10px;
@@ -70,6 +70,7 @@
   justify-content: flex-start;
   align-items: flex-start;
   width: 100%;
+  padding: 0.6rem;
 }
 
 .messages-pinned-image {
@@ -97,7 +98,7 @@
 .message-pinned-texts p {
   font-family: var(--font-family);
   color: var(--text-color2);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
   max-width: 100%;
 }
@@ -105,7 +106,6 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  align-items: center;
   width: 100% !important;
 }
 .message-pinned-texts-title p {
@@ -248,9 +248,9 @@
   border-bottom-right-radius: 1px;
 }
 
-/* Time */
+
 .message-time {
-  font-size: 11px;
+  font-size: 8px !important;
   color: #65676b;
   margin-top: 4px;
   padding-left: 4px;
@@ -446,6 +446,7 @@
     padding: 2px 6px;
     border-radius: 20px;
     margin-left: -12px;
+    z-index: 99999999999;
 }
 
 .unread-header {
@@ -468,39 +469,4 @@
     text-transform: uppercase;
     font-weight: bold;
     white-space: nowrap;
-}
-
-@media screen and (max-width: 960px) {
-  .rightsidebar-button {
-    display: flex;
-    flex-direction: row !important;
-    justify-content: center !important;
-    align-items: center !important;
-  }
-}
-@media screen and (max-width: 500px) {
-  .messages-container {
-    display: flex;
-    flex-direction: column;
-    column-gap: 1.5rem;
-    row-gap: 1rem;
-    margin-top: 1.25rem;
-    margin-bottom: 1rem;
-  }
-  .messages-list-container {
-    border: 1px solid rgb(236, 235, 235);
-    border-radius: 1rem;
-    padding: 1rem 1rem;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-    width: 100%;
-    height: 200px !important;
-
-    min-height: 200px;       /* Prevent collapse */
-    flex-shrink: 0;          /* Prevent flexbox from shrinking it */
-    display: block; 
-  }
-  .messages-list-pinned{
-    height: 200px !important;
-  }
 }
