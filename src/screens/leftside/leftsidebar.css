@@ -2,6 +2,9 @@
 }
 .leftSideBar-container{
     padding: 1rem;
+    overflow: auto; 
+    scroll-behavior: smooth;
+    height: 90vh; 
 }
 
 .vertical-dash{
