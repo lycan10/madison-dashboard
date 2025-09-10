@@ -7,6 +7,7 @@
   column-gap: 1.5rem;
   row-gap: 2rem;
   margin-top: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .message-margin {
@@ -16,10 +17,10 @@
 .messages-list-container {
   border: 1px solid rgb(236, 235, 235);
   border-radius: 1rem;
-  padding: 1.2rem;
-  max-height: 660px;
+  padding: 1.2rem 1rem;
   overflow-y: auto;
   scroll-behavior: smooth;
+  width: 275px;
 }
 
 .message-button {
@@ -40,9 +41,13 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 0.5px solid rgb(236, 235, 235);
-  padding: 1rem 0;
+  padding: 1rem 0.5rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  border-radius: 10px;
+  margin-top: 1rem;
+
+
 }
 .messages-pinned-container:hover {
   background-color: #f9f9f9;
@@ -56,6 +61,7 @@
   color: var(--text-color2);
   font-size: 11px;
   font-weight: 800;
+  width: 125px;
 }
 
 .messages-pinned {
@@ -118,7 +124,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 79vh;
+  height: 100%;
   background: #fff;
 }
 .messages-chats-top {
@@ -231,7 +237,8 @@
 }
 .main-user p {
   background: var(--background-color);
-  color: #252525;
+  color: white;
+  font-weight: 600;
 }
 .message-chat-user p {
   border-bottom-left-radius: 1px;
@@ -461,4 +468,13 @@
     text-transform: uppercase;
     font-weight: bold;
     white-space: nowrap;
+}
+
+@media screen and (max-width: 960px) {
+  .rightsidebar-button {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
 }
