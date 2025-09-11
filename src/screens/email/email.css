@@ -418,6 +418,7 @@
 @media (max-width: 768px) {
     .email-main-content {
         flex-direction: column;
+        background-color: red;
     }
     
     .email-list-container {

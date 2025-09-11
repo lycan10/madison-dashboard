@@ -207,6 +207,7 @@ const Cables = ({ selected }) => {
 
   const displayedCables = cables;
   const totalPages = cablePaginationData.last_page || 1;
+  console.log(displayedCables)
 
   const handlePageChange = (pageNumber) => {
     setCurrentCablePage(pageNumber);
