@@ -25,6 +25,7 @@ const Email = () => {
     const [isMobileView, setIsMobileView] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [sourceFilter, setSourceFilter] = useState("all");
+    const [showMobileDetail, setShowMobileDetail] = useState(false);
 
     const [imapCredentials, setImapCredentials] = useState({
         imap_host: "",
@@ -32,17 +33,24 @@ const Email = () => {
         imap_username: "",
         imap_password: "",
         imap_encryption: "ssl",
+        
     });
 
     useEffect(() => {
         const handleResize = () => {
-            setIsMobileView(window.innerWidth <= 768);
+            const wasMobile = isMobileView;
+            const nowMobile = window.innerWidth <= 768;
+            setIsMobileView(nowMobile);
+            
+            if (wasMobile && !nowMobile) {
+                setShowMobileDetail(false);
+            }
         };
         
         handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [isMobileView]);
     
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -75,21 +83,19 @@ const Email = () => {
         }
     }, [hasInitialLoad, user?.role, fetchEmails, fetchMembers]);
 
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            fetchEmails(1, searchTerm, sourceFilter);
+        }, 500);
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-        fetchEmails(1, searchTerm, sourceFilter);
-    }, 500);
-
-    return () => clearTimeout(delayDebounce);
+        return () => clearTimeout(delayDebounce);
     }, [searchTerm, sourceFilter, fetchEmails]);
 
-
     useEffect(() => {
-        if (emails.length > 0 && !selectedEmail) {
+        if (emails.length > 0 && !selectedEmail && !isMobileView) {
             setSelectedEmail(emails[0]);
         }
-    }, [emails, selectedEmail]);
+    }, [emails, selectedEmail, isMobileView]);
 
     const handleScroll = useCallback(() => {
         if (
@@ -137,10 +143,18 @@ const Email = () => {
         console.log(email)
         const name = getAssignedMemberName(Number(email.assigned_to_user_id));
         setAssigneeName(name);
+        
+        if (isMobileView) {
+            setShowMobileDetail(true);
+        }
     };
 
     const handleBackToList = () => {
-        setSelectedEmail(null);
+        if (isMobileView) {
+            setShowMobileDetail(false);
+        } else {
+            setSelectedEmail(null);
+        }
     };
 
     const handleAssignClick = async () => {
@@ -196,6 +210,29 @@ const Email = () => {
                         <HugeiconsIcon icon={MailIcon} size={24} color="#3498db" />
                         Emails ({pagination.total || 0})
                     </h2>
+
+                    <div className="email-filter">
+                        <input
+                            type="text"
+                            className="email-search-input"
+                            placeholder="Search emails..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <select 
+                            className="source-filter-dropdown"
+                            value={sourceFilter}
+                            onChange={(e) => setSourceFilter(e.target.value)}
+                            style={{
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                            }}
+                        >
+                            <option value="all">All Sources</option>
+                            <option value="gmail">Gmail</option>
+                            <option value="imap">Others</option>
+                        </select>
+                    </div>
                     
                     {user?.role === 'admin' && (
                         <div className="email-buttons">
@@ -216,34 +253,8 @@ const Email = () => {
                 </div>
             </div>
 
-            <div className={`email-main-content ${isMobileView && selectedEmail ? 'mobile-hide' : ''}`}>
-                <div className={`email-list-container ${isMobileView && selectedEmail ? 'mobile-hide' : ''}`}>
-                    <div className="email-list-header">
-                        <input
-                            type="text"
-                            className="email-search-input"
-                            placeholder="Search emails..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <select 
-                            className="source-filter-dropdown"
-                            value={sourceFilter}
-                            onChange={(e) => setSourceFilter(e.target.value)}
-                            style={{
-                                padding: '8px 12px',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                marginRight: '12px',
-                            }}
-                        >
-                            <option value="all">All Sources</option>
-                            <option value="gmail">Gmail</option>
-                            <option value="imap">Others</option>
-                        </select>
-                    </div>
-
-                    
+            <div className={`email-main-content ${isMobileView && showMobileDetail ? 'mobile-show-detail' : ''}`}>
+                <div className={`email-list-container ${isMobileView && showMobileDetail ? 'mobile-hide' : ''}`}>
                     <div 
                         ref={emailListRef}
                         className="email-list"
@@ -300,7 +311,7 @@ const Email = () => {
                     </div>
                 </div>
 
-                <div className={`email-detail-container ${isMobileView && selectedEmail ? 'mobile-show' : ''}`}>
+                <div className={`email-detail-container ${isMobileView && !showMobileDetail ? 'mobile-hide-detail' : ''}`}>
                     {selectedEmail ? (
                         <>
                             <div className="email-detail-header">
@@ -309,7 +320,7 @@ const Email = () => {
                                         {isMobileView && (
                                             <button
                                                 onClick={handleBackToList}
-                                                className="btn-options"
+                                                className="btn-options mobile-back-btn"
                                             >
                                                 <HugeiconsIcon icon={ArrowLeftIcon} size={20} />
                                             </button>
@@ -339,9 +350,6 @@ const Email = () => {
                                                 {isMobileView ? '' : 'Assign Task'}
                                             </button>
                                         )}
-                                        {/*<button className="btn-options">
-                                            <HugeiconsIcon icon={MoreVerticalIcon} size={20} />
-                                        </button>*/}
                                     </div>
                                 </div>
                                 

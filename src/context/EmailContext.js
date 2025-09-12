@@ -143,18 +143,19 @@ export const EmailProvider = ({ children }) => {
   }, []);
 
   const connectGoogleAccount = useCallback(async () => {
-    const redirectUri = process.env.REACT_APP_URL;
+  const redirectUri = process.env.REACT_APP_URL;
 
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.readonly&` +
-      `access_type=offline&` +
-      `include_granted_scopes=true&` +
-      `response_type=code&` +
-      `redirect_uri=${redirectUri}&` +
-      `client_id=${process.env.REACT_APP_GOOGLE_CLIENT_ID}`;
-      
-    window.location.href = authUrl;
-  }, []);
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.readonly&` +
+    `access_type=offline&` +
+    `prompt=consent&` + 
+    `include_granted_scopes=true&` +
+    `response_type=code&` +
+    `redirect_uri=${redirectUri}&` +
+    `client_id=${process.env.REACT_APP_GOOGLE_CLIENT_ID}`;
+    
+  window.location.href = authUrl;
+}, []);
 
   const exchangeGoogleCode = useCallback(async (code) => {
     try {
