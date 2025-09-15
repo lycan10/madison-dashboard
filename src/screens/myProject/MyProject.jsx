@@ -340,8 +340,8 @@ const MyProject = () => {
                                             <td>{task.id}</td>
                                             <td>{task.task_name.length > 20 ? task.task_name.slice(0, 20) + "..." : task.task_name}</td>
                                             <td dangerouslySetInnerHTML={{ __html: task.description.length > 20 ? task.description.slice(0, 20) + "..." : task.description }}></td>
-                                            <td>{task.start_date}</td>
-                                            <td>{task.deadline_date}</td>
+                                            <td>{task.start_date  ? new Date(task.start_date).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
+                                            <td>{task.deadline_date  ? new Date(task.deadline_date).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
                                             <td>
                                                 <Priority
                                                   color={priorityStyles.color}

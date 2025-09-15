@@ -535,8 +535,8 @@ const Cables = ({ selected }) => {
                                 :
                                 ""}
                             </td>
-                            <td>{item.dateIn}</td>
-                            <td>{item.dateOut}</td>
+                            <td>{item.dateIn  ? new Date(item.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
+                            <td>{item.dateOut  ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
                             <td>{item.progress}</td>
                             <td>
                               {Array.isArray(item.partsNeeded)
@@ -650,7 +650,7 @@ const Cables = ({ selected }) => {
                                 <p>Email: {item.email}</p>
                                 <div className="custom-line"></div>
                                 <div className="custom-grid-bottom-date">
-                                  <p>{item.dateIn}</p>
+                                  <p>{item.dateIn  ? new Date(item.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
                                   <p>{item.progress}</p>
                                 </div>
                               </div>
@@ -897,11 +897,11 @@ const Cables = ({ selected }) => {
               </div>
               <div className="info-group">
                 <strong>Date In:</strong>
-                <p>{selectedItem.dateIn}</p>
+                <p>{selectedItem.dateIn  ? new Date(selectedItem.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
               </div>
               <div className="info-group">
                 <strong>Date Out:</strong>
-                <p>{selectedItem.dateOut}</p>
+                <p>{selectedItem.dateOut  ? new Date(selectedItem.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
               </div>
               <div className="info-group">
                 <strong>Status:</strong>

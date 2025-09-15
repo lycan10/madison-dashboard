@@ -546,11 +546,9 @@ const Order = () => {
                     <p className="detail-value">
                       {selectedOrder.created_at 
                         ? new Date(selectedOrder.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
+                            day: '2-digit',
+                            month: 'short',
+                            year: '2-digit',
                           })
                         : 'N/A'
                       }
