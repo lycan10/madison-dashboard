@@ -24,7 +24,7 @@ export const TimeCardProvider = ({ children }) => {
     prev_page_url: null,
     to: null,
     total: 0,
-    date: new Date().toISOString().slice(0, 10),
+    date: new Date().toISOString().slice(0, 10), // Add date to initial state
   });
   const [currentActiveTimeCard, setCurrentActiveTimeCard] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -123,7 +123,7 @@ export const TimeCardProvider = ({ children }) => {
     setError(null);
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL}/api/timecards/today`,
+        `${process.env.REACT_APP_BASE_URL}/api/timecard/today`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -724,4 +724,3 @@ export const useTimeCards = () => {
   }
   return context;
 };
-
