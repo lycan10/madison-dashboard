@@ -48,7 +48,6 @@ const Messages = () => {
     updateGroupInfo,
   } = useMessages();
 
-  // Existing state
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [currentMessage, setCurrentMessage] = useState("");
   const [users, setUsers] = useState([]);

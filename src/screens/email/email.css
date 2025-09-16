@@ -334,7 +334,7 @@
 .email-body {
     flex: 1;
     padding: 30px;
-    /*overflow-y: auto;*/
+    overflow-y: auto;
     font-size: 15px;
     line-height: 1.6;
     color: #2c3e50;

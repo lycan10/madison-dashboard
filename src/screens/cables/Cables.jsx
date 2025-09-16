@@ -795,13 +795,11 @@ const Cables = ({ selected }) => {
                 value={formData.progress}
                 onChange={handleChange}
               >
-                <option>New</option>
-                <option>In Progress</option>
-                <option>Returns</option>
-                <option>Awaiting Parts</option>
-                <option>Rejected Jobs</option>
-                <option>Awaiting Pickup</option>
-                <option>Picked Up</option>
+                {statuses.slice(1).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -1097,13 +1095,11 @@ const Cables = ({ selected }) => {
                 value={formData.progress}
                 onChange={handleChange}
               >
-                <option>New</option>
-                <option>In Progress</option>
-                <option>Return</option>
-                <option>Awaiting Parts</option>
-                <option>Rejected Jobs</option>
-                <option>Awaiting Pickup</option>
-                <option>Picked Up</option>
+                {statuses.slice(1).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
