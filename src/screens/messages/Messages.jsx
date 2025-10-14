@@ -48,6 +48,7 @@ const Messages = () => {
     updateGroupInfo,
   } = useMessages();
 
+  // Existing state
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [currentMessage, setCurrentMessage] = useState("");
   const [users, setUsers] = useState([]);
@@ -770,7 +771,7 @@ const Messages = () => {
               {users.map((u) => (
                 <div
                   key={u.id}
-                  className={`participant-option ${
+                  className={`participant-option ${ 
                     selectedParticipants.includes(u.id) ? "selected" : ""
                   }`}
                   onClick={() => toggleParticipantSelection(u.id)}

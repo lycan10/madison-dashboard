@@ -39,7 +39,7 @@ const getPriorityStyles = (priority) => {
   }
 };
 
-const Hoses = ({ selected }) => {
+const Hoses = ({ selected }) => { 
   const {
     hosePaginationData,
     hoses,
@@ -62,12 +62,12 @@ const Hoses = ({ selected }) => {
   const statuses = [
     "All",
     "New",
-    "In Progress",
-    "Returns",
     "Awaiting Parts",
+    "In Progress",
     "Awaiting Pickup",
-    "Picked Up",
-    "Shipped",
+    //"Picked Up",
+    "Completed",
+    "Returns"
   ];
 
   const [sortBy, setSortBy] = useState("created_at");
@@ -484,6 +484,14 @@ const Hoses = ({ selected }) => {
                           (sortDirection === "asc" ? "▲" : "▼")}
                       </th>
                       <th
+                        onClick={() => handleSortClick("dateOut")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Due-Date{" "}
+                        {sortBy === "dateOut" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
                         onClick={() => handleSortClick("progress")}
                         style={{ cursor: "pointer" }}
                       >
@@ -493,9 +501,18 @@ const Hoses = ({ selected }) => {
                       </th>
                       <th>Parts Needed</th>
                       <th
+                        onClick={() => handleSortClick("dateOut")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Days-to-go{" "} 
+                        {sortBy === "dateOut" &&
+                          (sortDirection === "asc" ? "▲" : "▼")}
+                      </th>
+                      <th
                         onClick={() => handleSortClick("priority")}
                         style={{ cursor: "pointer" }}
                       >
+                        
                         Priority{" "}
                         {sortBy === "priority" &&
                           (sortDirection === "asc" ? "▲" : "▼")}
@@ -536,6 +553,7 @@ const Hoses = ({ selected }) => {
                             </td>
                             <td>{item.dateIn ? new Date(item.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
                             <td>{item.dateOut ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
+                            <td>{item.dateOut ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
                             <td>{item.progress}</td>
                             <td>
                               {Array.isArray(item.partsNeeded)
@@ -555,6 +573,7 @@ const Hoses = ({ selected }) => {
                                   })()
                                 : item.partsNeeded}
                             </td>
+                            <td>{item.dateOut ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
                             <td>
                               <Priority
                                 color={color}
@@ -794,11 +813,12 @@ const Hoses = ({ selected }) => {
                 value={formData.progress}
                 onChange={handleChange}
               >
-                {statuses.slice(1).map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
+                <option>New</option>
+                <option>Awaiting Parts</option>
+                <option>In Progress</option>
+                <option>Awaiting Pickup</option>
+                <option>Completed</option>
+                <option>Returns</option>
               </select>
             </div>
             <div className="form-group">
@@ -1094,11 +1114,12 @@ const Hoses = ({ selected }) => {
                 value={formData.progress}
                 onChange={handleChange}
               >
-                {statuses.slice(1).map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
+                <option>New</option>
+                <option>Awaiting Parts</option>
+                <option>In Progress</option>
+                <option>Awaiting Pickup</option>
+                <option>Completed</option>
+                <option>Returns</option>
               </select>
             </div>
             <div className="form-group">

@@ -481,7 +481,16 @@
     font-weight: bold;
     white-space: nowrap;
 }
-
+.participant-option{
+  display: flex;
+  flex-direction: column;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+.participant-option img{
+  width: 150px;
+  height: 150px;
+}
 @media screen and (max-width: 960px) {
   .messages-container {
     display: flex;

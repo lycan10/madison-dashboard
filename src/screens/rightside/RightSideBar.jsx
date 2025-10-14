@@ -69,15 +69,14 @@ const RightSideBar = ({ selected }) => {
   const itemsPerPage = alternatorPaginationData.per_page || 12;
   const [selectedStatus, setSelectedStatus] = useState("All");
   const statuses = [
-    "All",
+   "All",
     "New",
-    "In Progress",
-    "Returns",
     "Awaiting Parts",
-    "Rejected Jobs",
+    "In Progress",
     "Awaiting Pickup",
-    "Picked Up",
-    "Shipped",
+    //"Picked Up",
+    "Completed",
+    "Returns"
   ];
 
   const [sortBy, setSortBy] = useState("created_at");
@@ -502,6 +501,14 @@ const RightSideBar = ({ selected }) => {
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
                           <th
+                            onClick={() => handleSortClick("dateOut")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Due-Date{" "}
+                            {sortBy === "dateOut" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
+                          <th
                             onClick={() => handleSortClick("progress")}
                             style={{ cursor: "pointer" }}
                           >
@@ -511,6 +518,14 @@ const RightSideBar = ({ selected }) => {
                           </th>
                           <th>Repair Needed</th>
                           <th>Parts Needed</th>
+                          <th
+                            onClick={() => handleSortClick("dateOut")}
+                            style={{ cursor: "pointer" }}
+                          >
+                            Days-to-go{" "}
+                            {sortBy === "dateOut" &&
+                              (sortDirection === "asc" ? "▲" : "▼")}
+                          </th>
                           <th
                             onClick={() => handleSortClick("priority")}
                             style={{ cursor: "pointer" }}
@@ -560,6 +575,7 @@ const RightSideBar = ({ selected }) => {
                                 </td>
                                 <td>{item.dateIn  ? new Date(item.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
                                 <td>{item.dateOut  ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
+                                <td>{item.dateOut  ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
                                 <td>{item.progress}</td>
                                 <td>
                                   {Array.isArray(item.repairNeeded)
@@ -590,6 +606,7 @@ const RightSideBar = ({ selected }) => {
                                       })()
                                     : item.partsNeeded}
                                 </td>
+                                <td>{item.dateOut  ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
                                 <td>
                                   <Priority
                                     color={color}
