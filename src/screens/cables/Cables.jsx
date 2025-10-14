@@ -182,6 +182,14 @@ const Cables = ({ selected }) => {
   };
 
   const handleEditClick = (item) => {
+
+    const formatDateForInput = (dateStr) => {
+      if (!dateStr) return "";
+      const date = new Date(dateStr);
+      if (isNaN(date)) return ""; // invalid date
+      return date.toISOString().split("T")[0];
+    };
+
     setSelectedItem(item);
     setFormData({
       customerName: item.customerName || "",
@@ -189,8 +197,8 @@ const Cables = ({ selected }) => {
       email: item.email || "",
       cableType: item.cableType || "",
       address: item.address || "",
-      dateIn: item.dateIn || "",
-      dateOut: item.dateOut || "",
+      dateIn: formatDateForInput(item.dateIn),
+      dateOut: formatDateForInput(item.dateOut),
       progress: item.progress || "New",
       comments: item.comments || "",
       priority: item.priority || "Low",
