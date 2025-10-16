@@ -606,7 +606,13 @@ const RightSideBar = ({ selected }) => {
                                       })()
                                     : item.partsNeeded}
                                 </td>
-                                <td>{item.dateOut  ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
+                                <td> {
+                                    item.dateOut == null ?
+                                    <DaysToGo 
+                                      dateIn={item.dateIn} 
+                                      dueDate={item.dueDate} 
+                                  />:""
+                                  }</td>
                                 <td>
                                   <Priority
                                     color={color}
@@ -881,6 +887,17 @@ const RightSideBar = ({ selected }) => {
               />
             </div>
             <div className="form-group">
+              <label htmlFor="dateIn">Due Date</label>
+              <input
+                type="date"
+                id="dueDate"
+                name="dueDate"
+                className="input-field"
+                value={formData.dueDate}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
               <label htmlFor="progress">Status</label>
               <select
                 id="progress"
@@ -981,6 +998,10 @@ const RightSideBar = ({ selected }) => {
               <div className="info-group">
                 <strong>Date Out:</strong>
                 <p>{selectedItem.dateOut  ? new Date(selectedItem.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
+              </div>
+              <div className="info-group">
+                <strong>Due Date:</strong>
+                <p>{selectedItem.dueDate  ? new Date(selectedItem.dueDate).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
               </div>
               <div className="info-group">
                 <strong>Status:</strong>
@@ -1160,6 +1181,17 @@ const RightSideBar = ({ selected }) => {
               />
             </div>
             <div className="form-group">
+              <label htmlFor="editDateOut">Due Date</label>
+                <input
+                  type="date"
+                  id="editDueDate"
+                  name="dueDate"
+                  className="input-field"
+                  value={formData.dueDate}
+                  onChange={handleChange}
+                />
+              </div>
+            <div className="form-group">
               <label htmlFor="editProgress">Status</label>
               <select
                 id="editProgress"
@@ -1305,6 +1337,61 @@ const RightSideBar = ({ selected }) => {
           </Button>
         </Modal.Footer>
       </Modal>
+    </div>
+  );
+};
+
+
+ const calculateDaysToGo = (dueDateString) => {
+  if (!dueDateString) {
+    return 'N/A';
+  }
+
+  const dueDate = new Date(dueDateString);
+  const today = new Date();
+
+  const one_day = 1000 * 60 * 60 * 24;
+  const utcToday = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const utcDueDate = Date.UTC(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+
+  const diffInMilliseconds = utcDueDate - utcToday;
+  
+  const daysToGo = Math.floor(diffInMilliseconds / one_day);
+
+  if (isNaN(daysToGo)) {
+    return 'N/A';
+  }
+
+  return daysToGo;
+};
+
+const DaysToGo = ({ dateIn, dueDate }) => {
+  const days = calculateDaysToGo(dueDate);
+  
+  const isCritical = typeof days === 'number' && days >= 0 && days <= 7;
+  
+  const style = {
+    color: isCritical ? 'red' : 'inherit',
+    fontWeight: isCritical ? 'bold' : 'normal',
+  };
+
+  let displayText;
+  if (days === 'N/A') {
+    displayText = 'N/A';
+  } else if (days < 0) {
+    displayText = `OVERDUE by ${Math.abs(days)} days`;
+    style.color = 'red';
+  } else if (days === 0) {
+    displayText = 'DUE TODAY';
+    style.color = 'red';
+  } else {
+    displayText = `${days} days`;
+  }
+
+
+  return (
+    <div style={style}>
+      {displayText}
     </div>
   );
 };
