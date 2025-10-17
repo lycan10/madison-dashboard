@@ -100,3 +100,29 @@
     
   }
 }
+
+
+.leftSideBar {
+  width: 240px;
+  transition: width 0.3s ease;
+}
+
+.leftSideBar.collapsed {
+  width: 60px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 800px) {
+  .leftSideBar {
+    position: fixed;
+    z-index: 1100;
+    width: 70%;
+    height: 100%;
+    left: -100%;
+    transition: left 0.3s ease;
+  }
+
+  .leftSideBar.show {
+    left: 0;
+  }
+}

@@ -438,8 +438,8 @@ const Cables = ({ selected }) => {
             <p>Error: {error.message}</p>
           ) : viewMode === "table" ? (
             <div className="order-table-container">
-              <div className="rightsidebar-table">
-                <table className="custom-table">
+              <div className="table-responsive">
+                <table className="custom-table table table-striped table-bordered">
                   <thead>
                     <tr>
                       <th
@@ -586,7 +586,7 @@ const Cables = ({ selected }) => {
                                       )
                                       .join(", ");
 
-                                    const maxLength = 35;
+                                    const maxLength = 25;
 
                                     return fullText.length > maxLength
                                       ? `${fullText.slice(0, maxLength)}...`
@@ -1345,30 +1345,40 @@ const Cables = ({ selected }) => {
 
 const DaysToGo = ({ dateIn, dueDate }) => {
   const days = calculateDaysToGo(dueDate);
-  
-  const isCritical = typeof days === 'number' && days >= 0 && days <= 7;
-  
-  const style = {
-    color: isCritical ? 'red' : 'inherit',
-    fontWeight: isCritical ? 'bold' : 'normal',
-  };
 
   let displayText;
-  if (days === 'N/A') {
-    displayText = 'N/A';
+  let bgColor = "transparent";
+  let textColor = "inherit";
+
+  if (days === "N/A") {
+    displayText = "N/A";
   } else if (days < 0) {
     displayText = `OVERDUE by ${Math.abs(days)} days`;
-    style.color = 'red';
+    bgColor = "#FFE5E5";
+    textColor = "red";
   } else if (days === 0) {
-    displayText = 'DUE TODAY';
-    style.color = 'red';
+    displayText = "DUE TODAY";
+    bgColor = "#FFE5E5"; 
+    textColor = "red";
+  } else if (days <= 7) {
+    displayText = `${days} days`;
+    bgColor = "#FFE5E5"; 
+    textColor = "red";
   } else {
     displayText = `${days} days`;
   }
 
-
   return (
-    <div style={style}>
+    <div
+      style={{
+        backgroundColor: bgColor,
+        color: textColor,
+        fontWeight: "bold",
+        textAlign: "center",
+        borderRadius: "4px",
+        padding: "4px 6px",
+      }}
+    >
       {displayText}
     </div>
   );
