@@ -200,6 +200,7 @@ const Hoses = ({ selected }) => {
       dateIn: formatDateForInput(item.dateIn),
       dateOut: formatDateForInput(item.dateOut),
       dueDate: formatDateForInput(item.dueDate),
+      poNumber: item.poNumber || "",
       progress: item.progress || "New",
       comments: item.comments || "",
       priority: item.priority || "Low",
@@ -518,6 +519,10 @@ const Hoses = ({ selected }) => {
                           (sortDirection === "asc" ? "▲" : "▼")}
                       </th>
                       <th
+                      >
+                        PO Number{" "}
+                      </th>
+                      <th
                         onClick={() => handleSortClick("priority")}
                         style={{ cursor: "pointer" }}
                       >
@@ -560,9 +565,9 @@ const Hoses = ({ selected }) => {
                                 :
                                 ""}
                             </td>
-                            <td>{item.dateIn ? new Date(item.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
-                            <td>{item.dateOut ? new Date(item.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
-                            <td>{item.dueDate ? new Date(item.dueDate).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</td>
+                            <td>{item.dateIn ? new Date(item.dateIn).toISOString().substring(0, 10): 'N/A'}</td>
+                            <td>{item.dateOut ? new Date(item.dateOut).toISOString().substring(0, 10): 'N/A'}</td>
+                            <td>{item.dueDate ? new Date(item.dueDate).toISOString().substring(0, 10): 'N/A'}</td>
                             <td>{item.progress}</td>
                             <td>
                               {Array.isArray(item.partsNeeded)
@@ -589,6 +594,7 @@ const Hoses = ({ selected }) => {
                                   dueDate={item.dueDate} 
                               />:""
                               }</td>
+                               <td>{item.poNumber}</td>
                             <td>
                               <Priority
                                 color={color}
@@ -683,7 +689,7 @@ const Hoses = ({ selected }) => {
                                 <p>Email: {item.email}</p>
                                 <div className="custom-line"></div>
                                 <div className="custom-grid-bottom-date">
-                                  <p>{item.dateIn ? new Date(item.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
+                                  <p>{item.dateIn ? new Date(item.dateIn).toISOString().substring(0, 10): 'N/A'}</p>
                                   <p>{item.progress}</p>
                                 </div>
                               </div>
@@ -831,6 +837,16 @@ const Hoses = ({ selected }) => {
               />
             </div>
             <div className="form-group">
+              <label htmlFor="poNumber">PO Number</label>
+              <input
+                id="poNumber"
+                name="poNumber"
+                className="input-field"
+                value={formData.poNumber}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
               <label htmlFor="progress">Status</label>
               <select
                 id="progress"
@@ -940,15 +956,19 @@ const Hoses = ({ selected }) => {
               </div>
               <div className="info-group">
                 <strong>Date In:</strong>
-                <p>{selectedItem.dateIn ? new Date(selectedItem.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
+                <p>{selectedItem.dateIn ? new Date(selectedItem.dateIn).toISOString().substring(0, 10): 'N/A'}</p>
               </div>
               <div className="info-group">
                 <strong>Date Out:</strong>
-                <p>{selectedItem.dateOut ? new Date(selectedItem.dateOut).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
+                <p>{selectedItem.dateOut ? new Date(selectedItem.dateOut).toISOString().substring(0, 10): 'N/A'}</p>
               </div>
               <div className="info-group">
                 <strong>Due Date:</strong>
-                <p>{selectedItem.dueDate  ? new Date(selectedItem.dueDate).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
+                <p>{selectedItem.dueDate  ? new Date(selectedItem.dueDate).toISOString().substring(0, 10): 'N/A'}</p>
+              </div>
+              <div className="info-group">
+                <strong>PO Number:</strong>
+                <p>{selectedItem.poNumber}</p>
               </div>
               <div className="info-group">
                 <strong>Status:</strong>
@@ -1146,6 +1166,16 @@ const Hoses = ({ selected }) => {
                   onChange={handleChange}
                 />
               </div>
+            <div className="form-group">
+              <label htmlFor="editPONumber">PO Number</label>
+              <input
+                id="editPONumber"
+                name="poNumber"
+                className="input-field"
+                value={formData.poNumber}
+                onChange={handleChange}
+              />
+            </div>
             <div className="form-group">
               <label htmlFor="editProgress">Status</label>
               <select
