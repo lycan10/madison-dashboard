@@ -18,6 +18,7 @@ import {
   Notification01FreeIcons,
   Note02Icon,
   Mail01Icon,
+  ReceiptDollarIcon
 } from "@hugeicons/core-free-icons";
 import { useSidebar } from "../../context/SideBarContext";
 import { useAuth } from "../../context/AuthContext";
@@ -94,6 +95,11 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
       icon: Tag01FreeIcons,
       title: "Starters/Alternators",
       componentName: "Dashboard"
+    },
+    {
+      icon: ReceiptDollarIcon,
+      title: "Price",
+      componentName: "Price"
     },
     {
       icon: Task02Icon,

@@ -65,6 +65,10 @@ function App() {
                                   path="/orders"
                                   element={<ProtectedRoute element={Dashboard} />}
                                 />
+                                 <Route
+                                  path="/price"
+                                  element={<ProtectedRoute element={Dashboard} />}
+                                />
                                 <Route
                                   path="/notifications"
                                   element={<ProtectedRoute element={Dashboard} />}

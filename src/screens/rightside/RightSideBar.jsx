@@ -34,6 +34,7 @@ import Member from "../member/Member";
 import Email from "../email/Email";
 import MyProject from "../myProject/MyProject";
 import Overview from "../overview/Overview";
+import Price from "../pricing/Price";
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
@@ -764,6 +765,11 @@ const RightSideBar = ({ selected }) => {
             <Order />
           </div>
         )}
+         {selected === "Price" && (
+  <div className="rightsidebar-bottom">
+    <Price />
+  </div>
+)}
          {selected === "Member" && (
           <div className="rightsidebar-bottom">
             <Member />

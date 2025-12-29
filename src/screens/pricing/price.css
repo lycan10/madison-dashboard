@@ -1,0 +1,181 @@
+/* PRICE SECTION */
+.price {
+    display: flex;
+    /* optional centering if needed */
+}
+
+.price-type {
+    max-width: 40%;
+    margin-top: 2rem;
+}
+
+/* PART NUMBER GRID */
+.part-number {
+    display: grid;
+    grid-template-columns: 0.5fr 1.5fr 0.5fr;
+}
+
+.part-number-cableType-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.part-number-cableType-container h3 { 
+    margin-top: 1rem;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.part-number-cableType {
+    display: grid;
+    grid-template-columns: 0.5fr 0.5fr 0.5fr;
+}
+
+.part-number-cable-details {
+    display: grid;
+    grid-template-columns: repeat(5, 0.5fr);
+    margin: 0 1rem;
+}
+
+.part-number-cableLength {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+}
+
+.part-number input {
+    margin-right: 1rem;
+}
+
+/* HARDWARE TABLE */
+.hardware-table, .parts-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    border: 1px solid #d0d0d0;
+}
+
+.hardware-table th, .hardware-table td,
+.parts-table th, .parts-table td {
+    padding: 8px 10px;
+    border: 1px solid #d0d0d0;
+    text-align: left;
+}
+
+.parts-table th, .hardware-table th {
+    background: #f3f3f3;
+    font-weight: bold;
+}
+
+.no-parts {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #777;
+}
+
+/* BUTTONS */
+.add-part-btn, .add-btn {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: var(--color, #ffbb00);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.add-part-btn:hover, .add-btn:hover {
+    background: rgb(230, 156, 28);
+}
+
+/* MODAL BELOW TABLE */
+.modal-backdrop {
+    background: none;
+    position: static;
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.modal-box {
+    background: #ffffff;
+    width: 100%;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 10px;
+}
+.modal-box h3{
+    margin-bottom: 1rem;
+}
+
+.modal-title {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.modal-field {
+    margin-bottom: 12px;
+}
+
+.modal-field label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cfcfcf;
+    border-radius: 4px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.modal-cancel {
+    padding: 8px 14px;
+    background: #d8d8d8;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-save {
+    padding: 8px 14px;
+    background: var(--color, #ffbb00);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-save:hover {
+    background: rgb(230, 156, 28);
+}
+
+/* ANIMATION (if needed for fade-in effects) */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+
+/* Hose */
+.hose-partnumber{
+    padding: 1rem;
+    border: 1px solid grey;
+}
+.hose-partnumber p{
+    margin: 0;
+    padding: 0;
+}
