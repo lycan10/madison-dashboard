@@ -2,6 +2,7 @@ import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { OrderProvider } from "./context/OrderContext";
+import { PricingProvider } from "./context/PricingContext";
 import Login from "./screens/login/Login";
 import Dashboard from "./screens/dashboard/Dashboard";
 import { TimeCardProvider } from "./context/TimeCardContext";
@@ -24,7 +25,7 @@ const ProtectedRoute = ({ element: Component, ...rest }) => {
   return user ? <Component {...rest} /> : <Navigate to="/login" replace />;
 };
 
-function App() {
+const App = () => {
   return (
     <AuthProvider>
       <OrderProvider>
@@ -39,70 +40,76 @@ function App() {
                         <EmailProvider>
                           <OverviewProvider>
                             <SidebarProvider>
-                              <Routes>
-                                <Route path="/login" element={<Login />} />
-                                <Route
-                                  path="/"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/overview"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/cables"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/hose"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/starters-alternators"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/orders"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                 <Route
-                                  path="/price"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/new-price"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/notifications"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/emails"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/my-tasks"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/messages"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/members"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/timecard"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />
-                                <Route
-                                  path="/change-password"
-                                  element={<ProtectedRoute element={Dashboard} />}
-                                />                                
-                                <Route path="*" element={<Navigate to="/overview" replace />} />
-                              </Routes>
+                              <PricingProvider>
+                                <Routes>
+                                  <Route path="/login" element={<Login />} />
+                                  <Route
+                                    path="/"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/overview"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/cables"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/hose"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/starters-alternators"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/orders"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                   <Route
+                                    path="/price"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/new-price"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/admin-pricing"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/notifications"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/emails"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/my-tasks"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/messages"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/members"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/timecard"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />
+                                  <Route
+                                    path="/change-password"
+                                    element={<ProtectedRoute element={Dashboard} />}
+                                  />                                
+                                  <Route path="*" element={<Navigate to="/overview" replace />} />
+                                </Routes>
+                              </PricingProvider>
                             </SidebarProvider>
                           </OverviewProvider>
                         </EmailProvider>

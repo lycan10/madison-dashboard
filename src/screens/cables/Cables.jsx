@@ -586,7 +586,7 @@ const Cables = ({ selected }) => {
                                       )
                                       .join(", ");
 
-                                    const maxLength = 25;
+                                    const maxLength = 10;
 
                                     return fullText.length > maxLength
                                       ? `${fullText.slice(0, maxLength)}...`

@@ -101,10 +101,15 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
       title: "Price",
       componentName: "Price"
     },
+    // {
+    //   icon: ReceiptDollarIcon,
+    //   title: "New Price",
+    //   componentName: "NewPrice"
+    // },
     {
       icon: ReceiptDollarIcon,
-      title: "New Price",
-      componentName: "NewPrice"
+      title: "Admin Pricing",
+      componentName: "AdminPricing"
     },
     {
       icon: Task02Icon,
