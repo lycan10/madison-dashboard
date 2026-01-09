@@ -35,6 +35,7 @@ import Email from "../email/Email";
 import MyProject from "../myProject/MyProject";
 import Overview from "../overview/Overview";
 import Price from "../pricing/Price";
+import NewPrice from "../pricing/NewPrice";
 
 const getPriorityStyles = (priority) => {
   switch (priority) {
@@ -70,14 +71,14 @@ const RightSideBar = ({ selected }) => {
   const itemsPerPage = alternatorPaginationData.per_page || 12;
   const [selectedStatus, setSelectedStatus] = useState("All");
   const statuses = [
-   "All",
+    "All",
     "New",
     "Awaiting Parts",
     "In Progress",
     "Awaiting Pickup",
     //"Picked Up",
     "Completed",
-    "Returns"
+    "Returns",
   ];
 
   const [sortBy, setSortBy] = useState("created_at");
@@ -251,7 +252,16 @@ const RightSideBar = ({ selected }) => {
       ...(searchTerm && { search: searchTerm }),
     };
     fetchAlternators(params);
-  }, [currentPage, selectedStatus, sortBy, sortDirection, itemsPerPage, startDate, endDate, searchTerm]);
+  }, [
+    currentPage,
+    selectedStatus,
+    sortBy,
+    sortDirection,
+    itemsPerPage,
+    startDate,
+    endDate,
+    searchTerm,
+  ]);
 
   useEffect(() => {
     fetchAlternatorCounts();
@@ -528,10 +538,7 @@ const RightSideBar = ({ selected }) => {
                             {sortBy === "dateOut" &&
                               (sortDirection === "asc" ? "▲" : "▼")}
                           </th>
-                          <th
-                          >
-                            PO Number{" "}
-                          </th>
+                          <th>PO Number </th>
                           <th
                             onClick={() => handleSortClick("priority")}
                             style={{ cursor: "pointer" }}
@@ -579,9 +586,27 @@ const RightSideBar = ({ selected }) => {
                                       : item.plateNumber
                                     : ""}
                                 </td>
-                                <td>{item.dateIn  ? new Date(item.dateIn).toISOString().substring(0, 10): 'N/A'}</td>
-                                <td>{item.dateOut  ? new Date(item.dateOut).toISOString().substring(0, 10): 'N/A'}</td>
-                                <td>{item.dateOut  ? new Date(item.dateOut).toISOString().substring(0, 10): 'N/A'}</td>
+                                <td>
+                                  {item.dateIn
+                                    ? new Date(item.dateIn)
+                                        .toISOString()
+                                        .substring(0, 10)
+                                    : "N/A"}
+                                </td>
+                                <td>
+                                  {item.dateOut
+                                    ? new Date(item.dateOut)
+                                        .toISOString()
+                                        .substring(0, 10)
+                                    : "N/A"}
+                                </td>
+                                <td>
+                                  {item.dateOut
+                                    ? new Date(item.dateOut)
+                                        .toISOString()
+                                        .substring(0, 10)
+                                    : "N/A"}
+                                </td>
                                 <td>{item.progress}</td>
                                 <td>
                                   {Array.isArray(item.repairNeeded)
@@ -612,13 +637,17 @@ const RightSideBar = ({ selected }) => {
                                       })()
                                     : item.partsNeeded}
                                 </td>
-                                <td> {
-                                    item.dateOut == null ?
-                                    <DaysToGo 
-                                      dateIn={item.dateIn} 
-                                      dueDate={item.dueDate} 
-                                  />:""
-                                  }</td>
+                                <td>
+                                  {" "}
+                                  {item.dateOut == null ? (
+                                    <DaysToGo
+                                      dateIn={item.dateIn}
+                                      dueDate={item.dueDate}
+                                    />
+                                  ) : (
+                                    ""
+                                  )}
+                                </td>
                                 <td>{item.poNumber}</td>
                                 <td>
                                   <Priority
@@ -714,7 +743,17 @@ const RightSideBar = ({ selected }) => {
                                     <p>Plate: {item.plateNumber}</p>
                                     <div className="custom-line"></div>
                                     <div className="custom-grid-bottom-date">
-                                      <p>{item.dateIn  ? new Date(item.dateIn).toLocaleDateString('en-GB', {day: "2-digit", month: "short", year: "2-digit"}): 'N/A'}</p>
+                                      <p>
+                                        {item.dateIn
+                                          ? new Date(
+                                              item.dateIn
+                                            ).toLocaleDateString("en-GB", {
+                                              day: "2-digit",
+                                              month: "short",
+                                              year: "2-digit",
+                                            })
+                                          : "N/A"}
+                                      </p>
                                       <p>{item.progress}</p>
                                     </div>
                                   </div>
@@ -765,33 +804,38 @@ const RightSideBar = ({ selected }) => {
             <Order />
           </div>
         )}
-         {selected === "Price" && (
-  <div className="rightsidebar-bottom">
-    <Price />
-  </div>
-)}
-         {selected === "Member" && (
+        {selected === "Price" && (
+          <div className="rightsidebar-bottom">
+            <Price />
+          </div>
+        )}
+        {selected === "NewPrice" && (
+          <div className="rightsidebar-bottom">
+            <NewPrice />
+          </div>
+        )}
+        {selected === "Member" && (
           <div className="rightsidebar-bottom">
             <Member />
           </div>
         )}
-         {selected === "Messages" && (
+        {selected === "Messages" && (
           <div className="rightsidebar-bottom">
             <Messages />
           </div>
         )}
-           {selected === "Email" && (
+        {selected === "Email" && (
           <div className="rightsidebar-bottom">
             <Email />
           </div>
         )}
-        
-          {selected === "Notification" && (
+
+        {selected === "Notification" && (
           <div className="rightsidebar-bottom">
             <Notification />
           </div>
         )}
-         {selected === "MyProject" && (
+        {selected === "MyProject" && (
           <div className="rightsidebar-bottom">
             <MyProject />
           </div>
@@ -971,13 +1015,13 @@ const RightSideBar = ({ selected }) => {
           </form>
         </Modal.Body>
         <Modal.Footer>
-          <div className="flex gap-2 d-flex"> 
-          <button className="btn-secondary" onClick={handleCloseAddModal}>
-            Cancel
-          </button>
-          <button className="btn-primary" onClick={handleAddSubmit}>
-            Save
-          </button>
+          <div className="flex gap-2 d-flex">
+            <button className="btn-secondary" onClick={handleCloseAddModal}>
+              Cancel
+            </button>
+            <button className="btn-primary" onClick={handleAddSubmit}>
+              Save
+            </button>
           </div>
         </Modal.Footer>
       </Modal>
@@ -1015,15 +1059,33 @@ const RightSideBar = ({ selected }) => {
               </div>
               <div className="info-group">
                 <strong>Date In:</strong>
-                <p>{selectedItem.dateIn  ? new Date(selectedItem.dateIn).toISOString().substring(0, 10): 'N/A'}</p>
+                <p>
+                  {selectedItem.dateIn
+                    ? new Date(selectedItem.dateIn)
+                        .toISOString()
+                        .substring(0, 10)
+                    : "N/A"}
+                </p>
               </div>
               <div className="info-group">
                 <strong>Date Out:</strong>
-                <p>{selectedItem.dateOut  ? new Date(selectedItem.dateOut).toISOString().substring(0, 10): 'N/A'}</p>
+                <p>
+                  {selectedItem.dateOut
+                    ? new Date(selectedItem.dateOut)
+                        .toISOString()
+                        .substring(0, 10)
+                    : "N/A"}
+                </p>
               </div>
               <div className="info-group">
                 <strong>Due Date:</strong>
-                <p>{selectedItem.dueDate  ? new Date(selectedItem.dueDate).toISOString().substring(0, 10): 'N/A'}</p>
+                <p>
+                  {selectedItem.dueDate
+                    ? new Date(selectedItem.dueDate)
+                        .toISOString()
+                        .substring(0, 10)
+                    : "N/A"}
+                </p>
               </div>
               <div className="info-group">
                 <strong>PO Number:</strong>
@@ -1100,27 +1162,27 @@ const RightSideBar = ({ selected }) => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <div className="flex gap-2 d-flex"> 
-          <button className="btn-secondary" onClick={handleCloseInfoModal}>
-            Cancel
-          </button>
-          {user.name === "admin" && (
-            <button
-              className="btn-danger"
-              onClick={() => handleDelete(selectedItem.id)}
-            >
-              Delete
+          <div className="flex gap-2 d-flex">
+            <button className="btn-secondary" onClick={handleCloseInfoModal}>
+              Cancel
             </button>
-          )}
-          <button
-            className="btn-primary"
-            onClick={() => {
-              handleCloseInfoModal();
-              handleEditClick(selectedItem);
-            }}
-          >
-            Edit
-          </button>
+            {user.name === "admin" && (
+              <button
+                className="btn-danger"
+                onClick={() => handleDelete(selectedItem.id)}
+              >
+                Delete
+              </button>
+            )}
+            <button
+              className="btn-primary"
+              onClick={() => {
+                handleCloseInfoModal();
+                handleEditClick(selectedItem);
+              }}
+            >
+              Edit
+            </button>
           </div>
         </Modal.Footer>
       </Modal>
@@ -1208,15 +1270,15 @@ const RightSideBar = ({ selected }) => {
             </div>
             <div className="form-group">
               <label htmlFor="editDateOut">Due Date</label>
-                <input
-                  type="date"
-                  id="editDueDate"
-                  name="dueDate"
-                  className="input-field"
-                  value={formData.dueDate}
-                  onChange={handleChange}
-                />
-              </div>
+              <input
+                type="date"
+                id="editDueDate"
+                name="dueDate"
+                className="input-field"
+                value={formData.dueDate}
+                onChange={handleChange}
+              />
+            </div>
             <div className="form-group">
               <label htmlFor="editPONumber">PO Number</label>
               <input
@@ -1327,13 +1389,13 @@ const RightSideBar = ({ selected }) => {
           </form>
         </Modal.Body>
         <Modal.Footer>
-          <div className="flex gap-2 d-flex"> 
-          <button className="btn-secondary" onClick={handleCloseEditModal}>
-            Cancel
-          </button>
-          <button className="btn-primary" onClick={handleEditSubmit}>
-            Save Changes
-          </button>
+          <div className="flex gap-2 d-flex">
+            <button className="btn-secondary" onClick={handleCloseEditModal}>
+              Cancel
+            </button>
+            <button className="btn-primary" onClick={handleEditSubmit}>
+              Save Changes
+            </button>
           </div>
         </Modal.Footer>
       </Modal>
@@ -1377,25 +1439,32 @@ const RightSideBar = ({ selected }) => {
   );
 };
 
-
- const calculateDaysToGo = (dueDateString) => {
+const calculateDaysToGo = (dueDateString) => {
   if (!dueDateString) {
-    return 'N/A';
+    return "N/A";
   }
 
   const dueDate = new Date(dueDateString);
   const today = new Date();
 
   const one_day = 1000 * 60 * 60 * 24;
-  const utcToday = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-  const utcDueDate = Date.UTC(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+  const utcToday = Date.UTC(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+  const utcDueDate = Date.UTC(
+    dueDate.getFullYear(),
+    dueDate.getMonth(),
+    dueDate.getDate()
+  );
 
   const diffInMilliseconds = utcDueDate - utcToday;
-  
+
   const daysToGo = Math.floor(diffInMilliseconds / one_day);
 
   if (isNaN(daysToGo)) {
-    return 'N/A';
+    return "N/A";
   }
 
   return daysToGo;
@@ -1416,11 +1485,11 @@ const DaysToGo = ({ dateIn, dueDate }) => {
     textColor = "red";
   } else if (days === 0) {
     displayText = "DUE TODAY";
-    bgColor = "#FFE5E5"; 
+    bgColor = "#FFE5E5";
     textColor = "red";
   } else if (days <= 7) {
     displayText = `${days} days`;
-    bgColor = "#FFE5E5"; 
+    bgColor = "#FFE5E5";
     textColor = "red";
   } else {
     displayText = `${days} days`;
@@ -1441,6 +1510,5 @@ const DaysToGo = ({ dateIn, dueDate }) => {
     </div>
   );
 };
-
 
 export default RightSideBar;

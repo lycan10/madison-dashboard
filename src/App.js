@@ -70,6 +70,10 @@ function App() {
                                   element={<ProtectedRoute element={Dashboard} />}
                                 />
                                 <Route
+                                  path="/new-price"
+                                  element={<ProtectedRoute element={Dashboard} />}
+                                />
+                                <Route
                                   path="/notifications"
                                   element={<ProtectedRoute element={Dashboard} />}
                                 />
