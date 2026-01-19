@@ -5,8 +5,8 @@ import { usePricing } from "../../context/PricingContext";
 const Price = () => {
   const [cableType, setCableType] = useState("Push-pull cable");
   const [partNumberData, setPartNumberData] = useState({
-    prefix: "100",
-    type: "0",
+    prefix: "",
+    type: "",
     series: "",
     travel: "",
     fitting1: "",
@@ -192,16 +192,20 @@ const Price = () => {
               <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "10px" }}>
                 <input
                   type="text"
+                  placeholder="Prefix"
                   value={partNumberData.prefix}
-                  disabled
-                  style={{ width: "60px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px", background: "#e9ecef" }}
+                  onChange={(e) => handlePartNumberChange("prefix", e.target.value)}
+                  maxLength="3"
+                  style={{ width: "60px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
                 />
                 <span>-</span>
                 <input
                   type="text"
+                  placeholder="Type"
                   value={partNumberData.type}
-                  disabled
-                  style={{ width: "40px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px", background: "#e9ecef" }}
+                  onChange={(e) => handlePartNumberChange("type", e.target.value)}
+                  maxLength="1"
+                  style={{ width: "40px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
                 />
                 <input
                   type="text"
