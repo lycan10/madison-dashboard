@@ -17,7 +17,88 @@ const Price = () => {
   const [showModal, setShowModal] = useState(false);
   const [newPart, setNewPart] = useState({ name: "", partNumber: "", quantity: 1, unitPrice: 0 });
   
-  const { transformedData: priceData, loading } = usePricing();
+  
+  const { transformedData: priceData, pricingConfig, loading } = usePricing();
+
+  const CostBreakdown = ({ partsTotal, config }) => {
+        const cost = parseFloat(partsTotal);
+        const tariff = cost * (parseFloat(config.tariff_percent) / 100);
+        // Step 1: Cost + Tariff
+        const costWithTariff = cost + tariff;
+        
+        const labor = parseFloat(config.labor_cost);
+        // Step 2: (Cost + Tariff) + Labor
+        const costWithLabor = costWithTariff + labor;
+
+        const overhead = cost * (parseFloat(config.overhead_percent) / 100);
+        // Note: The user prompt image suggests Overhead is calculated on the BASE COST? 
+        // "Overhead 20%: 60.66" where previous was 50.55. 
+        // 50.55 + (44.95 * 0.20) = 50.55 + 8.99 = 59.54... Not matching 60.66.
+        // Let's check 50.55 * 1.20 = 60.66.
+        // So Overhead is 20% OF THE RUNNING TOTAL.
+        const overheadAmount = costWithLabor * (parseFloat(config.overhead_percent) / 100);
+        const costWithOverhead = costWithLabor + overheadAmount;
+
+        const misc = parseFloat(config.misc_cost);
+        const trueCost = costWithOverhead + misc;
+
+        // Margin 35%
+        // Usually Price = Cost / (1 - Margin%)
+        // 63.66 / (1 - 0.35) = 63.66 / 0.65 = 97.938
+        // Image: 97.93. Matches perfectly.
+        const marginPercent = parseFloat(config.margin_percent) / 100;
+        const total = trueCost / (1 - marginPercent);
+
+        return (
+            <div style={{ maxWidth: "400px", marginLeft: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <tbody>
+                        <tr>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>Cost</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}></td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{cost.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>Tariff</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>{config.tariff_percent}%</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{(cost + tariff).toFixed(2)}</td>
+                        </tr>
+                       <tr>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>Labor</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>${config.labor_cost}</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{costWithLabor.toFixed(2)}</td>
+                        </tr>
+                         <tr>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>Overhead</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>{config.overhead_percent}%</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{costWithOverhead.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>Misc</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>${config.misc_cost}</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{trueCost.toFixed(2)}</td>
+                        </tr>
+                         <tr>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>True cost</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}></td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}></td>
+                        </tr>
+                        <tr>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>Margin</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>{config.margin_percent}</td>
+                            <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{total.toFixed(2)}</td>
+                        </tr>
+                         <tr style={{ fontWeight: "bold", fontSize: "1.2em" }}>
+                            <td style={{ padding: "10px 5px" }}>Total</td>
+                            <td style={{ padding: "10px 5px" }}></td>
+                            <td style={{ padding: "10px 5px", textAlign: "right" }}>{total.toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        );
+  };
+
 
   useEffect(() => {
     const { series, travel, fitting1, fitting2, length } = partNumberData;
@@ -296,9 +377,13 @@ const Price = () => {
             </div>
 
             <div style={{ marginTop: "20px", padding: "15px", background: "#f8f9fa", borderRadius: "4px" }}>
-              <h2 style={{ margin: 0, textAlign: "right" }}>
-                Total: ${calculateTotal()}
-              </h2>
+              {(parts.length > 0 && pricingConfig) ? (
+                 <CostBreakdown partsTotal={calculateTotal()} config={pricingConfig} />
+              ) : (
+                <h2 style={{ margin: 0, textAlign: "right" }}>
+                    Total: ${calculateTotal()}
+                </h2>
+              )}
             </div>
           </>
         )}

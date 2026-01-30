@@ -9,23 +9,49 @@ export const usePricing = () => {
 export const PricingProvider = ({ children }) => {
   const [pricingData, setPricingData] = useState([]); // Raw data from API
   const [transformedData, setTransformedData] = useState({ pushpull: {}, hoses: {} }); // Transformed for Calculator
+  const [pricingConfig, setPricingConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchPricing = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/pricing");
-      if (!response.ok) throw new Error("Failed to fetch pricing data");
-      const data = await response.json();
+      const [pricingRes, configRes] = await Promise.all([
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing`),
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/config`)
+      ]);
+
+      if (!pricingRes.ok) throw new Error("Failed to fetch pricing data");
+      if (!configRes.ok) throw new Error("Failed to fetch pricing config");
+
+      const data = await pricingRes.json();
+      const config = await configRes.json();
+
       setPricingData(data);
       setTransformedData(transformData(data));
+      setPricingConfig(config);
       setError(null);
     } catch (err) {
       console.error("Error fetching pricing data:", err);
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateConfig = async (newConfig) => {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/api/pricing/config", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newConfig)
+        });
+        if (!response.ok) throw new Error("Failed to update config");
+        const updatedConfig = await response.json();
+        setPricingConfig(updatedConfig);
+        return updatedConfig;
+    } catch (err) {
+        throw err;
     }
   };
 
@@ -97,7 +123,7 @@ export const PricingProvider = ({ children }) => {
   }, []);
 
   return (
-    <PricingContext.Provider value={{ pricingData, transformedData, loading, error, fetchPricing }}>
+    <PricingContext.Provider value={{ pricingData, transformedData, pricingConfig, loading, error, fetchPricing, updateConfig }}>
       {children}
     </PricingContext.Provider>
   );
