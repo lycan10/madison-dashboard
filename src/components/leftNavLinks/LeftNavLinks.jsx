@@ -2,10 +2,10 @@ import React from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import './leftnavlinks.css';
 
-const LeftNavLinks = ({ icon, title, onClick, isSelected, collapsed, badgeCount }) => {
+const LeftNavLinks = ({ icon, title, onClick, isSelected, collapsed, badgeCount, className }) => {
   return (
     <div
-      className={`LeftNavLinks ${isSelected ? 'selected' : ''}`}
+      className={`LeftNavLinks ${isSelected ? 'selected' : ''} ${className || ''}`}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -14,7 +14,7 @@ const LeftNavLinks = ({ icon, title, onClick, isSelected, collapsed, badgeCount 
       }}
     >
       <div className='LeftNavLinks-icon'>
-        <HugeiconsIcon icon={icon} color='#545454' size={16} />
+        <HugeiconsIcon icon={icon} color='currentColor' size={18} />
       </div>
       <div className='LeftNavLinks-title'>
         {!collapsed && <p>{title}</p>}

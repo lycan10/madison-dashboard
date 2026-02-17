@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Table,
   Button,
@@ -8,7 +9,8 @@ import {
   Row,
   Col,
   Alert,
-  Card
+  Card,
+  Pagination
 } from "react-bootstrap";
 import { usePricing } from "../../context/PricingContext";
 
@@ -70,7 +72,7 @@ const GlobalConfigForm = ({ config, onUpdate }) => {
                 </Col>
                  <Col md={2}>
                     <Form.Group className="mb-3">
-                        <Form.Label>Margin %</Form.Label>
+                        <Form.Label>Margin $</Form.Label>
                         <Form.Control type="number" step="0.01" name="margin_percent" value={formData.margin_percent} onChange={handleChange} />
                     </Form.Group>
                 </Col>
@@ -83,19 +85,75 @@ const GlobalConfigForm = ({ config, onUpdate }) => {
 };
 
 const AdminPricing = () => {
-  const { pricingData, pricingConfig, loading: contextLoading, fetchPricing: refreshData } = usePricing();
-  const API_URL = "http://127.0.0.1:8000/api/pricing";
+  const { pricingData, pricingPaginationData, pricingConfig, loading: contextLoading, fetchPricing: refreshData } = usePricing();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const API_URL = `${process.env.REACT_APP_BASE_URL}/api/pricing`;
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [newPrice, setNewPrice] = useState("");
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  
+  // Get initial values from URL params
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
+  const [cableTypeFilter, setCableTypeFilter] = useState(searchParams.get('cable_type') || "");
+  const itemsPerPage = pricingPaginationData.per_page || 15;
+  const totalPages = pricingPaginationData.last_page || 1;
+
+  // Cable types for the filter dropdown
+  const cableTypes = [
+    "Push-pull cable",
+    "Hydraulic Hose",
+    "Universal Cable",
+    "Positive Lock",
+    "Precision Control",
+    "Hi-Capacity",
+    "Roller Cable",
+    "RVC"
+  ];
+
+  // Update URL params when filters change
+  useEffect(() => {
+    const params = {};
+    if (currentPage > 1) params.page = currentPage;
+    if (searchTerm) params.search = searchTerm;
+    if (cableTypeFilter) params.cable_type = cableTypeFilter;
+    setSearchParams(params, { replace: true });
+  }, [currentPage, searchTerm, cableTypeFilter, setSearchParams]);
+
+  // Fetch data when filters change
+  useEffect(() => {
+    const params = {
+      page: currentPage,
+      per_page: itemsPerPage,
+    };
+    if (searchTerm) params.search = searchTerm;
+    if (cableTypeFilter) params.cable_type = cableTypeFilter;
+    
+    refreshData(params);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, searchTerm, cableTypeFilter]);
 
   useEffect(() => {
-    // Fetch data on mount to ensure backend data is loaded
-    refreshData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (pricingPaginationData.current_page && pricingPaginationData.current_page !== currentPage) {
+      setCurrentPage(pricingPaginationData.current_page);
+    }
+  }, [pricingPaginationData.current_page]);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
+  const handleCableTypeChange = (e) => {
+    setCableTypeFilter(e.target.value);
+    setCurrentPage(1); // Reset to first page on filter change
+  };
 
   const handleShowModal = (item) => {
     setEditingItem(item);
@@ -152,6 +210,35 @@ const AdminPricing = () => {
       {error && <Alert variant="danger">{error}</Alert>}
       {successMessage && <Alert variant="success">{successMessage}</Alert>}
 
+      {/* Search and Filter Controls */}
+      <Row className="mb-3">
+        <Col md={6}>
+          <Form.Group>
+            <Form.Label>Search by Part Number</Form.Label>
+            <Form.Control 
+              type="text" 
+              placeholder="Enter part number..." 
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </Form.Group>
+        </Col>
+        <Col md={6}>
+          <Form.Group>
+            <Form.Label>Filter by Cable Type</Form.Label>
+            <Form.Select
+              value={cableTypeFilter}
+              onChange={handleCableTypeChange}
+            >
+              <option value="">All Cable Types</option>
+              {cableTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        </Col>
+      </Row>
+
       {contextLoading ? (
         <p>Loading...</p>
       ) : (
@@ -190,6 +277,37 @@ const AdminPricing = () => {
               ))}
             </tbody>
           </Table>
+        </div>
+        
+        {/* Pagination Controls */}
+        <div className="d-flex justify-content-center mt-3">
+          <Pagination>
+            <Pagination.First
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+            />
+            <Pagination.Prev
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            />
+            {[...Array(totalPages)].map((_, index) => (
+              <Pagination.Item
+                key={index + 1}
+                active={index + 1 === currentPage}
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </Pagination.Item>
+            ))}
+            <Pagination.Next
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            />
+            <Pagination.Last
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+            />
+          </Pagination>
         </div>
         </>
       )}

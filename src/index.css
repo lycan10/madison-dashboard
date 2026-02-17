@@ -36,11 +36,11 @@ h3 {
 
 :root {
   --font-family: "Nunito Sans", sans-serif;
-  --color: rgb(255, 173, 31);
+  --color: #ffbb00;
   --border: #f0f4f8;
   --text-color: #121212;
   --text-color2: #545454;
-  --background-color: rgb(255, 173, 31);
+  --background-color: #ffbb00;
 }
 
 .btn-primary{
@@ -93,4 +93,12 @@ h3 {
   outline: none;
   border-color: var(--background-color) !important;
   box-shadow: 0 0 0 1px var(--background-color)!important;
+}
+
+input:focus, 
+select:focus, 
+textarea:focus {
+  outline: none;
+  border-color: var(--background-color) !important;
+  box-shadow: 0 0 0 1px var(--background-color) !important;
 }

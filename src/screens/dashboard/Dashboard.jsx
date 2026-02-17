@@ -11,7 +11,7 @@ const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { sidebarShow, toggleSidebar } = useSidebar();
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 300);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 800);
 
   const routeToComponentMap = {
     '/': 'Dashboard',
@@ -62,7 +62,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 300);
+      setIsMobile(window.innerWidth <= 800);
     };
 
     window.addEventListener('resize', handleResize);
@@ -84,7 +84,7 @@ const Dashboard = () => {
         <LeftSideBar
           selected={selectedLink}
           onSelect={handleNavigation}
-          collapsed={sidebarShow}
+          collapsed={isMobile ? false : sidebarShow}
         />
 
         {!isMobile && (
@@ -98,6 +98,10 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      {isMobile && sidebarShow && (
+        <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+      )}
 
       <div className="dashboard-right">
         <RightSideBar selected={selectedLink} />

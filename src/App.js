@@ -72,7 +72,7 @@ const App = () => {
                                     element={<ProtectedRoute element={Dashboard} />}
                                   />
                                   <Route
-                                    path="/new-price"
+                                    path="/old-price"
                                     element={<ProtectedRoute element={Dashboard} />}
                                   />
                                   <Route

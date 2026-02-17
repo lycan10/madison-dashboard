@@ -4,10 +4,7 @@ import LeftNavLinks from "../../components/leftNavLinks/LeftNavLinks";
 import logo from "../../assets/Icon-yellow.png";
 import {
   Task02Icon,
-  Home02Icon,
   DashboardSquare01Icon,
-  CheckListIcon,
-  Notification01Icon,
   UserMultipleIcon, 
   CalendarAdd01FreeIcons,
   LogoutIcon,
@@ -18,7 +15,9 @@ import {
   Notification01FreeIcons,
   Note02Icon,
   Mail01Icon,
-  ReceiptDollarIcon
+  ReceiptDollarIcon,
+  Settings01Icon,
+  SecurityPasswordIcon
 } from "@hugeicons/core-free-icons";
 import { useSidebar } from "../../context/SideBarContext";
 import { useAuth } from "../../context/AuthContext";
@@ -27,14 +26,15 @@ import { useNotifications } from "../../context/NotificationContext";
 
 const LeftSideBar = ({ selected, onSelect, collapsed }) => {
   const { toggleSidebar } = useSidebar();
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 300);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 800);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { user, logout } = useAuth();
   const { fetchConversations, totalUnreadCount } = useMessages();
   const { unreadCount, fetchUnreadCount } = useNotifications();
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 300);
+      setIsMobile(window.innerWidth <= 800);
     };
 
     window.addEventListener("resize", handleResize);
@@ -71,8 +71,16 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
   console.log(totalUnreadCount);
 
   const handleLogout = async () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
     await logout();
     window.location.reload();
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   const navigationItems = [
@@ -101,13 +109,13 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
       title: "Price",
       componentName: "Price"
     },
-    // {
-    //   icon: ReceiptDollarIcon,
-    //   title: "New Price",
-    //   componentName: "NewPrice"
-    // },
+     {
+       icon: ReceiptDollarIcon,
+       title: "Old Price",
+       componentName: "OldPrice"
+     },
     {
-      icon: ReceiptDollarIcon,
+      icon: Settings01Icon,
       title: "Admin Pricing",
       componentName: "AdminPricing"
     },
@@ -203,7 +211,7 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
 
         {user?.name === "admin" && (
           <LeftNavLinks
-            icon={CalendarAdd01FreeIcons}
+            icon={SecurityPasswordIcon}
             title="Change Password"
             onClick={() => handleLinkClick("ChangePassword")}
             isSelected={selected === "ChangePassword"}
@@ -216,8 +224,26 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           title="Logout"
           onClick={() => handleLogout()}
           collapsed={collapsed}
+          className="logout-link"
         />
       </div>
+
+      {showLogoutConfirm && (
+        <div className="logout-modal-overlay">
+          <div className="logout-modal">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to log out?</p>
+            <div className="logout-modal-actions">
+              <button className="logout-cancel-btn" onClick={cancelLogout}>
+                Cancel
+              </button>
+              <button className="logout-confirm-btn" onClick={confirmLogout}>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

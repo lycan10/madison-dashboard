@@ -1,128 +1,357 @@
-.leftSideBar{
-}
-.leftSideBar-container{
-    padding: 1rem;
-    overflow: auto; 
-    scroll-behavior: smooth;
-    height: 90vh; 
-}
-
-.vertical-dash{
-  height: 1px;
-  width: 100%;
-  background-color: rgb(216, 216, 216);
-  margin-bottom: 0.3rem;
-}
-/* .leftSideBar-logo-container{
-    display: flex;
-    justify-content: start;
-    align-self: center;
-    margin-bottom: 1rem;
-} */
-.leftSideBar-logo-container {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-    white-space: nowrap; 
-    overflow: hidden; 
-  }
-.leftSideBar-logo{
-    width: 25px;
-    height: 25px;
-    transition: all 0.5s linear;
-}
-.leftSideBar-logo img{
-    width: 100%;
-    height: 100%;
-    transition: all 0.5s linear;
-}
-/* .leftSideBar-title{
-    display: flex;
-    justify-content: center;
-    align-self: center;
-}
-.leftSideBar-title h1{
-    font-family: var(--font-family);
-    color: var(--text-color2);
-    font-size: 16px;
-    font-weight: 700;
-    margin-left: 0.5rem;
-    max-width: 100%;
-} */
-.leftSideBar-title {
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
-    flex-shrink: 1;
-    overflow: hidden;
-    transition: all 0.5s linear;
-  }
-  
-  .leftSideBar-title h1 {
-    font-family: var(--font-family);
-    color: var(--text-color2);
-    font-size: 16px;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin: 0;
-    transition: all 0.5s linear;
-  }
-  
-.leftSideBar-search{
-
-}
-.leftSideBar.collapsed .leftSideBar-title {
-    width: 100%;
-  }
-  
-  .leftSideBar.collapsed {
-    width: 60px;
-  }
-
-
-  .unread-count-badge {
-    background-color: red;
-    color: white;
-    font-size: 8px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 20px;
-    margin-left: -12px;
-}
-
-@media screen and (max-width: 1200px) {
-  .leftSideBar{
- 
-  }
-  .leftSideBar-container{
-      padding: 1rem;
-    
-  }
-}
-
-
+/* Light Theme Sidebar - Clean & Professional */
 .leftSideBar {
-  width: 240px;
-  transition: width 0.3s ease;
+  width: 250px;
+  height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
 }
 
 .leftSideBar.collapsed {
-  width: 60px;
+  width: 72px;
 }
 
-/* Mobile adjustments */
+/* Header Section - Sticky at Top */
+.leftSideBar-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #ffffff;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+/* Logo Container */
+.leftSideBar-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+}
+
+.leftSideBar-logo {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.leftSideBar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.leftSideBar-logo:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.leftSideBar-title {
+  flex: 1;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+}
+
+.leftSideBar-title h1 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
+  color: #1f2937;
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.leftSideBar.collapsed .leftSideBar-title {
+  opacity: 0;
+  width: 0;
+  transform: translateX(-10px);
+}
+
+/* Collapse Toggle Button */
+.collapse-toggle-btn {
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  padding: 0;
+  outline: none;
+  font-family: inherit;
+}
+
+.collapse-toggle-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.collapse-toggle-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.collapse-toggle-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.collapse-toggle-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.leftSideBar.collapsed .collapse-toggle-btn {
+  width: 42px;
+  margin: 0 auto;
+}
+
+/* Scrollable Container */
+.leftSideBar-container {
+  flex: 1;
+  padding: 1rem 0.875rem 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar - Light Theme */
+.leftSideBar-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.leftSideBar-container::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+
+.leftSideBar-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.leftSideBar-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.leftSideBar.collapsed .leftSideBar-container {
+  padding: 0.75rem 0.5rem 1rem;
+}
+
+/* Vertical Divider */
+.vertical-dash {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #e5e7eb 20%,
+    #e5e7eb 80%,
+    transparent 100%
+  );
+  margin: 0.875rem 0;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.leftSideBar.collapsed .vertical-dash {
+  margin: 0.625rem auto;
+  width: 75%;
+}
+
+/* Notification Badge */
+.unread-count-badge {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.leftSideBar.collapsed .unread-count-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  margin-left: 0;
+  font-size: 9px;
+  padding: 2px 5px;
+  min-width: 16px;
+}
+
+/* Collapsed State Logo Enhancement */
+.leftSideBar.collapsed .leftSideBar-logo {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto;
+  border-radius: 10px;
+}
+
+/* Mobile Responsive */
 @media (max-width: 800px) {
   .leftSideBar {
-    position: fixed;
-    z-index: 1100;
-    width: 70%;
+    width: 100%;
     height: 100%;
-    left: -100%;
-    transition: left 0.3s ease;
+    box-shadow: none;
+    border-right: none;
   }
+  
+  /* Removed .leftSideBar.show styling as standard display block is sufficient */
 
-  .leftSideBar.show {
-    left: 0;
+  .collapse-toggle-btn {
+    display: none;
   }
+}
+
+/* Tablet Adjustments */
+@media (max-width: 1200px) and (min-width: 801px) {
+  .leftSideBar {
+    width: 230px;
+  }
+  
+  .leftSideBar-container {
+    padding: 0.875rem 0.75rem 1.25rem;
+  }
+}
+
+/* Focus Styles for Accessibility */
+.collapse-toggle-btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Smooth Transitions */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Print Styles */
+@media print {
+  .leftSideBar {
+    display: none;
+  }
+}
+
+.logout-link {
+    color: #ef4444 !important; 
+}
+
+.logout-link:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: #dc2626 !important;
+}
+
+.logout-link .LeftNavLinks-icon svg {
+    color: #ef4444 !important;
+}
+
+.logout-link:hover .LeftNavLinks-icon svg {
+    color: #dc2626 !important;
+}
+
+/* Logout Confirmation Modal */
+.logout-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+}
+
+.logout-modal {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    width: 90%;
+    max-width: 320px;
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.logout-modal h3 {
+    margin-top: 0;
+    color: #1f2937;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.logout-modal p {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+}
+
+.logout-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.logout-cancel-btn, .logout-confirm-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-size: 0.875rem;
+}
+
+.logout-cancel-btn {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.logout-cancel-btn:hover {
+    background-color: #e5e7eb;
+}
+
+.logout-confirm-btn {
+    background-color: #ef4444;
+    color: white;
+}
+
+.logout-confirm-btn:hover {
+    background-color: #dc2626;
 }

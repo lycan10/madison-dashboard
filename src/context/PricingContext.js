@@ -8,27 +8,63 @@ export const usePricing = () => {
 
 export const PricingProvider = ({ children }) => {
   const [pricingData, setPricingData] = useState([]); // Raw data from API
+  const [pricingPaginationData, setPricingPaginationData] = useState({
+    current_page: 1,
+    data: [],
+    first_page_url: null,
+    from: null,
+    last_page: 1,
+    last_page_url: null,
+    links: [],
+    next_page_url: null,
+    path: null,
+    per_page: 15,
+    prev_page_url: null,
+    to: null,
+    total: 0,
+  });
   const [transformedData, setTransformedData] = useState({ pushpull: {}, hoses: {} }); // Transformed for Calculator
   const [pricingConfig, setPricingConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchPricing = async () => {
+  const fetchAllPricing = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing?per_page=all`);
+      if (!response.ok) throw new Error("Failed to fetch all pricing data");
+      const data = await response.json();
+      setTransformedData(transformData(data));
+    } catch (err) {
+      console.error("Error fetching all pricing data:", err);
+    }
+  };
+
+  const fetchPricing = async (params = {}) => {
     setLoading(true);
     try {
+      const query = new URLSearchParams(params).toString();
+      const pricingUrl = `${process.env.REACT_APP_BASE_URL}/api/pricing${query ? `?${query}` : ''}`;
+      
       const [pricingRes, configRes] = await Promise.all([
-        fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing`),
+        fetch(pricingUrl),
         fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/config`)
       ]);
 
       if (!pricingRes.ok) throw new Error("Failed to fetch pricing data");
       if (!configRes.ok) throw new Error("Failed to fetch pricing config");
 
-      const data = await pricingRes.json();
+      const paginatedData = await pricingRes.json();
       const config = await configRes.json();
 
-      setPricingData(data);
-      setTransformedData(transformData(data));
+      // Handle paginated response
+      if (paginatedData.data) {
+        setPricingPaginationData(paginatedData);
+        setPricingData(paginatedData.data);
+      } else {
+        // Fallback for non-paginated response
+        setPricingData(paginatedData);
+      }
+      
       setPricingConfig(config);
       setError(null);
     } catch (err) {
@@ -41,7 +77,7 @@ export const PricingProvider = ({ children }) => {
 
   const updateConfig = async (newConfig) => {
     try {
-        const response = await fetch("http://127.0.0.1:8000/api/pricing/config", {
+        const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/config`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newConfig)
@@ -52,6 +88,84 @@ export const PricingProvider = ({ children }) => {
         return updatedConfig;
     } catch (err) {
         throw err;
+    }
+  };
+
+  // Custom Parts API methods
+  const searchCustomParts = async (query) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/custom-parts/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error("Failed to search custom parts");
+      return await response.json();
+    } catch (err) {
+      console.error("Error searching custom parts:", err);
+      throw err;
+    }
+  };
+
+  const saveCustomPart = async (configData) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/custom-parts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(configData)
+      });
+      if (!response.ok) throw new Error("Failed to save custom part");
+      return await response.json();
+    } catch (err) {
+      console.error("Error saving custom part:", err);
+      throw err;
+    }
+  };
+
+  const deleteCustomPart = async (id) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/custom-parts/${id}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) throw new Error("Failed to delete custom part");
+    } catch (err) {
+      console.error("Error deleting custom part:", err);
+      throw err;
+    }
+  };
+
+  // Saved Components API Methods
+  const saveComponent = async (componentData) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/components`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(componentData)
+      });
+      if (!response.ok) throw new Error("Failed to save component");
+      return await response.json();
+    } catch (err) {
+      console.error("Error saving component:", err);
+      throw err;
+    }
+  };
+
+  const searchComponents = async (query) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/components/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error("Failed to search components");
+      return await response.json();
+    } catch (err) {
+      console.error("Error searching components:", err);
+      throw err;
+    }
+  };
+
+  // Search parts for new cable types by part number
+  const searchPartsByNumber = async (cableType, partNumber) =>{
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing/search-by-part?cable_type=${encodeURIComponent(cableType)}&part_number=${encodeURIComponent(partNumber)}`);
+      if (!response.ok) throw new Error("Failed to search parts");
+      return await response.json();
+    } catch (err) {
+      console.error("Error searching parts:", err);
+      throw err;
     }
   };
 
@@ -119,11 +233,28 @@ export const PricingProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    fetchAllPricing();
     fetchPricing();
   }, []);
 
   return (
-    <PricingContext.Provider value={{ pricingData, transformedData, pricingConfig, loading, error, fetchPricing, updateConfig }}>
+    <PricingContext.Provider value={{ 
+      pricingData, 
+      pricingPaginationData,
+      transformedData, 
+      pricingConfig, 
+      loading, 
+      error, 
+      fetchPricing, 
+      fetchAllPricing,
+      updateConfig,
+      searchCustomParts,
+      saveCustomPart,
+      deleteCustomPart,
+      saveComponent,
+      searchComponents,
+      searchPartsByNumber
+    }}>
       {children}
     </PricingContext.Provider>
   );
