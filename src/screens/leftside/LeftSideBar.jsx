@@ -109,11 +109,11 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
       title: "Price",
       componentName: "Price"
     },
-     {
+     /*{
        icon: ReceiptDollarIcon,
        title: "Old Price",
        componentName: "OldPrice"
-     },
+     },*/
     {
       icon: Settings01Icon,
       title: "Admin Pricing",
