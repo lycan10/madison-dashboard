@@ -96,9 +96,10 @@ const Price = () => {
     const misc = parseFloat(config.misc_cost);
     const trueCost = costWithOverhead + misc;
 
-    // Margin is a dollar amount, not a percentage
-    const marginAmount = parseFloat(config.margin_percent); // Note: field name is margin_percent but value is dollar amount
-    const total = trueCost + marginAmount;
+    // Margin 35%
+    // Usually Price = Cost / (1 - Margin%)
+    const marginPercent = parseFloat(config.margin_percent) / 100;
+    const total = trueCost / (1 - marginPercent);
 
     return (
         <div style={{ maxWidth: "400px", marginLeft: "auto" }}>
@@ -129,14 +130,14 @@ const Price = () => {
                         <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>${config.misc_cost}</td>
                         <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{trueCost.toFixed(2)}</td>
                     </tr>
-                      <tr>
+                    <tr>
                         <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>True cost</td>
                         <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}></td>
-                        <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}></td>
+                        <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{trueCost.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>Margin</td>
-                        <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>${(total - trueCost).toFixed(2)}</td>
+                        <td style={{ padding: "5px", borderBottom: "1px solid #ddd" }}>{config.margin_percent}%</td>
                         <td style={{ padding: "5px", borderBottom: "1px solid #ddd", textAlign: "right" }}>{total.toFixed(2)}</td>
                     </tr>
                       <tr style={{ fontWeight: "bold", fontSize: "1.2em" }}>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const PricingContext = createContext();
 
@@ -28,7 +28,7 @@ export const PricingProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAllPricing = async () => {
+  const fetchAllPricing = useCallback(async () => {
     try {
       const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pricing?per_page=all`);
       if (!response.ok) throw new Error("Failed to fetch all pricing data");
@@ -37,9 +37,9 @@ export const PricingProvider = ({ children }) => {
     } catch (err) {
       console.error("Error fetching all pricing data:", err);
     }
-  };
+  }, []);
 
-  const fetchPricing = async (params = {}) => {
+  const fetchPricing = useCallback(async (params = {}) => {
     setLoading(true);
     try {
       const query = new URLSearchParams(params).toString();
@@ -73,7 +73,7 @@ export const PricingProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const updateConfig = async (newConfig) => {
     try {
@@ -234,8 +234,8 @@ export const PricingProvider = ({ children }) => {
 
   useEffect(() => {
     fetchAllPricing();
-//    fetchPricing();
-  }, []);
+    fetchPricing();
+  }, [fetchAllPricing, fetchPricing]);
 
   return (
     <PricingContext.Provider value={{ 
