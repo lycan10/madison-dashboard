@@ -5,8 +5,8 @@ import { usePricing } from "../../context/PricingContext";
 const Price = () => {
   const [cableType, setCableType] = useState("Push-pull cable");
   const [partNumberData, setPartNumberData] = useState({
-    prefix: "",
-    type: "",
+    prefix: "100",
+    type: "0",
     series: "",
     travel: "",
     fitting1: "",
@@ -14,6 +14,7 @@ const Price = () => {
     length: "",
   });
   const [parts, setParts] = useState([]);
+  const [assemblyTitle, setAssemblyTitle] = useState("");
   
   // Input refs for auto-focus (OTP behavior)
   const typeRef = useRef(null);
@@ -333,6 +334,7 @@ const Price = () => {
     // Only fetch if we have at least some part number data
     if (!partNumber || partNumber.trim() === "") {
       setParts([]);
+      setAssemblyTitle("");
       return;
     }
 
@@ -344,25 +346,35 @@ const Price = () => {
         
         // Transform results to match the parts format
         const lengthInches = parseInt(partNumberData.length) || 0;
+        
+        // Extract assembly title if available
+        if (results.length > 0 && results[0].is_assembly_item) {
+          setAssemblyTitle(results[0].assembly_title);
+        } else {
+          setAssemblyTitle("");
+        }
+
         const transformedParts = results.map(item => {
-          const partName = item.component_type || item.description || "Component";
-          const lowerName = partName.toLowerCase();
-          
           let quantity = 1;
           
-          if (lowerName.includes("conduit") || lowerName.includes("core")) {
-            quantity = lengthInches;
-          } else if (
-            lowerName.includes("sleeve") || 
-            lowerName.includes("rod") || 
-            lowerName.includes("nut") || 
-            lowerName.includes("seal")
-          ) {
-            quantity = 2;
+          if (item.is_assembly_item) {
+            // New logic based on BOM 'reqd' field
+            if (item.quantity_required === "A/R") {
+              quantity = lengthInches;
+            } else {
+              // Extract numeric value from quantity_required (e.g. "2" or 2)
+              quantity = parseFloat(item.quantity_required) || 1;
+            }
+          } else {
+            // Fallback for non-assembly items (if any)
+            const lowerName = (item.component_type || item.description || "").toLowerCase();
+            if (lowerName.includes("conduit") || lowerName.includes("core")) {
+              quantity = lengthInches;
+            }
           }
           
           return {
-            partName: partName,
+            partName: item.part_name || item.component_type || "Component",
             partNumber: item.part_number,
             quantity: quantity,
             unitPrice: parseFloat(item.unit_price).toFixed(2),
@@ -374,6 +386,7 @@ const Price = () => {
       } catch (error) {
         console.error("Error fetching parts:", error);
         setParts([]);
+        setAssemblyTitle("");
       }
     };
 
@@ -541,7 +554,22 @@ const Price = () => {
                     <span>-</span>
                   </>
                 )}
-                <input
+                {cableType === "Push-pull cable" ? (
+                  <>
+                  <input
+                  type="text"
+                  placeholder="Type"
+                  ref={typeRef}
+                  readOnly
+                  value={partNumberData.type}
+                  onChange={(e) => handlePartNumberChange("type", e.target.value)}
+                  onKeyDown={(e) => handleKeyDown("type", e)}
+                  maxLength="1"
+                  style={{ width: "40px", padding: "8px", border: "1px solid #ccc", backgroundColor: "#f5f5f5", borderRadius: "4px" }}
+                />
+                  </>
+                ) : (
+                  <input
                   type="text"
                   placeholder="Type"
                   ref={typeRef}
@@ -551,6 +579,8 @@ const Price = () => {
                   maxLength="1"
                   style={{ width: "40px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
                 />
+                )}
+              
                 <input
                   type="text"
                   placeholder="Series (3,4,6)"
@@ -616,7 +646,14 @@ const Price = () => {
             </div>
 
             <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>Parts Breakdown</label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "8px" }}>
+                <label style={{ margin: 0, fontWeight: "600" }}>Parts Breakdown</label>
+                {assemblyTitle && (
+                  <span style={{ fontSize: "14px", fontWeight: "bold", color: "#007bff", fontStyle: "italic" }}>
+                    {assemblyTitle}
+                  </span>
+                )}
+              </div>
               <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #d0d0d0" }}>
                 <thead>
                   <tr style={{ background: "#f3f3f3" }}>

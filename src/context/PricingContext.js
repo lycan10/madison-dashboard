@@ -234,7 +234,7 @@ export const PricingProvider = ({ children }) => {
 
   useEffect(() => {
     fetchAllPricing();
-    fetchPricing();
+//    fetchPricing();
   }, []);
 
   return (
