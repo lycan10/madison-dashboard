@@ -323,9 +323,8 @@ const Price = () => {
       return;
     }
 
-    // Construct part number from Type, Series, Travel, Fitting fields
+    // Construct part number from Series, Travel, Fitting fields (excluding Type)
     const partNumber = [
-      partNumberData.type,
       partNumberData.series,
       partNumberData.travel,
       partNumberData.fitting1,
@@ -518,7 +517,7 @@ const Price = () => {
           >
             <option>Push-pull cable</option>
             <option>Hydraulic Hose</option>
-            <option>Universal Cable</option>
+            <option>T handle</option>
             <option>Positive Lock</option>
             <option>Quick Disconnect</option>
             <option>Quick Connect</option>
