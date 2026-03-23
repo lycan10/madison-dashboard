@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 
 import { usePricing } from "../../context/PricingContext";
 
@@ -64,6 +64,7 @@ const Price = () => {
   // Manual Part Add State
   const [showAddPartModal, setShowAddPartModal] = useState(false);
   const [newManualPart, setNewManualPart] = useState({
+    partNumber: "",
     partName: "",
     quantity: 1,
     unitPrice: 0,
@@ -73,6 +74,31 @@ const Price = () => {
   // Component Search State
   const [componentSearchQuery, setComponentSearchQuery] = useState("");
   const [componentSearchResults, setComponentSearchResults] = useState([]);
+
+  const fullPartNumber = useMemo(() => {
+    if (cableType === "Push-pull cable") {
+      return `${partNumberData.prefix}-${partNumberData.type}${partNumberData.series}${partNumberData.travel}${partNumberData.fitting1}${partNumberData.fitting2}-${partNumberData.length.padStart(4, "0")}`;
+    }
+    if (cableType === "Custom") {
+      const segments = [
+        partNumberData.prefix,
+        partNumberData.type,
+        partNumberData.series,
+        partNumberData.travel,
+        partNumberData.fitting1,
+        partNumberData.fitting2
+      ].filter(Boolean);
+      
+      if (segments.length === 0) return "";
+      
+      // If we have prefix and other fields, use hyphen
+      if (partNumberData.prefix && (partNumberData.type || partNumberData.series)) {
+          return `${partNumberData.prefix}-${partNumberData.type}${partNumberData.series}${partNumberData.travel}${partNumberData.fitting1}${partNumberData.fitting2}`;
+      }
+      return `${partNumberData.type}${partNumberData.series}${partNumberData.travel}${partNumberData.fitting1}${partNumberData.fitting2}`;
+    }
+    return `${partNumberData.type}${partNumberData.series}${partNumberData.travel}${partNumberData.fitting1}${partNumberData.fitting2}-${partNumberData.length}`;
+  }, [cableType, partNumberData]);
   
   const { transformedData: priceData, pricingConfig, saveComponent, searchComponents, searchPartsByNumber, saveCustomPart } = usePricing();
 
@@ -325,8 +351,8 @@ const Price = () => {
       return;
     }
 
-    // Construct part number from Series, Travel, Fitting fields (excluding Type)
-    const partNumber = [
+    // Construct part number from all fields for Custom, or specific ones for others
+    const partNumber = cableType === "Custom" ? fullPartNumber : [
       partNumberData.series,
       partNumberData.travel,
       partNumberData.fitting1,
@@ -397,7 +423,7 @@ const Price = () => {
     };
 
     fetchParts();
-  }, [cableType, partNumberData.type, partNumberData.series, partNumberData.travel, partNumberData.fitting1, partNumberData.fitting2, partNumberData.length, searchPartsByNumber]);
+  }, [cableType, partNumberData.type, partNumberData.series, partNumberData.travel, partNumberData.fitting1, partNumberData.fitting2, partNumberData.length, fullPartNumber, searchPartsByNumber]);
 
   const handlePartNumberChange = (field, value) => {
     setPartNumberData((prev) => ({ ...prev, [field]: value }));
@@ -434,14 +460,14 @@ const Price = () => {
   };
 
   const handleSaveConfiguration = async () => {
-    if (!partNumberData.series) {
+    if (!fullPartNumber) {
         alert("Please enter a Configuration Name / Part Number");
         return;
     }
 
     const configData = {
         cable_type: customBaseType,
-        configuration_name: partNumberData.series.toUpperCase(),
+        configuration_name: fullPartNumber.toUpperCase(),
         configuration_data: parts,
         total_price: calculateTotal()
     };
@@ -454,10 +480,6 @@ const Price = () => {
         alert("Failed to save configuration: " + err.message);
     }
   };
-
-  const fullPartNumber = cableType === "Push-pull cable" 
-    ? `${partNumberData.prefix}-${partNumberData.type}${partNumberData.series}${partNumberData.travel}${partNumberData.fitting1}${partNumberData.fitting2}-${partNumberData.length.padStart(4, "0")}`
-    : `${partNumberData.type}${partNumberData.series}${partNumberData.travel}${partNumberData.fitting1}${partNumberData.fitting2}-${partNumberData.length}`;
 
   /* REMOVED CONFIG PERSISTENCE HANDLERS */
 
@@ -478,9 +500,10 @@ const Price = () => {
   const selectSavedComponent = (component) => {
     setNewManualPart({
       ...newManualPart,
+      partNumber: component.part_number || "MANUAL",
       partName: component.name,
       unitPrice: component.unit_price,
-      saveToCatalog: false // Don't save it again if we just loaded it
+      saveToCatalog: false 
     });
     setComponentSearchQuery("");
     setComponentSearchResults([]);
@@ -504,13 +527,12 @@ const Price = () => {
     
     setParts(prevParts => [...prevParts, {
       ...newManualPart,
-      partName: newManualPart.partName, // Ensure consistent naming
-      partNumber: "MANUAL",
+      partNumber: newManualPart.partNumber || "MANUAL",
       description: "Manual Part Entry",
       unitPrice: parseFloat(newManualPart.unitPrice)
     }]);
     
-    setNewManualPart({ partName: "", quantity: 1, unitPrice: 0, saveToCatalog: false });
+    setNewManualPart({ partNumber: "", partName: "", quantity: 1, unitPrice: 0, saveToCatalog: false });
     setShowAddPartModal(false);
     setComponentSearchQuery("");
   };
@@ -568,8 +590,13 @@ const Price = () => {
                     style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
                 >
                     <option>Push-pull cable</option>
-                    <option>Hydraulic Hose</option>
-                    <option>Universal Cable</option>
+                    <option>T handle</option>
+                    <option>Positive Lock</option>
+                    <option>Quick Disconnect</option>
+                    <option>Quick Connect</option>
+                    <option>PTO Cable</option>
+                    <option>Shift Cable</option>
+                    <option>RVC</option>
                     <option>SMT Cable</option>
                     <option>Custom</option>
                 </select>
@@ -603,6 +630,27 @@ const Price = () => {
                     <span>-</span>
                   </>
                 )}
+                
+                {/* Prefix for Custom - also editable */}
+                {cableType === "Custom" && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Prefix"
+                      value={partNumberData.prefix}
+                      onChange={(e) => handlePartNumberChange("prefix", e.target.value)}
+                      maxLength="3"
+                      style={{ 
+                        width: "60px", 
+                        padding: "8px", 
+                        border: "1px solid #ccc", 
+                        borderRadius: "4px"
+                      }}
+                    />
+                    <span>-</span>
+                  </>
+                )}
+
                 {cableType === "Push-pull cable" ? (
                   <>
                   <input
@@ -623,7 +671,7 @@ const Price = () => {
                   placeholder="Type"
                   ref={typeRef}
                   value={partNumberData.type}
-                  onChange={(e) => handlePartNumberChange("type", e.target.value)}
+                  onChange={(e) => handlePartNumberChange("type", e.target.value.toUpperCase())}
                   onKeyDown={(e) => handleKeyDown("type", e)}
                   maxLength="1"
                   style={{ width: "40px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
@@ -632,53 +680,47 @@ const Price = () => {
               
                 <input
                   type="text"
-                  placeholder={cableType === "Push-pull cable" ? "Series (3,4,6)" : (cableType === "Custom" ? "Drawing / Model #" : "Part Part 1")}
+                  placeholder={cableType === "Custom" ? "Series" : (cableType === "Push-pull cable" ? "Series (3,4,6)" : "Part Part 1")}
                   ref={seriesRef}
                   value={partNumberData.series}
-                  onChange={(e) => handlePartNumberChange("series", e.target.value)}
+                  onChange={(e) => handlePartNumberChange("series", e.target.value.toUpperCase())}
                   onKeyDown={(e) => handleKeyDown("series", e)}
-                  maxLength={cableType === "Push-pull cable" ? "1" : "50"}
-                  style={{ width: cableType === "Push-pull cable" ? "80px" : (cableType === "Custom" ? "300px" : "120px"), padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                  maxLength={cableType === "Custom" ? "50" : (cableType === "Push-pull cable" ? "1" : "50")}
+                  style={{ width: cableType === "Custom" ? "120px" : (cableType === "Push-pull cable" ? "80px" : "120px"), padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
                 />
                 
-                {cableType !== "Custom" && (
-                  <input
-                    type="text"
-                    placeholder={cableType === "Push-pull cable" ? "Travel (1-7)" : "Part Part 2"}
-                    ref={travelRef}
-                    value={partNumberData.travel}
-                    onChange={(e) => handlePartNumberChange("travel", e.target.value)}
-                    onKeyDown={(e) => handleKeyDown("travel", e)}
-                    maxLength={cableType === "Push-pull cable" ? "1" : "50"}
-                    style={{ width: cableType === "Push-pull cable" ? "80px" : "120px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
-                  />
-                )}
+                <input
+                  type="text"
+                  placeholder={cableType === "Custom" ? "Travel" : (cableType === "Push-pull cable" ? "Travel (1-7)" : "Part Part 2")}
+                  ref={travelRef}
+                  value={partNumberData.travel}
+                  onChange={(e) => handlePartNumberChange("travel", e.target.value.toUpperCase())}
+                  onKeyDown={(e) => handleKeyDown("travel", e)}
+                  maxLength={cableType === "Custom" ? "50" : (cableType === "Push-pull cable" ? "1" : "50")}
+                  style={{ width: cableType === "Custom" ? "80px" : (cableType === "Push-pull cable" ? "80px" : "120px"), padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                />
                 
-                {cableType !== "Custom" && (
-                  <input
-                    type="text"
-                    placeholder={cableType === "Push-pull cable" ? "Fit1 (2,3,5)" : "Part Part 3"}
-                    ref={fit1Ref}
-                    value={partNumberData.fitting1}
-                    onChange={(e) => handlePartNumberChange("fitting1", e.target.value)}
-                    onKeyDown={(e) => handleKeyDown("fitting1", e)}
-                    maxLength={cableType === "Push-pull cable" ? "1" : "50"}
-                    style={{ width: cableType === "Push-pull cable" ? "80px" : "120px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
-                  />
-                )}
+                <input
+                  type="text"
+                  placeholder={cableType === "Custom" ? "Fit1" : (cableType === "Push-pull cable" ? "Fit1 (2,3,5)" : "Part Part 3")}
+                  ref={fit1Ref}
+                  value={partNumberData.fitting1}
+                  onChange={(e) => handlePartNumberChange("fitting1", e.target.value.toUpperCase())}
+                  onKeyDown={(e) => handleKeyDown("fitting1", e)}
+                  maxLength={cableType === "Custom" ? "50" : (cableType === "Push-pull cable" ? "1" : "50")}
+                  style={{ width: cableType === "Custom" ? "80px" : (cableType === "Push-pull cable" ? "80px" : "120px"), padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                />
                 
-                {cableType !== "Custom" && (
-                  <input
-                    type="text"
-                    placeholder={cableType === "Push-pull cable" ? "Fit2 (2,3,5)" : "Part Part 4"}
-                    ref={fit2Ref}
-                    value={partNumberData.fitting2}
-                    onChange={(e) => handlePartNumberChange("fitting2", e.target.value)}
-                    onKeyDown={(e) => handleKeyDown("fitting2", e)}
-                    maxLength={cableType === "Push-pull cable" ? "1" : "50"}
-                    style={{ width: cableType === "Push-pull cable" ? "80px" : "120px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
-                  />
-                )}
+                <input
+                  type="text"
+                  placeholder={cableType === "Custom" ? "Fit2" : (cableType === "Push-pull cable" ? "Fit2 (2,3,5)" : "Part Part 4")}
+                  ref={fit2Ref}
+                  value={partNumberData.fitting2}
+                  onChange={(e) => handlePartNumberChange("fitting2", e.target.value.toUpperCase())}
+                  onKeyDown={(e) => handleKeyDown("fitting2", e)}
+                  maxLength={cableType === "Custom" ? "50" : (cableType === "Push-pull cable" ? "1" : "50")}
+                  style={{ width: cableType === "Custom" ? "80px" : (cableType === "Push-pull cable" ? "80px" : "120px"), padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+                />
                 
                 {cableType !== "Custom" && (
                     <>
@@ -762,41 +804,46 @@ const Price = () => {
                 </tbody>
               </table>
               
-              <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
-                <button 
-                  onClick={() => setShowAddPartModal(true)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "4px",
-                    border: "1px solid #ffbb00",
-                    backgroundColor: "#fffdf0",
-                    color: "#a07000",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    fontSize: "14px"
-                  }}
-                >
-                  + Add Component
-                </button>
-
-                {cableType === "Custom" && parts.length > 0 && (
+              {cableType === "Custom" && (
+                <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
                   <button 
-                    onClick={handleSaveConfiguration}
+                    onClick={() => {
+                        setNewManualPart({ partNumber: "", partName: "", quantity: 1, unitPrice: 0, saveToCatalog: false });
+                        setShowAddPartModal(true);
+                    }}
                     style={{
                       padding: "8px 16px",
                       borderRadius: "4px",
-                      border: "none",
-                      backgroundColor: "#28a745",
-                      color: "#fff",
+                      border: "1px solid #ffbb00",
+                      backgroundColor: "#fffdf0",
+                      color: "#a07000",
                       fontWeight: "600",
                       cursor: "pointer",
                       fontSize: "14px"
                     }}
                   >
-                    {isCustomConfig ? "Update Configuration" : "Save Configuration"}
+                    + Add Component
                   </button>
-                )}
-              </div>
+
+                  {parts.length > 0 && (
+                    <button 
+                      onClick={handleSaveConfiguration}
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: "4px",
+                        border: "none",
+                        backgroundColor: "#28a745",
+                        color: "#fff",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        fontSize: "14px"
+                      }}
+                    >
+                      {isCustomConfig ? "Update Configuration" : "Save Configuration"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
 
@@ -999,7 +1046,18 @@ const Price = () => {
             </div>
 
             <div style={{ marginBottom: "15px" }}>
-              <label style={{ display: "block", marginBottom: "5px" }}>Part Name / Description</label>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>Part Number</label>
+              <input
+                type="text"
+                value={newManualPart.partNumber}
+                onChange={(e) => setNewManualPart({...newManualPart, partNumber: e.target.value.toUpperCase()})}
+                placeholder="e.g. 123-456"
+                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>Part Name / Description</label>
               <input
                 type="text"
                 value={newManualPart.partName}
@@ -1011,7 +1069,7 @@ const Price = () => {
 
             <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
               <div style={{ flex: 1 }}>
-                <label style={{ display: "block", marginBottom: "5px" }}>Quantity</label>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>Reqd Quantity</label>
                 <input
                   type="number"
                   min="1"
@@ -1021,7 +1079,7 @@ const Price = () => {
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={{ display: "block", marginBottom: "5px" }}>Unit Price ($)</label>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>Unit Price ($)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -1042,29 +1100,6 @@ const Price = () => {
                 />
                 <span style={{ fontSize: "14px" }}>Save this part to catalog for future use</span>
               </label>
-            </div>
-
-            <div style={{ marginBottom: "15px" }}>
-              <label style={{ display: "block", marginBottom: "5px" }}>Unit Price ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={newManualPart.unitPrice}
-                onChange={(e) => setNewManualPart({...newManualPart, unitPrice: e.target.value})}
-                style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
-                    <input 
-                        type="checkbox" 
-                        checked={newManualPart.saveToCatalog}
-                        onChange={(e) => setNewManualPart({...newManualPart, saveToCatalog: e.target.checked})}
-                        style={{ marginRight: "8px" }}
-                    />
-                    Save this part to catalog for future use?
-                </label>
             </div>
             
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
