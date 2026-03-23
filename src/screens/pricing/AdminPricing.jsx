@@ -137,13 +137,14 @@ const AdminPricing = () => {
   const cableTypes = [
     "Push-pull cable",
     "Hydraulic Hose",
-    "Universal Cable",
+    "T Handle",
     "Positive Lock",
     "Quick Disconnect",
     "Quick Connect",
     "PTO Cable",
     "Shift Cable",
-    "RVC"
+    "RVC",
+    "SMT Cable"
   ];
 
   // --- LOGIC SECTION: EXACTLY AS ORIGINAL ---

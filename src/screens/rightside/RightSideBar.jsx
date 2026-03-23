@@ -815,7 +815,7 @@ const RightSideBar = ({ selected }) => {
             <Price />
           </div>
         )}
-        {selected === "AdminPricing" && (
+        {selected === "AdminPricing" && user?.name === "admin" && (
           <div className="rightsidebar-bottom">
             <AdminPricing />
           </div>
@@ -861,7 +861,7 @@ const RightSideBar = ({ selected }) => {
             <TimeCard />
           </div>
         )}
-        {selected === "ChangePassword" && (
+        {selected === "ChangePassword" && user?.name === "admin" && (
           <div className="rightsidebar-bottom">
             <ChangeUsersPassword />
           </div>

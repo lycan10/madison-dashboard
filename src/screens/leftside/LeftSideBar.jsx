@@ -173,7 +173,12 @@ const LeftSideBar = ({ selected, onSelect, collapsed }) => {
           )}
         </div> 
 
-        {navigationItems.map((item) => (
+        {navigationItems.filter((item) => {
+          if (item.componentName === "AdminPricing") {
+            return user?.name === "admin";
+          }
+          return true;
+        }).map((item) => (
           <LeftNavLinks
             key={item.componentName}
             icon={item.icon}
